@@ -53,6 +53,7 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.TransferListener
+import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
@@ -3405,6 +3406,39 @@ private class SubtitleOffsetRenderersFactory(
             .setAudioProcessors(arrayOf(volumeBoostAudioProcessor))
             .build()
         return if (audioPassthroughEnabled) sink else PcmOnlyAudioSink(sink)
+    }
+
+    /**
+     * LUXO: the bundled FFmpeg decoder is put first for audio (EAC3/DD+, AC3, TrueHD, DTS…),
+     * so devices whose hardware decoder fails to initialise still play with sound.
+     * Video keeps hardware decoding. With passthrough on, the original order is kept.
+     */
+    override fun buildAudioRenderers(
+        context: Context,
+        extensionRendererMode: Int,
+        mediaCodecSelector: MediaCodecSelector,
+        enableDecoderFallback: Boolean,
+        audioSink: AudioSink,
+        eventHandler: Handler,
+        eventListener: AudioRendererEventListener,
+        out: ArrayList<Renderer>,
+    ) {
+        val audioMode =
+            if (!audioPassthroughEnabled && extensionRendererMode != EXTENSION_RENDERER_MODE_OFF) {
+                EXTENSION_RENDERER_MODE_PREFER
+            } else {
+                extensionRendererMode
+            }
+        super.buildAudioRenderers(
+            context,
+            audioMode,
+            mediaCodecSelector,
+            enableDecoderFallback,
+            audioSink,
+            eventHandler,
+            eventListener,
+            out,
+        )
     }
 
     override fun buildVideoRenderers(
