@@ -39,17 +39,20 @@ object SubtitleRepository {
             _addonSubtitles.value = emptyList()
 
             val requests = addonSubtitleRequests(type, videoId)
-            if (requests.isEmpty()) {
-                _isLoading.value = false
-                return@launch
-            }
-
-            _loadingProgress.value = SubtitleLoadingProgress(total = requests.size)
-            loadAddonSubtitles(requests) { request, subtitles ->
-                _addonSubtitles.update { it + subtitles }
-                _loadingProgress.update { progress ->
-                    progress?.copy(completed = progress.completed + 1, addonName = request.addonName)
+            // LUXO: SubDL + add-ons, Arabic only
+            _loadingProgress.value = SubtitleLoadingProgress(total = requests.size + 1)
+            if (requests.isNotEmpty()) {
+                loadAddonSubtitles(requests) { request, subtitles ->
+                    _addonSubtitles.update { it + subtitles.filter(LuxoSubtitleProviders::isArabic) }
+                    _loadingProgress.update { progress ->
+                        progress?.copy(completed = progress.completed + 1, addonName = request.addonName)
+                    }
                 }
+            }
+            val builtIn = LuxoSubtitleProviders.search(type, videoId)
+            _addonSubtitles.update { current -> (current + builtIn).distinctBy { it.url } }
+            _loadingProgress.update { progress ->
+                progress?.copy(completed = progress.completed + 1, addonName = "SubDL")
             }
 
             if (_addonSubtitles.value.isEmpty()) {

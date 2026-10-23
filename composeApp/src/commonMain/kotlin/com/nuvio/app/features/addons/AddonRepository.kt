@@ -72,7 +72,8 @@ object AddonRepository {
         currentProfileId = effectiveProfileId
         log.d { "initialize() — loading local addons for profile $currentProfileId" }
 
-        val storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId))
+        // LUXO: the Arabic OpenSubtitles v3 Pro add-on is always installed
+        val storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId) + LUXO_BUILT_IN_ADDONS)
         val enabledByUrl = loadLocalEnabledStates()
         log.d { "initialize() — local addon count: ${storedUrls.size}" }
         InAppLogger.info("Addons/Repository", "initialize profile=$currentProfileId localAddons=${storedUrls.size}")
@@ -586,6 +587,11 @@ private fun ManagedAddon?.toPendingAddon(
             enabled = enabled ?: this.enabled,
         )
     }
+
+/** LUXO: add-ons that are always installed. */
+internal val LUXO_BUILT_IN_ADDONS = listOf(
+    "https://opensubtitlesv3-pro.dexter21767.com/eyJsYW5ncyI6WyJhcmFiaWMiXSwic291cmNlIjoiYWxsIiwiYWlUcmFuc2xhdGVkIjp0cnVlLCJhdXRvQWRqdXN0bWVudCI6ZmFsc2V9/manifest.json",
+)
 
 private fun dedupeManifestUrls(urls: List<String>): List<String> =
     urls.map(::ensureManifestSuffix).distinct()
