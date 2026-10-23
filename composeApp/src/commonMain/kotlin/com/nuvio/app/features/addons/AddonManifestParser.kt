@@ -82,7 +82,20 @@ internal object AddonManifestParser {
                     }
                 },
             )
-        }
+        }.filterNot(::isHiddenCatalog)
+
+    /**
+     * LUXO: catalogs of raw torrent / cloud-download lists (type "other", or names like
+     * "TorBox", "Torrents", "Downloads") have no metadata behind them and open to an error page,
+     * so they are dropped and only movie / series catalogs stay.
+     */
+    private fun isHiddenCatalog(catalog: AddonCatalog): Boolean {
+        if (catalog.type.equals("other", ignoreCase = true)) return true
+        val label = "${catalog.name} ${catalog.id}".lowercase()
+        return HIDDEN_CATALOG_WORDS.any { it in label }
+    }
+
+    private val HIDDEN_CATALOG_WORDS = listOf("torbox", "torrent", "downloads")
 
     private fun JsonObject.behaviorHints(): AddonBehaviorHints {
         val hints = this["behaviorHints"]?.jsonObject ?: return AddonBehaviorHints()

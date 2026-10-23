@@ -70,7 +70,9 @@ enum class AppLanguage(
     }
 
     companion object {
+        // LUXO: Arabic is the default until the user picks another language.
         fun fromCode(code: String?): AppLanguage =
-            entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: DEVICE
+            if (code.isNullOrBlank()) ARABIC
+            else entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: ARABIC
     }
 }

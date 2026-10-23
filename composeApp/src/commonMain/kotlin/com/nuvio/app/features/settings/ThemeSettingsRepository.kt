@@ -54,7 +54,7 @@ object ThemeSettingsRepository {
     private val _showCatalogAccentEnabled = MutableStateFlow(false)
     val showCatalogAccentEnabled: StateFlow<Boolean> = _showCatalogAccentEnabled.asStateFlow()
 
-    private val _selectedAppLanguage = MutableStateFlow(AppLanguage.DEVICE)
+    private val _selectedAppLanguage = MutableStateFlow(AppLanguage.ARABIC)
     val selectedAppLanguage: StateFlow<AppLanguage> = _selectedAppLanguage.asStateFlow()
 
     private val _navBarStyle = MutableStateFlow(NavBarStyle.ADAPTIVE)
@@ -121,7 +121,7 @@ object ThemeSettingsRepository {
         )
         NativeTabBridge.publishTabBarBehavior(NuvioTabBarBehavior.Default)
         NativeTabBridge.publishLiquidGlassEnabled(NuvioTabBarBehavior.Default.isEnabled)
-        _selectedAppLanguage.value = AppLanguage.DEVICE
+        _selectedAppLanguage.value = AppLanguage.ARABIC
         _navBarGlowEnabled.value = true
         _navBarDefaultIconColorEnabled.value = false
         _navBarDefaultIconColor.value = DEFAULT_NAV_BAR_ICON_COLOR
