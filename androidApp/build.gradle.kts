@@ -72,6 +72,13 @@ android {
         versionCode = releaseAppVersionCode
         versionName = releaseAppVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // LUXO: نبني لمعالج واحد بس لو انطلب (مثلاً -Pluxo.abi=arm64-v8a) عشان البناء يكون أخف وأسرع
+        providers.gradleProperty("luxo.abi").orNull?.takeIf { it.isNotBlank() }?.let { abis ->
+            ndk {
+                abiFilters.clear()
+                abiFilters += abis.split(",").map(String::trim)
+            }
+        }
     }
 
     flavorDimensions += "distribution"
