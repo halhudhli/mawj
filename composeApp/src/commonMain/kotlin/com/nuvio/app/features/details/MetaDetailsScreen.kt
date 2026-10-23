@@ -2026,6 +2026,10 @@ fun MetaDetailsScreen(
                 },
             )
         }
+        // LUXO: «رفيق Luxo»
+        displayedMeta?.let { meta ->
+            LuxoCompanion(meta = meta, modifier = Modifier.align(Alignment.BottomEnd))
+        }
     }
 }
 
