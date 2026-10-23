@@ -152,8 +152,11 @@ internal fun StreamCard(
                 }
             }
 
+            val luxoLines = remember(stream) { LuxoStreamFormat.lines(stream) }
             val subtitle = stream.streamSubtitle
-            if (!subtitle.isNullOrBlank()) {
+            if (luxoLines != null) {
+                LuxoStreamLines(luxoLines)
+            } else if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
@@ -199,6 +202,27 @@ internal fun StreamCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+        }
+    }
+}
+
+/** LUXO: the four tidy lines of a stream card. */
+@Composable
+private fun LuxoStreamLines(lines: LuxoStreamFormat.Lines) {
+    val style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 18.sp, shadow = streamGlassTextShadow())
+    Spacer(modifier = Modifier.height(3.dp))
+    Text(text = lines.top, style = style.copy(fontWeight = FontWeight.SemiBold), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    lines.video?.let { Text(text = it, style = style, color = Color.White.copy(alpha = 0.85f), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+    lines.audio?.let { Text(text = it, style = style, color = Color.White.copy(alpha = 0.85f), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+    if (lines.size != null || lines.flags != null) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            lines.size?.let {
+                Text(text = it, style = style.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
+            }
+            lines.flags?.let {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = it, style = style, maxLines = 1)
             }
         }
     }
