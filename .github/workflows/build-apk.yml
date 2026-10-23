@@ -25,6 +25,9 @@ jobs:
     - name: Make Gradlew Executable
       run: chmod +x gradlew
 
+    - name: Create local.properties
+      run: touch local.properties
+
     - name: Build Debug APK
       run: ./gradlew assembleDebug -Pnuvio.android.distribution=full --no-daemon --stacktrace
 
