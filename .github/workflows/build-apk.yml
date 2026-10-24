@@ -55,6 +55,7 @@ jobs:
         env:
           # اختياري: لو أضفت مفتاح TMDB كـ secret يندمج في التطبيق وتطلع العناوين والأوصاف بالعربي تلقائياً
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
         run: |
           set -o pipefail
           ./gradlew :androidApp:assembleFullDebug \

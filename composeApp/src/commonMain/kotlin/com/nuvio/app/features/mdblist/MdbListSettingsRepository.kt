@@ -105,8 +105,9 @@ object MdbListSettingsRepository {
 
     private fun loadFromDisk() {
         hasLoaded = true
-        apiKey = MdbListSettingsStorage.loadApiKey().orEmpty().trim()
-        enabled = MdbListSettingsStorage.loadEnabled() ?: false
+        // LUXO: fall back to the key built into the app (CI secret) so ratings work out of the box.
+        apiKey = MdbListSettingsStorage.loadApiKey().orEmpty().trim().ifBlank { MdbListConfig.API_KEY.trim() }
+        enabled = MdbListSettingsStorage.loadEnabled() ?: MdbListConfig.API_KEY.isNotBlank()
         useImdb = MdbListSettingsStorage.loadUseImdb() ?: true
         useTmdb = MdbListSettingsStorage.loadUseTmdb() ?: true
         useTomatoes = MdbListSettingsStorage.loadUseTomatoes() ?: true

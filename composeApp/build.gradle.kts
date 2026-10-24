@@ -46,6 +46,9 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     @get:Input
     abstract val tmdbApiKey: Property<String>
 
+    @get:Input
+    abstract val mdbListApiKey: Property<String>
+
     @TaskAction
     fun generate() {
         val props = Properties()
@@ -132,6 +135,7 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |
                 |object MdbListConfig {
                 |    const val CLIENT_ID = "${props.getProperty("MDBLIST_CLIENT_ID", "")}"
+                |    const val API_KEY = "${mdbListApiKey.get()}"
                 |}
                 """.trimMargin()
             )
@@ -326,6 +330,7 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
     sentryDsn.set(runtimeConfigValue("SENTRY_DSN"))
     tmdbApiKey.set(runtimeConfigValue("TMDB_API_KEY"))
+    mdbListApiKey.set(runtimeConfigValue("MDBLIST_API_KEY"))
     sentryEnvironment.set(
         when {
             requestedGradleTasks.any { "benchmark" in it } -> "benchmark"
