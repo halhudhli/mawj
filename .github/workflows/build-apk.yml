@@ -52,13 +52,27 @@ jobs:
         run: touch local.properties
 
       - name: Build APK (full, debug, arm64)
-        run: >
-          ./gradlew :androidApp:assembleFullDebug
-          -Pnuvio.android.distribution=full
-          -Pnuvio.ios.distribution=appstore
-          -Pluxo.abi=arm64-v8a
-          -Pkotlin.compiler.execution.strategy=in-process
-          --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :androidApp:assembleFullDebug \
+            -Pnuvio.android.distribution=full \
+            -Pnuvio.ios.distribution=appstore \
+            -Pluxo.abi=arm64-v8a \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --stacktrace 2>&1 | tee build.log
+
+      # يحوّل أخطاء Kotlin إلى تنبيهات تظهر في صفحة البناء وتُقرأ عبر الـ API
+      - name: Report compile errors
+        if: failure()
+        run: |
+          # GitHub يعرض 10 تنبيهات فقط لكل خطوة، فنجمع الأخطاء في تنبيهات مجمّعة
+          grep -E '^e: ' build.log | sed 's#.*/composeApp/src/#src/#' | head -80 > errs.txt || true
+          split -l 8 errs.txt errpart_ || true
+          for f in errpart_*; do
+            [ -s "$f" ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")"
+          done
+          awk '/What went wrong/{f=1;c=0} f{print; if(++c>12) f=0}' build.log | head -25 > wrong.txt
+          [ -s wrong.txt ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' wrong.txt)" || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

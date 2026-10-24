@@ -64,7 +64,7 @@ private fun StarsBackground() {
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
                     animation = tween(2000 + (index * 100), easing = LinearEasing),
-                    repeatMode = androidx.compose.animation.RepeatMode.Reverse
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
                 )
             )
 
@@ -83,7 +83,7 @@ private fun StarsBackground() {
                             Color.White.copy(alpha = animatedAlpha),
                             shape = androidx.compose.foundation.shape.CircleShape
                         )
-                        .align(Alignment(xPos / 50f - 1f, yPos / 50f - 1f))
+                        .align(androidx.compose.ui.BiasAlignment(xPos / 50f - 1f, yPos / 50f - 1f))
                 )
             }
         }
