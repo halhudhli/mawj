@@ -1,7 +1,8 @@
-import com.nuvio.app.features.splash.SplashLogoFont
 @file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 
 package com.nuvio.app.features.settings
+
+import com.nuvio.app.features.splash.SplashLogoFont
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

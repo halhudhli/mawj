@@ -1,11 +1,11 @@
+package com.nuvio.app.features.splash
+
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.Font
 import nuvio.composeapp.generated.resources.cinzel_bold
-package com.nuvio.app.features.splash
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing

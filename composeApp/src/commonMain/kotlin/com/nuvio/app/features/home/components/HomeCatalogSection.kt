@@ -1,4 +1,3 @@
-import androidx.compose.ui.focus.onFocusChanged
 package com.nuvio.app.features.home.components
 
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,7 +25,6 @@ fun HomeCatalogRowSection(
     onViewAllClick: (() -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
-    onPosterFocused: ((MetaPreview) -> Unit)? = null,
 ) {
     if (sectionPadding != null) {
         HomeCatalogRowSectionContent(
@@ -39,7 +37,6 @@ fun HomeCatalogRowSection(
             onViewAllClick = onViewAllClick,
             onPosterClick = onPosterClick,
             onPosterLongClick = onPosterLongClick,
-            onPosterFocused = onPosterFocused,
         )
     } else {
         BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -84,11 +81,6 @@ private fun HomeCatalogRowSectionContent(
     ) { item ->
         HomePosterCard(
             item = item,
-            modifier = Modifier.onFocusChanged { focusState ->
-                if (focusState.hasFocus) {
-                    onPosterFocused?.invoke(item)
-                }
-            },
             useLandscapeBackdropMode = posterCardStyle.catalogLandscapeModeEnabled,
             isWatched = WatchingState.isPosterWatched(
                 watchedKeys = watchedKeys,
