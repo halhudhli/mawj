@@ -106,7 +106,7 @@ object TmdbMetadataService {
             val isCjkLanguage = language.startsWith("ja") ||
                 language.startsWith("ko") ||
                 language.startsWith("zh")
-            val shouldFetchEnglishPerson = language != "en" &&
+            val shouldFetchEnglishPerson = language != "ar" &&
                 (
                     person.biography.isNullOrBlank() ||
                         (
@@ -116,7 +116,7 @@ object TmdbMetadataService {
                                 (person.originalName == null || containsCjkOrHangul(person.originalName))
                             )
                     )
-            val shouldFetchEnglishCredits = language != "en" &&
+            val shouldFetchEnglishCredits = language != "ar" &&
                 !isCjkLanguage &&
                 personCreditsContainCjkTitles(credits)
 
@@ -153,7 +153,7 @@ object TmdbMetadataService {
             }
             val englishTitlesById = englishCreditTitlesById(englishCredits)
 
-            val biography = if (person.biography.isNullOrBlank() && language != "en") {
+            val biography = if (person.biography.isNullOrBlank() && language != "ar") {
                 englishPerson?.biography
             } else {
                 person.biography
@@ -527,7 +527,7 @@ object TmdbMetadataService {
                 language.startsWith("ko") ||
                 language.startsWith("zh")
             val englishTitlesById = if (
-                language != "en" &&
+                language != "ar" &&
                 !isCjkLanguage &&
                 discoverResultsContainCjkTitles(results)
             ) {
@@ -1119,12 +1119,12 @@ object TmdbMetadataService {
         return runCatching {
             val englishCredits = fetch<TmdbCreditsResponse>(
                 endpoint = "$mediaType/$numericId/credits",
-                query = mapOf("language" to "en-US"),
+                query = mapOf("language" to "ar-SA"),
             )
             val englishTvDetails = if (mediaType == "tv" && details.createdBy.isNotEmpty()) {
                 fetch<TmdbDetailsResponse>(
                     endpoint = "tv/$numericId",
-                    query = mapOf("language" to "en-US"),
+                    query = mapOf("language" to "ar-SA"),
                 )
             } else {
                 null

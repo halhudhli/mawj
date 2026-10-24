@@ -75,7 +75,7 @@ private fun AccountSettingsBody(
     var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
     val deleteAccountFallbackMessage = stringResource(Res.string.auth_account_deletion_failed)
     val canDeleteAccount = AppFeaturePolicy.accountDeletionEnabled && authState is AuthState.Authenticated
-    val isAnonymousGuest = (authState as? AuthState.Authenticated)?.isAnonymous == true
+    val isAnonymousGuest = false
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         NuvioSurfaceCard {
