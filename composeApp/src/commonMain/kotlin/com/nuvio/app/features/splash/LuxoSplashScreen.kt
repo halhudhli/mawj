@@ -1,3 +1,10 @@
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.Font
+import nuvio.composeapp.generated.resources.cinzel_bold
 package com.nuvio.app.features.splash
 
 import androidx.compose.animation.core.Animatable
@@ -158,7 +165,23 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
         }
     }
 
-    Image(
+    if (settings.logoFont == SplashLogoFont.CINZEL) {
+            Text(
+                text = "LUXO",
+                fontFamily = FontFamily(Font(Res.font.cinzel_bold)),
+                fontSize = (52 * settings.logoScale).sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 6.sp,
+                color = Color(settings.accentColor),
+                modifier = Modifier
+                    .graphicsLayer {
+                        this.alpha = alpha.value
+                        scaleX = scale.value
+                        scaleY = scale.value
+                    }
+            )
+        } else {
+            Image(
         painter = painterResource(settings.logoVariant.resource()),
         contentDescription = "Luxo",
         contentScale = ContentScale.Fit,
@@ -175,6 +198,7 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
 // ---------------------------------------------------------------- drawing
 
 private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val twinkle: Float, val depth: Float)
+        }
 private class Particle(val x: Float, val y: Float, val radius: Float, val rise: Float, val sway: Float, val phase: Float)
 
 private fun buildStars(count: Int): List<Star> {

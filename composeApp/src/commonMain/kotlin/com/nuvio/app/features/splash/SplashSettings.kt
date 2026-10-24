@@ -17,6 +17,9 @@ enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE }
 enum class SplashLogoVariant { SILVER, ORIGINAL, GOLD, ROSE_GOLD, COPPER, EMERALD, ARCTIC_BLUE, GRAPHITE }
 
 @Serializable
+enum class SplashLogoFont { DEFAULT, CINZEL }
+
+@Serializable
 data class SplashSettings(
     val enabled: Boolean = true,
     val style: SplashBackgroundStyle = SplashBackgroundStyle.WAVES,
@@ -25,6 +28,7 @@ data class SplashSettings(
     /** 0xRRGGBB — colour of stars / waves / particles / gradient accent. */
     val accentColor: Int = 0xC9CDD4,
     val logoVariant: SplashLogoVariant = SplashLogoVariant.SILVER,
+    val logoFont: SplashLogoFont = SplashLogoFont.DEFAULT,
     val logoAnimation: SplashLogoAnimation = SplashLogoAnimation.ZOOM,
     /** Multiplier of the default logo width. */
     val logoScale: Float = 1f,

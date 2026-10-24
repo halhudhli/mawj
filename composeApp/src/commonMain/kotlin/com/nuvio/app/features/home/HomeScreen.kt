@@ -1214,6 +1214,9 @@ fun HomeScreen(
                                             fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
                                             onPosterClick = onPosterClick,
                                             onPosterLongClick = onPosterLongClick,
+                            onPosterFocused = { focusedItem ->
+                                onActiveHeroArtworkChange(focusedItem.banner ?: focusedItem.rawPosterUrl)
+                            },
                                         )
                                     }
                                 }

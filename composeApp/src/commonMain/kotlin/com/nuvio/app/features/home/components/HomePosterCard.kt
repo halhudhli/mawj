@@ -23,8 +23,8 @@ fun HomePosterCard(
     val isLandscapeMode = useLandscapeBackdropMode || posterCardStyle.catalogLandscapeModeEnabled
     val effectiveLandscapePoster = if (posterCardStyle.alwaysShowLandscapeClearlogo) null else item.landscapePoster
     val imageUrl = if (isLandscapeMode) {
-        effectiveLandscapePoster ?: item.banner ?: item.poster
-    } else item.poster
+        effectiveLandscapePoster ?: item.banner ?: item.rawPosterUrl
+    } else item.rawPosterUrl
     val fallbackImageUrl = if (isLandscapeMode && !effectiveLandscapePoster.isNullOrBlank()) {
         // Landscape custom poster -> fall back to original backdrop, then portrait
         item.banner ?: item.rawPosterUrl
@@ -37,7 +37,7 @@ fun HomePosterCard(
         imageUrl = imageUrl,
         modifier = modifier,
         fallbackImageUrl = fallbackImageUrl,
-        shape = if (isLandscapeMode) NuvioPosterShape.Landscape else item.posterShape.toNuvioPosterShape(),
+        shape = if (isLandscapeMode) NuvioPosterShape.Landscape else item.rawPosterUrlShape.toNuvioPosterShape(),
         detailLine = if (isLandscapeMode || posterCardStyle.hideLabelsEnabled) null else item.releaseInfo?.let { formatReleaseDateForDisplay(it) },
         showTitleBelow = !posterCardStyle.hideLabelsEnabled,
         bottomLeftLogoUrl = if (isLandscapeMode && showLandscapeOverlay && effectiveLandscapePoster.isNullOrBlank()) item.logo else null,

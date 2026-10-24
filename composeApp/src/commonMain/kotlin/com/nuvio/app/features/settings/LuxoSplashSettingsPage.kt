@@ -1,3 +1,4 @@
+import com.nuvio.app.features.splash.SplashLogoFont
 @file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 
 package com.nuvio.app.features.settings
@@ -174,6 +175,16 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                     )
                 }
                 SettingsGroupDivider(isTablet = isTablet)
+        LuxoBlock(isTablet) {
+            LuxoLabel(lx("خط الشعار", "Logo font"))
+            LuxoChips(
+                options = SplashLogoFont.entries,
+                selected = settings.logoFont,
+                label = { it.label() },
+                onSelect = { font -> update { it.copy(logoFont = font) } },
+            )
+        }
+        SettingsGroupDivider(isTablet = isTablet)
                 LuxoBlock(isTablet) {
                     LuxoLabel(lx("حركة ظهور الشعار", "Logo entrance"))
                     LuxoChips(
@@ -279,6 +290,11 @@ private fun SplashLogoVariant.label(): String = when (this) {
     SplashLogoVariant.EMERALD -> lx("زمردي", "Emerald")
     SplashLogoVariant.ARCTIC_BLUE -> lx("أزرق ثلجي", "Arctic blue")
     SplashLogoVariant.GRAPHITE -> lx("جرافيت", "Graphite")
+}
+
+private fun SplashLogoFont.label(): String = when (this) {
+    SplashLogoFont.DEFAULT -> lx("افتراضي", "Default")
+    SplashLogoFont.CINZEL -> lx("سينزل (Cinzel)", "Cinzel")
 }
 
 // ---------------------------------------------------------------- shared Luxo settings widgets

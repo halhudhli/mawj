@@ -140,7 +140,7 @@ fun NuvioPosterCard(
     val posterCardStyle = rememberPosterCardStyleUiState()
     val tokens = MaterialTheme.nuvio
     val cardWidth = shape.cardWidth(basePosterWidthDp = posterCardStyle.widthDp)
-    val cardShape = RoundedCornerShape(posterCardStyle.cornerRadiusDp.dp)
+    val cardShape = RoundedCornerShape(16.dp)
     val catalogLogoOverlaySize = catalogLogoOverlaySize(
         basePosterWidthDp = posterCardStyle.widthDp,
         shape = shape,
