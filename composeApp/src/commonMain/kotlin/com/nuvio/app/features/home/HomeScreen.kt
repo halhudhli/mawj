@@ -1215,7 +1215,7 @@ fun HomeScreen(
                                             onPosterClick = onPosterClick,
                                             onPosterLongClick = onPosterLongClick,
                             onPosterFocused = { focusedItem ->
-                                onActiveHeroArtworkChange(focusedItem.banner ?: focusedItem.rawPosterUrl)
+                                onActiveHeroArtworkChange(focusedItem.banner?.takeIf { it.isNotBlank() } ?: focusedItem.rawPosterUrl?.takeIf { it.isNotBlank() } ?: focusedItem.poster)
                             },
                                         )
                                     }

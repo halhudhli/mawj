@@ -23,13 +23,13 @@ fun HomePosterCard(
     val isLandscapeMode = useLandscapeBackdropMode || posterCardStyle.catalogLandscapeModeEnabled
     val effectiveLandscapePoster = if (posterCardStyle.alwaysShowLandscapeClearlogo) null else item.landscapePoster
     val imageUrl = if (isLandscapeMode) {
-        effectiveLandscapePoster ?: item.banner ?: item.rawPosterUrl
-    } else item.rawPosterUrl
+        effectiveLandscapePoster ?: item.banner ?: (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
+    } else (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
     val fallbackImageUrl = if (isLandscapeMode && !effectiveLandscapePoster.isNullOrBlank()) {
         // Landscape custom poster -> fall back to original backdrop, then portrait
-        item.banner ?: item.rawPosterUrl
+        item.banner ?: (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
     } else {
-        item.rawPosterUrl
+        (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
     }
 
     NuvioPosterCard(

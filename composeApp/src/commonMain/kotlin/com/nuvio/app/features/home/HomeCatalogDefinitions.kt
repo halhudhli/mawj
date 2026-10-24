@@ -55,11 +55,11 @@ fun buildHomeCatalogDefinitions(addons: List<ManagedAddon>): List<HomeCatalogDef
                     defaultTitle = runBlocking {
                         getString(
                             Res.string.home_catalog_default_title,
-                            catalog.name,
+                            translateCatalogNameHarbor(catalog.name),
                             localizedMediaTypeLabel(catalog.type),
                         )
                     },
-                    catalogName = catalog.name,
+                    catalogName = translateCatalogNameHarbor(catalog.name),
                     addonName = addon.displayTitle,
                     manifestUrl = addon.manifestUrl,
                     type = catalog.type,
@@ -148,3 +148,41 @@ private class CatalogDescriptorSignature {
 }
 
 internal fun String.displayLabel(): String = localizedMediaTypeLabel(this)
+
+internal fun translateCatalogNameHarbor(rawName: String): String {
+    val clean = rawName.trim()
+    val map = mapOf(
+        "top" to "\u0627\u0644\u0623\u0639\u0644\u0649 \u062a\u0642\u064a\u064a\u0645\u0627\u064b",
+        "top rated" to "\u0627\u0644\u0623\u0639\u0644\u0649 \u062a\u0642\u064a\u064a\u0645\u0627\u064b",
+        "popular" to "\u0627\u0644\u0623\u0643\u062b\u0631 \u0634\u0639\u0628\u064a\u0629",
+        "trending" to "\u0627\u0644\u0631\u0627\u0626\u062c \u0627\u0644\u0622\u0646",
+        "featured" to "\u0645\u062e\u062a\u0627\u0631\u0627\u062a \u0645\u0645\u064a\u0632\u0629",
+        "for you" to "\u0645\u0642\u062a\u0631\u062d \u0644\u0643",
+        "new" to "\u0623\u062d\u062f\u062b \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a",
+        "new releases" to "\u0623\u062d\u062f\u062b \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a",
+        "latest" to "\u0627\u0644\u0645\u0636\u0627\u0641 \u062d\u062f\u064a\u062b\u0627\u064b",
+        "imdbrating" to "\u0627\u0644\u0623\u0639\u0644\u0649 \u062a\u0642\u064a\u064a\u0645\u0627\u064b (IMDb)",
+        "year" to "\u062d\u0633\u0628 \u0627\u0644\u0633\u0646\u0629",
+        "action" to "\u0623\u0643\u0634\u0646",
+        "adventure" to "\u0645\u063a\u0627\u0645\u0631\u0629",
+        "animation" to "\u0631\u0633\u0648\u0645 \u0645\u062a\u062d\u0631\u0643\u0629",
+        "anime" to "\u0623\u0646\u0645\u064a",
+        "comedy" to "\u0643\u0648\u0645\u064a\u062f\u064a\u0627",
+        "crime" to "\u062c\u0631\u064a\u0645\u0629",
+        "documentary" to "\u0648\u062b\u0627\u0626\u0642\u064a",
+        "drama" to "\u062f\u0631\u0627\u0645\u0627",
+        "family" to "\u0639\u0627\u0626\u0644\u064a",
+        "fantasy" to "\u0641\u0627\u0646\u062a\u0627\u0632\u064a\u0627",
+        "history" to "\u062a\u0627\u0631\u064a\u062e\u064a",
+        "horror" to "\u0631\u0639\u0628",
+        "mystery" to "\u063a\u0645\u0648\u0636",
+        "romance" to "\u0631\u0648\u0645\u0627\u0646\u0633\u064a",
+        "sci-fi" to "\u062e\u064a\u0627\u0644 \u0639\u0644\u0645\u064a",
+        "science fiction" to "\u062e\u064a\u0627\u0644 \u0639\u0644\u0645\u064a",
+        "thriller" to "\u0625\u062b\u0627\u0631\u0629 \u0648\u062a\u0634\u0648\u064a\u0642",
+        "war" to "\u062d\u0631\u0628",
+        "western" to "\u063a\u0631\u0628 \u0623\u0645\u0631\u064a\u0643\u064a"
+    )
+    return map[clean.lowercase()] ?: clean.ifBlank { rawName }
+}
+

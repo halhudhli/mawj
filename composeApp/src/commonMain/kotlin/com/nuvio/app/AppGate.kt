@@ -711,7 +711,7 @@ internal fun AppGate(
                         profileEditReturnScreen = AppGateScreen.ProfileSelection.name
                         gateScreen = AppGateScreen.ProfileEdit.name
                     },
-                    onSignInWithAccount = if ((authState as? AuthState.Authenticated)?.isAnonymous == true) {
+                    onSignInWithAccount = if (false) {
                         { gateScope.launch { AuthRepository.signOut() } }
                     } else {
                         null
