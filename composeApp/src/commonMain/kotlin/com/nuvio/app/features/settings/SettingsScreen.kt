@@ -875,6 +875,8 @@ private fun MobileSettingsScreen(
                     onCollectionsClick = onCollectionsClick,
                     onContinueWatchingClick = onContinueWatchingClick,
                     onPosterCustomizationClick = { onPageChange(SettingsPage.PosterCustomization) },
+                    onSplashClick = { onPageChange(SettingsPage.LuxoSplash) },
+                    onFontsClick = { onPageChange(SettingsPage.LuxoFonts) },
                 )
                 SettingsPage.Advanced -> advancedSettingsContent(
                     isTablet = false,
@@ -906,6 +908,8 @@ private fun MobileSettingsScreen(
                     isTablet = false,
                     uiState = posterCardStyleUiState,
                 )
+                SettingsPage.LuxoSplash -> luxoSplashSettingsContent(isTablet = false)
+                SettingsPage.LuxoFonts -> luxoFontsSettingsContent(isTablet = false)
                 SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                     isTablet = false,
                     showPluginsEntry = AppFeaturePolicy.pluginsEnabled,
@@ -1372,6 +1376,8 @@ private fun TabletSettingsScreen(
                         onCollectionsClick = onCollectionsClick,
                         onContinueWatchingClick = { openInlinePage(SettingsPage.ContinueWatching) },
                         onPosterCustomizationClick = { openInlinePage(SettingsPage.PosterCustomization) },
+                        onSplashClick = { openInlinePage(SettingsPage.LuxoSplash) },
+                        onFontsClick = { openInlinePage(SettingsPage.LuxoFonts) },
                     )
                     SettingsPage.Advanced -> advancedSettingsContent(
                         isTablet = true,
@@ -1403,6 +1409,8 @@ private fun TabletSettingsScreen(
                         isTablet = true,
                         uiState = posterCardStyleUiState,
                     )
+                    SettingsPage.LuxoSplash -> luxoSplashSettingsContent(isTablet = true)
+                    SettingsPage.LuxoFonts -> luxoFontsSettingsContent(isTablet = true)
                     SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                         isTablet = true,
                         showPluginsEntry = AppFeaturePolicy.pluginsEnabled,

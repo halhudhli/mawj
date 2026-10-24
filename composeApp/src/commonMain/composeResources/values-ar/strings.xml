@@ -2160,4 +2160,6 @@
     <string name="stream_info_subtitle_source_addon">إضافة</string>
     <string name="stream_info_subtitle_source_embedded">مدمج</string>
     <string name="stream_info_player_engine">المشغل</string>
+    <string name="luxo_settings_page_splash">شاشة الدخول</string>
+    <string name="luxo_settings_page_fonts">الخطوط</string>
 </resources>

@@ -59,7 +59,12 @@ private fun buildColorScheme(palette: ThemeColorPalette, amoled: Boolean = false
     onError = Color(0xFFFCE5EC),
 )
 
+// Luxo: the user's chosen app font (Settings → Appearance → Fonts) replaces the default family.
 private val JetBrainsSans: FontFamily
+    @Composable
+    get() = com.nuvio.app.features.luxo.luxoSelectedAppFontFamily() ?: DefaultAppFontFamily
+
+private val DefaultAppFontFamily: FontFamily
     @Composable
     get() = FontFamily(
         Font(Res.font.jetbrains_sans_bold, FontWeight.Bold, FontStyle.Normal),

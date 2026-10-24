@@ -165,7 +165,7 @@ internal fun AppGate(
     var gateScreen by rememberSaveable { mutableStateOf(AppGateScreen.Loading.name) }
     var introHoldElapsed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(AppIntroMinDurationMs)
+        kotlinx.coroutines.delay(com.nuvio.app.features.splash.SplashSettingsRepository.introDurationMs())
         introHoldElapsed = true
     }
     var editingProfile by remember { mutableStateOf<NuvioProfile?>(null) }

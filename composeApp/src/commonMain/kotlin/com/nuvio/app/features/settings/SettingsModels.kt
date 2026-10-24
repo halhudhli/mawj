@@ -22,6 +22,8 @@ import nuvio.composeapp.generated.resources.compose_settings_page_homescreen
 import nuvio.composeapp.generated.resources.compose_settings_page_integrations
 import nuvio.composeapp.generated.resources.compose_settings_page_licenses_attributions
 import nuvio.composeapp.generated.resources.compose_settings_page_whats_new
+import nuvio.composeapp.generated.resources.luxo_settings_page_fonts
+import nuvio.composeapp.generated.resources.luxo_settings_page_splash
 import nuvio.composeapp.generated.resources.compose_settings_page_live_tv
 import nuvio.composeapp.generated.resources.compose_settings_page_mdblist_ratings
 import nuvio.composeapp.generated.resources.compose_settings_page_media_server
@@ -130,6 +132,16 @@ internal enum class SettingsPage(
     ),
     PosterCustomization(
         titleRes = Res.string.compose_settings_page_poster_customization,
+        category = SettingsCategory.General,
+        parentPage = Appearance,
+    ),
+    LuxoSplash(
+        titleRes = Res.string.luxo_settings_page_splash,
+        category = SettingsCategory.General,
+        parentPage = Appearance,
+    ),
+    LuxoFonts(
+        titleRes = Res.string.luxo_settings_page_fonts,
         category = SettingsCategory.General,
         parentPage = Appearance,
     ),

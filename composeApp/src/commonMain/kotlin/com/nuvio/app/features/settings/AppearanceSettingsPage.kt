@@ -34,6 +34,9 @@ import com.nuvio.app.core.ui.dismissNuvioBottomSheet
 import com.nuvio.app.core.ui.labelRes
 import kotlinx.coroutines.launch
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.luxo_settings_page_fonts
+import nuvio.composeapp.generated.resources.luxo_settings_page_splash
+import com.nuvio.app.features.luxo.lx
 import nuvio.composeapp.generated.resources.cd_selected
 import nuvio.composeapp.generated.resources.collections_header
 import nuvio.composeapp.generated.resources.compose_settings_page_continue_watching
@@ -105,7 +108,37 @@ internal fun LazyListScope.appearanceSettingsContent(
     onCollectionsClick: () -> Unit,
     onContinueWatchingClick: () -> Unit,
     onPosterCustomizationClick: () -> Unit,
+    onSplashClick: () -> Unit = {},
+    onFontsClick: () -> Unit = {},
 ) {
+    item {
+        SettingsSection(
+            title = "Luxo",
+            isTablet = isTablet,
+        ) {
+            SettingsGroup(isTablet = isTablet) {
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.luxo_settings_page_splash),
+                    description = lx(
+                        "الخلفية المتحركة والألوان والشعار وحركته ومدة الظهور",
+                        "Animated background, colours, logo, motion and duration",
+                    ),
+                    isTablet = isTablet,
+                    onClick = onSplashClick,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.luxo_settings_page_fonts),
+                    description = lx(
+                        "خط التطبيق بالعربي والإنجليزي، وإضافة خطوطك الخاصة",
+                        "App font for Arabic and English, plus your own fonts",
+                    ),
+                    isTablet = isTablet,
+                    onClick = onFontsClick,
+                )
+            }
+        }
+    }
     item {
         SettingsSection(
             title = stringResource(Res.string.settings_appearance_section_theme),

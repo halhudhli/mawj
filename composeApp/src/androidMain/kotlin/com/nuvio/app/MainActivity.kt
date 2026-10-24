@@ -110,6 +110,7 @@ open class MainActivity : AppCompatActivity() {
             ),
         )
         ThemeSettingsStorage.initialize(applicationContext)
+        com.nuvio.app.features.luxo.LuxoPrefsStorage.initialize(applicationContext)
         AppIconPlatform.initialize(applicationContext)
         SentrySettingsStorage.initialize(applicationContext)
         SentryInitializer.start(application)

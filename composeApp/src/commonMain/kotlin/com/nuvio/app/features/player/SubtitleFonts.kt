@@ -92,6 +92,7 @@ object SubtitleFontRepository {
         SubtitleFontFiles.delete(font.fileName)
         familyCache = familyCache - font.fileName
         refresh()
+        com.nuvio.app.features.luxo.LuxoFontSettingsRepository.forgetCustom(font.fileName)
         val style = PlayerSettingsRepository.uiState.value.subtitleStyle
         if (style.customFontFile == font.fileName) {
             PlayerSettingsRepository.setSubtitleStyle(style.copy(customFontFile = null))
