@@ -55,6 +55,17 @@ android {
     compileSdkMinor = libs.versions.android.compileSdkMinor.get().toInt()
 
     signingConfigs {
+        // LUXO: one fixed debug key for every CI build, so a new APK installs over the old one
+        // (keeping the app's data) instead of needing an uninstall each time.
+        getByName("debug") {
+            val luxoDebugKeystore = file("luxo-debug.keystore")
+            if (luxoDebugKeystore.exists()) {
+                storeFile = luxoDebugKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
         create("release") {
             if (releaseKeystore != null && releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null) {
                 storeFile = releaseKeystore
@@ -133,6 +144,15 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            // LUXO: the CI APK is a debug build (it needs no release keystore). A debuggable app
+            // runs Compose far slower, so CI turns that off with -Pluxo.fastDebug=true: same app
+            // and same data on the phone, just fully optimised by Android.
+            if (providers.gradleProperty("luxo.fastDebug").map(String::toBoolean).getOrElse(false)) {
+                isDebuggable = false
+                isJniDebuggable = false
+            }
+        }
         getByName("release") {
             val minifyRelease = providers.gradleProperty("releaseMinifyEnabled")
                 .map(String::toBooleanStrict)

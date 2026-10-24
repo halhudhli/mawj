@@ -73,7 +73,17 @@ object AddonRepository {
         log.d { "initialize() — loading local addons for profile $currentProfileId" }
 
         // LUXO: the Arabic OpenSubtitles v3 Pro add-on is always installed
-        val storedUrls = dedupeManifestUrls(AddonStorage.loadInstalledAddonUrls(currentProfileId) + LUXO_BUILT_IN_ADDONS)
+        // LUXO: seed the movies/series catalog once so the home screen isn't empty on first launch.
+        // It is a normal add-on afterwards: removing it sticks.
+        val seedDefaultCatalog = com.nuvio.app.features.luxo.LuxoPrefsStorage.load(LUXO_CATALOG_SEEDED_KEY) != "1"
+        val storedUrls = dedupeManifestUrls(
+            AddonStorage.loadInstalledAddonUrls(currentProfileId) +
+                LUXO_BUILT_IN_ADDONS +
+                (if (seedDefaultCatalog) LUXO_DEFAULT_CATALOG_ADDONS else emptyList()),
+        )
+        if (seedDefaultCatalog) {
+            com.nuvio.app.features.luxo.LuxoPrefsStorage.save(LUXO_CATALOG_SEEDED_KEY, "1")
+        }
         val enabledByUrl = loadLocalEnabledStates()
         log.d { "initialize() — local addon count: ${storedUrls.size}" }
         InAppLogger.info("Addons/Repository", "initialize profile=$currentProfileId localAddons=${storedUrls.size}")
@@ -88,6 +98,8 @@ object AddonRepository {
                 )
             },
         )
+
+        if (seedDefaultCatalog) persist()
 
         storedUrls.forEach { manifestUrl ->
             val existing = existingByUrl[manifestUrl]
@@ -589,6 +601,13 @@ private fun ManagedAddon?.toPendingAddon(
     }
 
 /** LUXO: add-ons that are always installed. */
+private const val LUXO_CATALOG_SEEDED_KEY = "default_catalog_seeded_v1"
+
+/** Installed once on first launch (removable): Cinemeta, the standard movies & series catalog. */
+internal val LUXO_DEFAULT_CATALOG_ADDONS = listOf(
+    "https://v3-cinemeta.strem.io/manifest.json",
+)
+
 internal val LUXO_BUILT_IN_ADDONS = listOf(
     "https://opensubtitlesv3-pro.dexter21767.com/eyJsYW5ncyI6WyJhcmFiaWMiXSwic291cmNlIjoiYWxsIiwiYWlUcmFuc2xhdGVkIjp0cnVlLCJhdXRvQWRqdXN0bWVudCI6ZmFsc2V9/manifest.json",
 )

@@ -136,6 +136,8 @@ internal fun LazyListScope.appearanceSettingsContent(
                     isTablet = isTablet,
                     onClick = onFontsClick,
                 )
+                SettingsGroupDivider(isTablet = isTablet)
+                LuxoNavTabSwitches(isTablet = isTablet)
             }
         }
     }
@@ -534,4 +536,31 @@ private fun TabBarBehaviorBottomSheet(
             }
         }
     }
+}
+
+@androidx.compose.runtime.Composable
+private fun LuxoNavTabSwitches(isTablet: Boolean) {
+    val navSettings by remember {
+        com.nuvio.app.features.luxo.LuxoNavSettingsRepository.ensureLoaded()
+        com.nuvio.app.features.luxo.LuxoNavSettingsRepository.state
+    }.collectAsStateWithLifecycle()
+    SettingsSwitchRow(
+        title = lx("قسم الأفلام في الشريط السفلي", "Movies tab in the bottom bar"),
+        description = lx("أقسام الأفلام من إضافاتك مثل Cinemata", "Movie catalogs from your addons such as Cinemata"),
+        checked = navSettings.showMovies,
+        isTablet = isTablet,
+        onCheckedChange = { checked ->
+            com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(showMovies = checked) }
+        },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
+    SettingsSwitchRow(
+        title = lx("قسم المسلسلات في الشريط السفلي", "Series tab in the bottom bar"),
+        description = lx("أقسام المسلسلات من إضافاتك مثل Cinemata", "Series catalogs from your addons such as Cinemata"),
+        checked = navSettings.showSeries,
+        isTablet = isTablet,
+        onCheckedChange = { checked ->
+            com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(showSeries = checked) }
+        },
+    )
 }

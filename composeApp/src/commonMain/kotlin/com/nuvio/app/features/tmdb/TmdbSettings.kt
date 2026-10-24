@@ -1,9 +1,9 @@
 package com.nuvio.app.features.tmdb
 
 data class TmdbSettings(
-    val enabled: Boolean = false,
+    val enabled: Boolean = true,
     val apiKey: String = "",
-    val language: String = "en",
+    val language: String = "ar",
     val useTrailers: Boolean = true,
     val useArtwork: Boolean = true,
     val useBasicInfo: Boolean = true,

@@ -13,9 +13,9 @@ object TmdbSettingsRepository {
 
     private var hasLoaded = false
 
-    private var enabled = false
+    private var enabled = true
     private var apiKey = ""
-    private var language = "en"
+    private var language = "ar"
     private var useTrailers = true
     private var useArtwork = true
     private var useBasicInfo = true
@@ -176,10 +176,11 @@ object TmdbSettingsRepository {
         val previousApiKey = apiKey
         val previousUseEpisodeRatings = useEpisodeRatings
         hasLoaded = true
-        enabled = TmdbSettingsStorage.loadEnabled() ?: false
+        // Luxo: TMDB enrichment on by default so titles and descriptions come in Arabic.
+        enabled = TmdbSettingsStorage.loadEnabled() ?: true
         apiKey = TmdbSettingsStorage.loadApiKey()?.trim().orEmpty()
         val storedLanguage = TmdbSettingsStorage.loadLanguage()
-        language = if (storedLanguage == null) "en" else normalizeLanguage(storedLanguage)
+        language = if (storedLanguage == null) "ar" else normalizeLanguage(storedLanguage)
         useTrailers = TmdbSettingsStorage.loadUseTrailers() ?: true
         useArtwork = TmdbSettingsStorage.loadUseArtwork() ?: true
         useBasicInfo = TmdbSettingsStorage.loadUseBasicInfo() ?: true

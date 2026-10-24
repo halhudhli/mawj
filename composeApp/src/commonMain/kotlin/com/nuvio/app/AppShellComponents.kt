@@ -29,6 +29,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Icon
@@ -210,6 +212,26 @@ internal fun AppTabHost(
                 }
             }
 
+            AppScreenTab.Movies, AppScreenTab.Series -> {
+                val isMovies = tab == AppScreenTab.Movies
+                com.nuvio.app.features.luxo.LuxoTypeBrowseScreen(
+                    contentType = if (isMovies) {
+                        com.nuvio.app.features.luxo.LuxoContentType.MOVIE
+                    } else {
+                        com.nuvio.app.features.luxo.LuxoContentType.SERIES
+                    },
+                    title = if (isMovies) {
+                        com.nuvio.app.features.luxo.lx("أفلام", "Movies")
+                    } else {
+                        com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    onCatalogClick = actions.onCatalogClick,
+                    onPosterClick = actions.onPosterClick,
+                    onPosterLongClick = actions.onPosterLongClick,
+                )
+            }
+
             AppScreenTab.Search -> {
                 SearchScreen(
                     modifier = Modifier.fillMaxSize(),
@@ -324,6 +346,34 @@ internal fun TabletFloatingTopBar(
                         )
                     },
                 )
+                val luxoNav by androidx.compose.runtime.remember {
+                    com.nuvio.app.features.luxo.LuxoNavSettingsRepository.ensureLoaded()
+                    com.nuvio.app.features.luxo.LuxoNavSettingsRepository.state
+                }.collectAsStateWithLifecycle()
+                listOf(
+                    Triple(AppScreenTab.Movies, luxoNav.showMovies, Icons.Filled.Movie),
+                    Triple(AppScreenTab.Series, luxoNav.showSeries, Icons.Filled.VideoLibrary),
+                ).forEach { (sectionTab, visible, sectionIcon) ->
+                    if (!visible) return@forEach
+                    val sectionLabel = if (sectionTab == AppScreenTab.Movies) {
+                        com.nuvio.app.features.luxo.lx("أفلام", "Movies")
+                    } else {
+                        com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
+                    }
+                    TabletTopPillItem(
+                        label = sectionLabel,
+                        selected = selectedTab == sectionTab,
+                        onClick = { onTabSelected(sectionTab) },
+                        icon = {
+                            Icon(
+                                imageVector = sectionIcon,
+                                contentDescription = sectionLabel,
+                                modifier = Modifier.size(NuvioTokens.Space.s18),
+                                tint = if (selectedTab == sectionTab) tokens.colors.textPrimary else tokens.colors.textMuted,
+                            )
+                        },
+                    )
+                }
                 TabletTopPillItem(
                     label = stringResource(Res.string.compose_nav_search),
                     selected = selectedTab == AppScreenTab.Search,

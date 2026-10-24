@@ -52,12 +52,16 @@ jobs:
         run: touch local.properties
 
       - name: Build APK (full, debug, arm64)
+        env:
+          # اختياري: لو أضفت مفتاح TMDB كـ secret يندمج في التطبيق وتطلع العناوين والأوصاف بالعربي تلقائياً
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: |
           set -o pipefail
           ./gradlew :androidApp:assembleFullDebug \
             -Pnuvio.android.distribution=full \
             -Pnuvio.ios.distribution=appstore \
             -Pluxo.abi=arm64-v8a \
+            -Pluxo.fastDebug=true \
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace 2>&1 | tee build.log
 

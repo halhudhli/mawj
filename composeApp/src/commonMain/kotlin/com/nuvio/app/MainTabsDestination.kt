@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -262,6 +264,27 @@ internal fun mainFloatingNavigationItems(
             label = stringResource(Res.string.compose_nav_home),
         ),
     )
+    val luxoNav = luxoNavSettingsState()
+    if (luxoNav.showMovies) {
+        add(
+            FloatingNavigationItem(
+                selected = highlightedTab == AppScreenTab.Movies,
+                onClick = { onTabSelected(AppScreenTab.Movies) },
+                icon = Icons.Filled.Movie,
+                label = com.nuvio.app.features.luxo.lx("أفلام", "Movies"),
+            ),
+        )
+    }
+    if (luxoNav.showSeries) {
+        add(
+            FloatingNavigationItem(
+                selected = highlightedTab == AppScreenTab.Series,
+                onClick = { onTabSelected(AppScreenTab.Series) },
+                icon = Icons.Filled.VideoLibrary,
+                label = com.nuvio.app.features.luxo.lx("مسلسلات", "Series"),
+            ),
+        )
+    }
     add(
         FloatingNavigationItem(
             selected = highlightedTab == AppScreenTab.Search,
@@ -324,6 +347,23 @@ internal fun MainClassicNavigationBar(
             icon = Icons.Filled.Home,
             contentDescription = stringResource(Res.string.compose_nav_home),
         )
+        val luxoNav = luxoNavSettingsState()
+        if (luxoNav.showMovies) {
+            NavItem(
+                selected = highlightedTab == AppScreenTab.Movies,
+                onClick = { onTabSelected(AppScreenTab.Movies) },
+                icon = Icons.Filled.Movie,
+                contentDescription = com.nuvio.app.features.luxo.lx("أفلام", "Movies"),
+            )
+        }
+        if (luxoNav.showSeries) {
+            NavItem(
+                selected = highlightedTab == AppScreenTab.Series,
+                onClick = { onTabSelected(AppScreenTab.Series) },
+                icon = Icons.Filled.VideoLibrary,
+                contentDescription = com.nuvio.app.features.luxo.lx("مسلسلات", "Series"),
+            )
+        }
         NavItem(
             selected = highlightedTab == AppScreenTab.Search,
             onClick = { onTabSelected(AppScreenTab.Search) },
@@ -448,4 +488,13 @@ internal fun BoxScope.SettingsRouteNavigationBar(
             )
         }
     }
+}
+
+@Composable
+private fun luxoNavSettingsState(): com.nuvio.app.features.luxo.LuxoNavSettings {
+    val state by androidx.compose.runtime.remember {
+        com.nuvio.app.features.luxo.LuxoNavSettingsRepository.ensureLoaded()
+        com.nuvio.app.features.luxo.LuxoNavSettingsRepository.state
+    }.collectAsStateWithLifecycle()
+    return state
 }

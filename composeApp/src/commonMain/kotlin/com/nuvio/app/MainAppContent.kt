@@ -458,6 +458,7 @@ internal fun MainAppContent(
 
         when (tab) {
             AppScreenTab.Home -> homeScrollToTopRequests.tryEmit(Unit)
+            AppScreenTab.Movies, AppScreenTab.Series -> Unit
             AppScreenTab.Search -> {
                 searchFocusRequestCount++
                 searchScrollToTopRequests.tryEmit(Unit)

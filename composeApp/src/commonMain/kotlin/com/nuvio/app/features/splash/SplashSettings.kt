@@ -19,7 +19,7 @@ enum class SplashLogoVariant { SILVER, ORIGINAL, GOLD, ROSE_GOLD, COPPER, EMERAL
 @Serializable
 data class SplashSettings(
     val enabled: Boolean = true,
-    val style: SplashBackgroundStyle = SplashBackgroundStyle.STARS,
+    val style: SplashBackgroundStyle = SplashBackgroundStyle.WAVES,
     /** 0xRRGGBB */
     val backgroundColor: Int = 0x0D0D0D,
     /** 0xRRGGBB — colour of stars / waves / particles / gradient accent. */

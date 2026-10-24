@@ -4,6 +4,8 @@ import com.nuvio.app.core.ui.NativeNavigationTab
 
 enum class AppScreenTab {
     Home,
+    Movies,
+    Series,
     Search,
     Library,
     LiveTv,
@@ -18,6 +20,9 @@ enum class AppScreenTab {
 
 internal fun AppScreenTab.toNativeNavigationTab(): NativeNavigationTab = when (this) {
     AppScreenTab.Home -> NativeNavigationTab.Home
+    // The iOS native tab bar has no section tabs; they live in the Compose bars only.
+    AppScreenTab.Movies -> NativeNavigationTab.Home
+    AppScreenTab.Series -> NativeNavigationTab.Home
     AppScreenTab.Search -> NativeNavigationTab.Search
     AppScreenTab.Library -> NativeNavigationTab.Library
     AppScreenTab.LiveTv -> NativeNavigationTab.LiveTv
