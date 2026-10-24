@@ -200,7 +200,6 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
 
 
 private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val twinkle: Float, val depth: Float)
-        }
 private class Particle(val x: Float, val y: Float, val radius: Float, val rise: Float, val sway: Float, val phase: Float)
 
 private fun buildStars(count: Int): List<Star> {
