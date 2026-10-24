@@ -196,6 +196,8 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
 }
 
 // ---------------------------------------------------------------- drawing
+}
+
 
 private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val twinkle: Float, val depth: Float)
         }

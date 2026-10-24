@@ -37,7 +37,7 @@ fun HomePosterCard(
         imageUrl = imageUrl,
         modifier = modifier,
         fallbackImageUrl = fallbackImageUrl,
-        shape = if (isLandscapeMode) NuvioPosterShape.Landscape else item.rawPosterUrlShape.toNuvioPosterShape(),
+        shape = if (isLandscapeMode) NuvioPosterShape.Landscape else item.posterShape.toNuvioPosterShape(),
         detailLine = if (isLandscapeMode || posterCardStyle.hideLabelsEnabled) null else item.releaseInfo?.let { formatReleaseDateForDisplay(it) },
         showTitleBelow = !posterCardStyle.hideLabelsEnabled,
         bottomLeftLogoUrl = if (isLandscapeMode && showLandscapeOverlay && effectiveLandscapePoster.isNullOrBlank()) item.logo else null,

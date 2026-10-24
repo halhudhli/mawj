@@ -293,6 +293,7 @@ private fun SplashLogoVariant.label(): String = when (this) {
     SplashLogoVariant.GRAPHITE -> lx("جرافيت", "Graphite")
 }
 
+@Composable
 private fun SplashLogoFont.label(): String = when (this) {
     SplashLogoFont.DEFAULT -> lx("افتراضي", "Default")
     SplashLogoFont.CINZEL -> lx("سينزل (Cinzel)", "Cinzel")

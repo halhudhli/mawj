@@ -1,5 +1,7 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.ui.focus.onFocusChanged
+
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +27,7 @@ fun HomeCatalogRowSection(
     onViewAllClick: (() -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
+    onPosterFocused: ((MetaPreview) -> Unit)? = null,
 ) {
     if (sectionPadding != null) {
         HomeCatalogRowSectionContent(
@@ -37,6 +40,7 @@ fun HomeCatalogRowSection(
             onViewAllClick = onViewAllClick,
             onPosterClick = onPosterClick,
             onPosterLongClick = onPosterLongClick,
+            onPosterFocused = onPosterFocused,
         )
     } else {
         BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -50,6 +54,7 @@ fun HomeCatalogRowSection(
                 onViewAllClick = onViewAllClick,
                 onPosterClick = onPosterClick,
                 onPosterLongClick = onPosterLongClick,
+            onPosterFocused = onPosterFocused,
             )
         }
     }
@@ -66,6 +71,7 @@ private fun HomeCatalogRowSectionContent(
     onViewAllClick: (() -> Unit)?,
     onPosterClick: ((MetaPreview) -> Unit)?,
     onPosterLongClick: ((MetaPreview) -> Unit)?,
+    onPosterFocused: ((MetaPreview) -> Unit)? = null,
 ) {
     val posterCardStyle = rememberPosterCardStyleUiState()
 
@@ -81,6 +87,11 @@ private fun HomeCatalogRowSectionContent(
     ) { item ->
         HomePosterCard(
             item = item,
+            modifier = Modifier.onFocusChanged { focusState ->
+                if (focusState.hasFocus) {
+                    onPosterFocused?.invoke(item)
+                }
+            },
             useLandscapeBackdropMode = posterCardStyle.catalogLandscapeModeEnabled,
             isWatched = WatchingState.isPosterWatched(
                 watchedKeys = watchedKeys,
