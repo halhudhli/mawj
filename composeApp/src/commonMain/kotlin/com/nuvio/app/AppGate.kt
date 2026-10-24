@@ -711,11 +711,7 @@ internal fun AppGate(
                         profileEditReturnScreen = AppGateScreen.ProfileSelection.name
                         gateScreen = AppGateScreen.ProfileEdit.name
                     },
-                    onSignInWithAccount = if (false) {
-                        { gateScope.launch { AuthRepository.signOut() } }
-                    } else {
-                        null
-                    },
+                    onSignInWithAccount = null,
                     interactionEnabled = !profileSelectionLoading,
                     onBack = onBack,
                     activeProfileIndex = if (autoSkipProfileSelection) null else profileState.activeProfile?.profileIndex,
