@@ -50,7 +50,7 @@ data class MetaScreenSettingsUiState(
     val iconActionRow: Boolean = true,
     val tabLayout: Boolean = false,
     val episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal,
-    val blurUnwatchedEpisodes: Boolean = false,
+    val blurUnwatchedEpisodes: Boolean = true,
     val posterTransitionEnabled: Boolean = false,
     val showOverallRatings: Boolean = true,
     val episodeRatingsVisibility: EpisodeRatingsVisibility = EpisodeRatingsVisibility.SHOW_ALL,
@@ -138,7 +138,7 @@ private data class StoredMetaScreenSettingsPayload(
     val tabLayout: Boolean = false,
     val episodeCardStyle: String = "horizontal",
     @SerialName("blur_unwatched_episodes")
-    val blurUnwatchedEpisodes: Boolean = false,
+    val blurUnwatchedEpisodes: Boolean = true,
     @SerialName("poster_transition_enabled")
     val posterTransitionEnabled: Boolean = false,
     @SerialName("show_overall_ratings")
@@ -231,7 +231,7 @@ object MetaScreenSettingsRepository {
     private var iconActionRow: Boolean = true
     private var tabLayout: Boolean = false
     private var episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal
-    private var blurUnwatchedEpisodes: Boolean = false
+    private var blurUnwatchedEpisodes: Boolean = true
     private var showOverallRatings: Boolean = true
     private var episodeRatingsVisibility: EpisodeRatingsVisibility = EpisodeRatingsVisibility.SHOW_ALL
     private var showRatingMap: Boolean = true
@@ -287,7 +287,7 @@ object MetaScreenSettingsRepository {
         iconActionRow = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
-        blurUnwatchedEpisodes = false
+        blurUnwatchedEpisodes = true
         posterTransitionEnabled = false
         showOverallRatings = true
         episodeRatingsVisibility = EpisodeRatingsVisibility.SHOW_ALL
@@ -420,7 +420,7 @@ object MetaScreenSettingsRepository {
         iconActionRow = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
-        blurUnwatchedEpisodes = false
+        blurUnwatchedEpisodes = true
         posterTransitionEnabled = false
         showOverallRatings = true
         episodeRatingsVisibility = EpisodeRatingsVisibility.SHOW_ALL
@@ -437,7 +437,7 @@ object MetaScreenSettingsRepository {
         iconActionRow: Boolean = true,
         tabLayout: Boolean,
         episodeCardStyle: MetaEpisodeCardStyle = MetaEpisodeCardStyle.Horizontal,
-        blurUnwatchedEpisodes: Boolean = false,
+        blurUnwatchedEpisodes: Boolean = true,
         backgroundMode: MetaScreenBackgroundMode? = null,
         posterTransitionEnabled: Boolean = false,
         showOverallRatings: Boolean = true,
@@ -489,7 +489,7 @@ object MetaScreenSettingsRepository {
         iconActionRow = true
         tabLayout = false
         episodeCardStyle = MetaEpisodeCardStyle.Horizontal
-        blurUnwatchedEpisodes = false
+        blurUnwatchedEpisodes = true
         posterTransitionEnabled = false
         showOverallRatings = true
         episodeRatingsVisibility = EpisodeRatingsVisibility.SHOW_ALL

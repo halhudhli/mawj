@@ -116,16 +116,28 @@ private fun AccountSettingsBody(
             }
         }
 
-        NuvioPrimaryButton(
-            text = if (isAnonymousGuest) {
-                stringResource(Res.string.settings_account_sign_in_with_account)
-            } else {
-                stringResource(Res.string.settings_account_sign_out)
-            },
-            onClick = { showSignOutConfirm = true },
-        )
+        // Luxo: no Nuvio cloud account. Profiles live on this device; an older signed-in account
+        // can still sign out (which switches to the local profile) but nothing offers signing in.
+        val isLocalProfile = (authState as? AuthState.Authenticated)?.isAnonymous != false
+        if (isLocalProfile) {
+            NuvioSurfaceCard {
+                Text(
+                    text = com.nuvio.app.features.luxo.lx(
+                        "Luxo يشتغل بملف شخصي محلي على هذا الجهاز، بدون حساب أو تسجيل دخول. إضافاتك وإعداداتك وسجل مشاهدتك محفوظة في الجهاز.",
+                        "Luxo runs on a local profile on this device, with no account or sign-in. Your addons, settings and watch history are stored on the device.",
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            NuvioPrimaryButton(
+                text = stringResource(Res.string.settings_account_sign_out),
+                onClick = { showSignOutConfirm = true },
+            )
+        }
 
-        if (canDeleteAccount) {
+        if (canDeleteAccount && !isLocalProfile) {
             DeleteAccountCard(
                 errorMessage = deleteErrorMessage,
                 onDeleteClick = {

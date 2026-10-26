@@ -7,7 +7,12 @@ internal actual object LuxoPrefsStorage {
     private const val preferencesName = "luxo_customization"
     private var preferences: SharedPreferences? = null
 
+    /** App-private folder for Luxo's cached files (e.g. fonts). */
+    internal var filesDir: java.io.File? = null
+        private set
+
     fun initialize(context: Context) {
+        if (filesDir == null) filesDir = context.applicationContext.filesDir
         if (preferences == null) {
             preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
         }

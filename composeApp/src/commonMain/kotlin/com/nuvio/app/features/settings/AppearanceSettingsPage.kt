@@ -138,6 +138,8 @@ internal fun LazyListScope.appearanceSettingsContent(
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 LuxoNavTabSwitches(isTablet = isTablet)
+                SettingsGroupDivider(isTablet = isTablet)
+                LuxoLookControls(isTablet = isTablet)
             }
         }
     }
@@ -561,6 +563,63 @@ private fun LuxoNavTabSwitches(isTablet: Boolean) {
         isTablet = isTablet,
         onCheckedChange = { checked ->
             com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(showSeries = checked) }
+        },
+    )
+}
+
+@androidx.compose.runtime.Composable
+private fun LuxoLookControls(isTablet: Boolean) {
+    val look = com.nuvio.app.features.luxo.rememberLuxoLookSettings()
+    val metaScreen by remember {
+        com.nuvio.app.features.details.MetaScreenSettingsRepository.ensureLoaded()
+        com.nuvio.app.features.details.MetaScreenSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    LuxoBlock(isTablet) {
+        LuxoLabel(lx("تأثير البوستر عند الضغط أو التحديد", "Poster effect when pressed or focused"))
+        Text(
+            text = when (look.posterFocusStyle) {
+                com.nuvio.app.features.luxo.LuxoPosterFocusStyle.CLEAN -> lx(
+                    "بدون أي إضاءة خلف البوستر: تكبير ناعم وظل أسود عميق وإطار زجاجي رفيع، والخلفية تبقى داكنة.",
+                    "No light behind posters: a soft zoom, a deep black shadow and a thin glass edge; the background stays dark.",
+                )
+                com.nuvio.app.features.luxo.LuxoPosterFocusStyle.AMBIENT -> lx(
+                    "هالة خافتة (20%) من ألوان البوستر نفسه، والشاشة تاخذ لون البوستر بشكل داكن وهادي.",
+                    "A faint (20%) glow in the poster's own colours; the screen takes a dark, quiet tint of it.",
+                )
+                com.nuvio.app.features.luxo.LuxoPosterFocusStyle.SPOTLIGHT -> lx(
+                    "بدون توهج: البوستر يرتفع شوي ويطلع خط إضاءة صغير تحته.",
+                    "No glow: the poster lifts a little and a small light line appears under it.",
+                )
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LuxoChips(
+            options = com.nuvio.app.features.luxo.LuxoPosterFocusStyle.entries,
+            selected = look.posterFocusStyle,
+            label = { style ->
+                when (style) {
+                    com.nuvio.app.features.luxo.LuxoPosterFocusStyle.CLEAN -> lx("Harbor الصافي", "Harbor clean")
+                    com.nuvio.app.features.luxo.LuxoPosterFocusStyle.AMBIENT -> lx("إضاءة محيطية", "Ambient glow")
+                    com.nuvio.app.features.luxo.LuxoPosterFocusStyle.SPOTLIGHT -> lx("تركيز سفلي", "Spotlight")
+                }
+            },
+            onSelect = { style ->
+                com.nuvio.app.features.luxo.LuxoLookSettingsRepository.update { it.copy(posterFocusStyle = style) }
+            },
+        )
+    }
+    SettingsGroupDivider(isTablet = isTablet)
+    SettingsSwitchRow(
+        title = lx("مانع الحرق", "Spoiler protection"),
+        description = lx(
+            "يغبّش صورة وعنوان ووصف الحلقات اللي ما شفتها للحين",
+            "Blurs the image, title and description of episodes you haven't watched yet",
+        ),
+        checked = metaScreen.blurUnwatchedEpisodes,
+        isTablet = isTablet,
+        onCheckedChange = { checked ->
+            com.nuvio.app.features.details.MetaScreenSettingsRepository.setBlurUnwatchedEpisodes(checked)
         },
     )
 }

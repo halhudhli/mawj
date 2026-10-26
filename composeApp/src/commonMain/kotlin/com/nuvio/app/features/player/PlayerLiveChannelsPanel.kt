@@ -576,7 +576,7 @@ private fun LiveChannelRow(
                 AsyncImage(
                     model = channel.logoUrl,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(6.dp),

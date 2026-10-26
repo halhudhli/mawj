@@ -71,6 +71,7 @@ internal fun Modifier.posterCardClickable(
     onLongClick: (() -> Unit)?,
     zoomImageUrl: String? = null,
     zoomCornerRadius: Dp = NuvioTokens.Radius.poster,
+    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource? = null,
 ): Modifier {
     val graphicsContext = LocalGraphicsContext.current
     val source = remember(graphicsContext, zoomImageUrl) { PosterLiftSource(graphicsContext) }
@@ -93,8 +94,9 @@ internal fun Modifier.posterCardClickable(
     if (onClick == null && onLongClick == null) return posterModifier
     return posterModifier
         .combinedClickable(
-            interactionSource = null,
-            indication = if (onPosterClickAnchor == null) LocalIndication.current else null,
+            interactionSource = interactionSource,
+            // Luxo: posters with their own pressed effect skip the grey ripple flash.
+            indication = if (onPosterClickAnchor == null && interactionSource == null) LocalIndication.current else null,
             onClick = {
                 if (onClick != null) {
                     source.bounds?.let { bounds ->

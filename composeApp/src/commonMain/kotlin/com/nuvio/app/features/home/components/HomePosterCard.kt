@@ -22,14 +22,23 @@ fun HomePosterCard(
     val posterCardStyle = rememberPosterCardStyleUiState()
     val isLandscapeMode = useLandscapeBackdropMode || posterCardStyle.catalogLandscapeModeEnabled
     val effectiveLandscapePoster = if (posterCardStyle.alwaysShowLandscapeClearlogo) null else item.landscapePoster
+    // Custom poster first (e.g. a ratings poster), then the addon's own poster, then the backdrop,
+    // so a card is never left empty.
+    val portraitUrl = item.poster?.takeIf { it.isNotBlank() }
+        ?: item.rawPosterUrl?.takeIf { it.isNotBlank() }
+        ?: item.banner?.takeIf { it.isNotBlank() }
+    val portraitFallback = item.rawPosterUrl?.takeIf { it.isNotBlank() && it != portraitUrl }
+        ?: item.banner?.takeIf { it.isNotBlank() && it != portraitUrl }
     val imageUrl = if (isLandscapeMode) {
-        effectiveLandscapePoster ?: item.banner ?: (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
-    } else (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
-    val fallbackImageUrl = if (isLandscapeMode && !effectiveLandscapePoster.isNullOrBlank()) {
-        // Landscape custom poster -> fall back to original backdrop, then portrait
-        item.banner ?: (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
+        effectiveLandscapePoster ?: item.banner?.takeIf { it.isNotBlank() } ?: portraitUrl
     } else {
-        (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)
+        portraitUrl
+    }
+    val fallbackImageUrl = if (isLandscapeMode) {
+        listOfNotNull(item.banner, item.rawPosterUrl, item.poster)
+            .firstOrNull { it.isNotBlank() && it != imageUrl }
+    } else {
+        portraitFallback
     }
 
     NuvioPosterCard(
@@ -45,6 +54,7 @@ fun HomePosterCard(
         isWatched = isWatched,
         onClick = onClick,
         onLongClick = onLongClick,
+        ratingText = item.imdbRating,
     )
 }
 

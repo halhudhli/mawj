@@ -241,7 +241,7 @@ fun DetailHero(
                                 .widthIn(max = contentMaxWidth)
                                 .height(if (isTablet) 72.dp else 80.dp),
                             alignment = Alignment.Center,
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                             onError = { logoLoadError = true },
                         )
                     } else {

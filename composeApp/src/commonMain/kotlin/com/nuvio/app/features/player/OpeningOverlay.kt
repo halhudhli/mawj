@@ -162,7 +162,7 @@ internal fun OpeningOverlay(
                                             scaleY = contentScale
                                         }
                                     },
-                                contentScale = ContentScale.Crop,
+                                contentScale = ContentScale.Fit,
                                 onError = { logoLoadError = true },
                             )
                             if (progressActive) {
@@ -176,7 +176,7 @@ internal fun OpeningOverlay(
                                                 this@drawWithContent.drawContent()
                                             }
                                         },
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = ContentScale.Fit,
                                 )
                             }
                         }

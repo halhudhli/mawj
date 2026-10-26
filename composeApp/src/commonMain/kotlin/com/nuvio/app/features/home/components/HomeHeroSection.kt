@@ -799,7 +799,7 @@ private fun HeroContentBlock(
                         onItemClick?.invoke(item)
                     },
                 alignment = if (layout.isTablet) Alignment.CenterStart else Alignment.Center,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 onError = { logoLoadError = true },
             )
         } else {

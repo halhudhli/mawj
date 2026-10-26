@@ -287,7 +287,7 @@ fun TabletDetailHero(
                         .widthIn(max = 560.dp)
                         .height(120.dp),
                     alignment = Alignment.CenterStart,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     onError = { logoLoadError = true },
                 )
             } else {

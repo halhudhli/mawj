@@ -1,11 +1,16 @@
 package com.nuvio.app.features.splash
 
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import nuvio.composeapp.generated.resources.luxo_barlow_bold
+import nuvio.composeapp.generated.resources.luxo_bebas
+import nuvio.composeapp.generated.resources.luxo_cinzel
+import nuvio.composeapp.generated.resources.luxo_poppins_bold
 import org.jetbrains.compose.resources.Font
-import nuvio.composeapp.generated.resources.cinzel_bold
+import org.jetbrains.compose.resources.FontResource
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -165,39 +170,50 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
         }
     }
 
-    if (settings.logoFont == SplashLogoFont.CINZEL) {
-            Text(
-                text = "LUXO",
-                fontFamily = FontFamily(Font(Res.font.cinzel_bold)),
-                fontSize = (52 * settings.logoScale).sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 6.sp,
-                color = Color(settings.accentColor),
-                modifier = Modifier
-                    .graphicsLayer {
-                        this.alpha = alpha.value
-                        scaleX = scale.value
-                        scaleY = scale.value
-                    }
-            )
-        } else {
-            Image(
-        painter = painterResource(settings.logoVariant.resource()),
-        contentDescription = "Luxo",
-        contentScale = ContentScale.Fit,
-        modifier = Modifier
-            .width((230 * settings.logoScale).dp)
-            .graphicsLayer {
-                this.alpha = alpha.value
-                scaleX = scale.value
-                scaleY = scale.value
-            },
-    )
+    val animatedModifier = Modifier.graphicsLayer {
+        this.alpha = alpha.value
+        scaleX = scale.value
+        scaleY = scale.value
+    }
+    val fontResource = settings.logoFont.fontResource()
+    if (fontResource == null) {
+        Image(
+            painter = painterResource(settings.logoVariant.resource()),
+            contentDescription = "Luxo",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .width((230 * settings.logoScale).dp)
+                .then(animatedModifier),
+        )
+    } else {
+        Text(
+            text = "LUXO",
+            fontFamily = FontFamily(Font(fontResource)),
+            fontSize = (54 * settings.logoScale * settings.logoFont.sizeFactor()).sp,
+            letterSpacing = (10 * settings.logoScale).sp,
+            maxLines = 1,
+            style = TextStyle(
+                color = rgbColor(settings.logoTextColor),
+                shadow = Shadow(color = Color.Black.copy(alpha = 0.55f), offset = Offset(0f, 6f), blurRadius = 24f),
+            ),
+            modifier = animatedModifier,
+        )
+    }
 }
+
+/** Font used to write "LUXO"; null means the image wordmark. */
+internal fun SplashLogoFont.fontResource(): FontResource? = when (this) {
+    SplashLogoFont.DEFAULT -> null
+    SplashLogoFont.CINZEL -> Res.font.luxo_cinzel
+    SplashLogoFont.BEBAS -> Res.font.luxo_bebas
+    SplashLogoFont.BARLOW -> Res.font.luxo_barlow_bold
+    SplashLogoFont.POPPINS -> Res.font.luxo_poppins_bold
+}
+
+/** Bebas is a tall condensed face; give it a little more size so it reads the same. */
+private fun SplashLogoFont.sizeFactor(): Float = if (this == SplashLogoFont.BEBAS) 1.25f else 1f
 
 // ---------------------------------------------------------------- drawing
-}
-
 
 private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val twinkle: Float, val depth: Float)
 private class Particle(val x: Float, val y: Float, val radius: Float, val rise: Float, val sway: Float, val phase: Float)

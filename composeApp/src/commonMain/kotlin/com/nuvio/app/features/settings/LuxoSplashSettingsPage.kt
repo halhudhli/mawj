@@ -3,7 +3,6 @@
 package com.nuvio.app.features.settings
 
 import com.nuvio.app.features.splash.SplashLogoFont
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -176,16 +175,39 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                     )
                 }
                 SettingsGroupDivider(isTablet = isTablet)
-        LuxoBlock(isTablet) {
-            LuxoLabel(lx("خط الشعار", "Logo font"))
-            LuxoChips(
-                options = SplashLogoFont.entries,
-                selected = settings.logoFont,
-                label = { it.label() },
-                onSelect = { font -> update { it.copy(logoFont = font) } },
-            )
-        }
-        SettingsGroupDivider(isTablet = isTablet)
+                LuxoBlock(isTablet) {
+                    LuxoLabel(lx("كلمة LUXO", "The LUXO word"))
+                    Text(
+                        text = lx(
+                            "اختر «الشعار» لصورة الشعار، أو خط تنكتب فيه كلمة LUXO.",
+                            "Pick “Logo” for the logo image, or a font to write LUXO in.",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    LuxoChips(
+                        options = SplashLogoFont.entries,
+                        selected = settings.logoFont,
+                        label = { it.label() },
+                        onSelect = { font ->
+                            update { it.copy(logoFont = font) }
+                            replayKey++
+                        },
+                    )
+                }
+                if (settings.logoFont != SplashLogoFont.DEFAULT) {
+                    SettingsGroupDivider(isTablet = isTablet)
+                    LuxoBlock(isTablet) {
+                        LuxoColorChooser(
+                            title = lx("لون كلمة LUXO", "LUXO colour"),
+                            color = settings.logoTextColor,
+                            swatches = accentSwatches,
+                            pickerIndex = 2,
+                            onColor = { color -> update { it.copy(logoTextColor = color) } },
+                        )
+                    }
+                }
+                SettingsGroupDivider(isTablet = isTablet)
                 LuxoBlock(isTablet) {
                     LuxoLabel(lx("حركة ظهور الشعار", "Logo entrance"))
                     LuxoChips(
@@ -295,8 +317,11 @@ private fun SplashLogoVariant.label(): String = when (this) {
 
 @Composable
 private fun SplashLogoFont.label(): String = when (this) {
-    SplashLogoFont.DEFAULT -> lx("افتراضي", "Default")
-    SplashLogoFont.CINZEL -> lx("سينزل (Cinzel)", "Cinzel")
+    SplashLogoFont.DEFAULT -> lx("الشعار", "Logo")
+    SplashLogoFont.CINZEL -> "Cinzel"
+    SplashLogoFont.BEBAS -> "Bebas"
+    SplashLogoFont.BARLOW -> "Barlow"
+    SplashLogoFont.POPPINS -> "Poppins"
 }
 
 // ---------------------------------------------------------------- shared Luxo settings widgets

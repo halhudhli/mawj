@@ -127,7 +127,7 @@ private fun ProductionChip(
                 modifier = Modifier
                     .width(logoWidth)
                     .height(logoHeight),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
             )
         } else {
             Text(

@@ -1043,6 +1043,7 @@ private fun EpisodeHorizontalCard(
 
             Text(
                 text = video.title,
+                modifier = Modifier.luxoSpoilerBlur(blurUnwatchedEpisodes && !isWatched),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = metrics.titleTextSize,
                     fontWeight = FontWeight.ExtraBold,
@@ -1056,6 +1057,7 @@ private fun EpisodeHorizontalCard(
             if (!video.overview.isNullOrBlank()) {
                 Text(
                     text = video.overview,
+                    modifier = Modifier.luxoSpoilerBlur(blurUnwatchedEpisodes && !isWatched),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = metrics.bodyTextSize,
                         lineHeight = metrics.bodyLineHeight,
@@ -1368,7 +1370,7 @@ private fun TmdbEpisodeRatingBadge(
                 painter = painterResource(if (isImdb) Res.drawable.rating_imdb else Res.drawable.rating_tmdb),
                 contentDescription = stringResource(if (isImdb) Res.string.source_imdb else Res.string.source_tmdb),
                 modifier = Modifier.size(logoSize),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
             )
         }
         Text(
@@ -1503,6 +1505,7 @@ private fun EpisodeListCard(
             ) {
                 Text(
                     text = titleText,
+                    modifier = Modifier.luxoSpoilerBlur(blurUnwatchedEpisodes && !isWatched),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = sizing.titleTextSize,
                         fontWeight = FontWeight.Bold,
@@ -1544,6 +1547,7 @@ private fun EpisodeListCard(
                 if (!video.overview.isNullOrBlank() && overviewText != null) {
                     Text(
                         text = overviewText,
+                        modifier = Modifier.luxoSpoilerBlur(blurUnwatchedEpisodes && !isWatched),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = sizing.bodyTextSize,
                             lineHeight = sizing.bodyLineHeight,
@@ -1749,3 +1753,7 @@ private fun formatEpisodeRating(rating: Double): String {
     val tenth = (roundedTenths % 10).absoluteValue
     return "$whole.$tenth"
 }
+
+/** Luxo spoiler protection: blurs an unwatched episode's title and description like its image. */
+private fun Modifier.luxoSpoilerBlur(enabled: Boolean): Modifier =
+    if (enabled) this.blur(7.dp) else this

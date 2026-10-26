@@ -24,7 +24,7 @@ val LocalDynamicArtworkBackgroundActive = staticCompositionLocalOf { false }
 
 val LocalDynamicArtworkBackgroundColor = staticCompositionLocalOf<State<Color>?> { null }
 
-private const val DOMINANT_BLEND_FRACTION = 0.42f
+private const val DOMINANT_BLEND_FRACTION = 0.20f
 
 private const val COLOR_TRANSITION_MS = 600
 
@@ -40,7 +40,11 @@ fun DynamicArtworkBackground(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val active = rememberDynamicArtworkBackgroundEnabled()
+    // Luxo: the screen only takes a poster's colour with the "ambient" poster effect, and then a
+    // darkened, faint version of it — bright posters used to wash the whole screen grey/white.
+    val focusStyle = com.nuvio.app.features.luxo.rememberLuxoLookSettings().posterFocusStyle
+    val active = rememberDynamicArtworkBackgroundEnabled() &&
+        focusStyle == com.nuvio.app.features.luxo.LuxoPosterFocusStyle.AMBIENT
     if (!active) {
         CompositionLocalProvider(LocalDynamicArtworkBackgroundActive provides false) {
             content()
@@ -59,7 +63,7 @@ fun DynamicArtworkBackground(
     }
     if (tint != ArtworkTint.Pending) lastTint = currentTint
     val targetColor = currentTint
-        ?.let { baseColor.blendTowards(it, DOMINANT_BLEND_FRACTION) }
+        ?.let { baseColor.blendTowards(it.darkened(0.55f), DOMINANT_BLEND_FRACTION) }
         ?: baseColor
 
     val washColor = animateColorAsState(
@@ -87,3 +91,6 @@ private fun Color.blendTowards(target: Color, fraction: Float): Color {
         alpha = alpha + (target.alpha - alpha) * clamped,
     )
 }
+
+private fun Color.darkened(factor: Float): Color =
+    Color(red = red * factor, green = green * factor, blue = blue * factor, alpha = alpha)

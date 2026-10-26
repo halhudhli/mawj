@@ -2932,7 +2932,7 @@ private fun PlaybackException.isDecoderFailure(): Boolean =
 
 private fun PlayerResizeMode.toExoResizeMode(): Int =
     when (this) {
-        PlayerResizeMode.Fit -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+        PlayerResizeMode.Fit -> AspectRatioFrameLayout.RESIZE_MODE_FIT
         PlayerResizeMode.Fill -> AspectRatioFrameLayout.RESIZE_MODE_FILL
         PlayerResizeMode.Zoom -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
     }

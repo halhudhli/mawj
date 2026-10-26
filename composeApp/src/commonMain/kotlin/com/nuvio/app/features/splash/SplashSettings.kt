@@ -17,7 +17,7 @@ enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE }
 enum class SplashLogoVariant { SILVER, ORIGINAL, GOLD, ROSE_GOLD, COPPER, EMERALD, ARCTIC_BLUE, GRAPHITE }
 
 @Serializable
-enum class SplashLogoFont { DEFAULT, CINZEL }
+enum class SplashLogoFont { DEFAULT, CINZEL, BEBAS, BARLOW, POPPINS }
 
 @Serializable
 data class SplashSettings(
@@ -28,7 +28,10 @@ data class SplashSettings(
     /** 0xRRGGBB — colour of stars / waves / particles / gradient accent. */
     val accentColor: Int = 0xC9CDD4,
     val logoVariant: SplashLogoVariant = SplashLogoVariant.SILVER,
+    /** DEFAULT shows the image wordmark; the others write "LUXO" in that font. */
     val logoFont: SplashLogoFont = SplashLogoFont.DEFAULT,
+    /** 0xRRGGBB — colour of the written "LUXO". */
+    val logoTextColor: Int = 0xE8E8EC,
     val logoAnimation: SplashLogoAnimation = SplashLogoAnimation.ZOOM,
     /** Multiplier of the default logo width. */
     val logoScale: Float = 1f,

@@ -83,8 +83,8 @@ private fun LuxoFontsSettingsBody(isTablet: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(
             text = lx(
-                "الخط العربي يُستخدم لما تكون لغة التطبيق عربي، والإنجليزي لباقي اللغات. أي خط تضيفه يطلع هنا وفي خطوط الترجمة بعد.",
-                "The Arabic font is used when the app language is Arabic, the English font for every other language. Fonts you add also appear in the subtitle fonts.",
+                "الخط العربي للحروف العربية، والخط الإنجليزي للحروف الإنجليزية (العناوين والأوصاف الإنجليزية) — كل واحد يتغيّر لحاله بدون ما يأثر على الثاني. أي خط تضيفه يطلع هنا وفي خطوط الترجمة بعد.",
+                "Arabic letters use the Arabic font and English letters (English titles and descriptions) use the English font — each changes on its own. Fonts you add also appear in the subtitle fonts.",
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -169,7 +169,7 @@ private fun FontChoiceList(
 ) {
     FontChoiceRow(
         isTablet = isTablet,
-        title = lx("خط التطبيق الأصلي", "App default"),
+        title = lx("الخط الأصلي", "Original font"),
         sample = sample,
         family = null,
         selected = selected == LuxoFontChoice.DEFAULT,

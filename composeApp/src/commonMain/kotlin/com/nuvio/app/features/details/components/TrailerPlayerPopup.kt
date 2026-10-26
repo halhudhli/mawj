@@ -42,6 +42,9 @@ import kotlinx.coroutines.launch
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
+/** Luxo: trailers play edge to edge instead of in a half-height sheet. */
+private const val LuxoTrailerAlwaysFullscreen = true
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailerPlayerPopup(
@@ -77,15 +80,12 @@ fun TrailerPlayerPopup(
     }
 
     val exitFullscreen = {
-        if (isIos) {
-            playbackState.controller?.pause()
-            onDismiss()
-        } else {
-            toggleFullscreen()
-        }
+        // Luxo: the trailer always opens full screen; leaving full screen closes it.
+        playbackState.controller?.pause()
+        onDismiss()
     }
 
-    if (isIos || fullscreen) {
+    if (isIos || fullscreen || LuxoTrailerAlwaysFullscreen) {
         LockPlayerToLandscape()
         FullscreenPlayerDialog(onDismiss = exitFullscreen) {
             TrailerPlayer(

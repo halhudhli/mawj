@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 
 internal const val DefaultPosterCardWidthDp = 126
 internal const val DefaultPosterCardHeightDp = 189
-internal const val DefaultPosterCardCornerRadiusDp = 12
+internal const val DefaultPosterCardCornerRadiusDp = 16
 
 @Serializable
 private data class StoredPosterCardStylePreferences(

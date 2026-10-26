@@ -149,7 +149,12 @@ private class CatalogDescriptorSignature {
 
 internal fun String.displayLabel(): String = localizedMediaTypeLabel(this)
 
+/** Catalog names are translated only when the app runs in Arabic; English stays the fallback. */
+private fun luxoArabicUi(): Boolean =
+    androidx.compose.ui.text.intl.Locale.current.language == "ar"
+
 internal fun translateCatalogNameHarbor(rawName: String): String {
+    if (!luxoArabicUi()) return rawName
     val clean = rawName.trim()
     val map = mapOf(
         "top" to "\u0627\u0644\u0623\u0639\u0644\u0649 \u062a\u0642\u064a\u064a\u0645\u0627\u064b",
@@ -203,6 +208,7 @@ internal fun translateCatalogNameHarbor(rawName: String): String {
 }
 
 internal fun translateCatalogTitleAr(raw: String): String {
+    if (!luxoArabicUi()) return raw
     val map = mapOf(
         "for you" to "\u0645\u0642\u062a\u0631\u062d \u0644\u0643",
         "popular" to "\u0627\u0644\u0623\u0643\u062b\u0631 \u0634\u0639\u0628\u064a\u0629",

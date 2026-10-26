@@ -923,7 +923,7 @@ private fun ContinueWatchingWideCard(
             width = layout.widePosterStripWidth,
             blurred = shouldBlurArtwork,
             fallbackUrl = item.fallbackUrlForArtwork(artworkUrl),
-            contentScale = if (item.isCloudLibraryItem()) ContentScale.Crop else ContentScale.Crop,
+            contentScale = if (item.isCloudLibraryItem()) ContentScale.Fit else ContentScale.Crop,
             modifier = Modifier.fillMaxHeight(),
         )
         Column(
@@ -1068,7 +1068,7 @@ private fun ContinueWatchingPosterCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .then(if (shouldBlurArtwork) Modifier.blur(18.dp) else Modifier),
-                    contentScale = if (item.isCloudLibraryItem()) ContentScale.Crop else ContentScale.Crop,
+                    contentScale = if (item.isCloudLibraryItem()) ContentScale.Fit else ContentScale.Crop,
                 )
             }
             if (item.shufflePlayback) ShuffleBadge(Modifier.align(Alignment.TopStart).padding(8.dp))

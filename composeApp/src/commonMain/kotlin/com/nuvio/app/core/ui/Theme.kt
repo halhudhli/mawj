@@ -126,7 +126,18 @@ private val NuvioTypography: Typography
             fontWeight = FontWeight.SemiBold,
             letterSpacing = NuvioTokens.LetterSpacing.label,
         ),
+        // Luxo: the remaining Material styles use the app font too (they used the platform default,
+        // so some screens ignored the chosen font).
+        displayMedium = MaterialDefaultTypography.displayMedium.copy(fontFamily = JetBrainsSans),
+        displaySmall = MaterialDefaultTypography.displaySmall.copy(fontFamily = JetBrainsSans),
+        headlineMedium = MaterialDefaultTypography.headlineMedium.copy(fontFamily = JetBrainsSans),
+        headlineSmall = MaterialDefaultTypography.headlineSmall.copy(fontFamily = JetBrainsSans),
+        titleSmall = MaterialDefaultTypography.titleSmall.copy(fontFamily = JetBrainsSans),
+        bodySmall = MaterialDefaultTypography.bodySmall.copy(fontFamily = JetBrainsSans),
+        labelSmall = MaterialDefaultTypography.labelSmall.copy(fontFamily = JetBrainsSans),
     )
+
+private val MaterialDefaultTypography = Typography()
 
 private val NuvioTypeTokens: NuvioTypeScale
     @Composable

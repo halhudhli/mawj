@@ -28,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import com.nuvio.app.features.settings.ThemeSettingsRepository
 import androidx.compose.ui.Alignment
@@ -136,11 +138,13 @@ fun NuvioPosterCard(
     isWatched: Boolean = false,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
+    ratingText: String? = null,
 ) {
     val posterCardStyle = rememberPosterCardStyleUiState()
     val tokens = MaterialTheme.nuvio
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val cardWidth = shape.cardWidth(basePosterWidthDp = posterCardStyle.widthDp)
-    val cardShape = RoundedCornerShape(16.dp)
+    val cardShape = RoundedCornerShape(posterCardStyle.cornerRadiusDp.dp)
     val catalogLogoOverlaySize = catalogLogoOverlaySize(
         basePosterWidthDp = posterCardStyle.widthDp,
         shape = shape,
@@ -155,6 +159,16 @@ fun NuvioPosterCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(shape.aspectRatio)
+                .luxoPosterFocusEffect(
+                    shape = cardShape,
+                    interactionSource = interactionSource,
+                    imageUrl = imageUrl,
+                ),
+        ) {
+        var imageFailed by remember(imageUrl, fallbackImageUrl) { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
                 .clip(cardShape)
                 .background(tokens.colors.surface)
                 .nuvioCardDepth(
@@ -166,9 +180,22 @@ fun NuvioPosterCard(
                     onLongClick = onLongClick,
                     zoomImageUrl = imageUrl,
                     zoomCornerRadius = posterCardStyle.cornerRadiusDp.dp,
+                    interactionSource = interactionSource,
                 ),
             contentAlignment = Alignment.Center,
         ) {
+            if (imageUrl == null || imageFailed) {
+                // Luxo: never an empty black card — show the title when there's no usable image.
+                Text(
+                    text = title,
+                    modifier = Modifier.padding(horizontal = NuvioTokens.Space.s14),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = tokens.colors.textMuted,
+                    textAlign = TextAlign.Center,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (imageUrl != null) {
                 val platformContext = coil3.compose.LocalPlatformContext.current
                 val hasFallback = !fallbackImageUrl.isNullOrBlank() && fallbackImageUrl != imageUrl
@@ -189,16 +216,8 @@ fun NuvioPosterCard(
                     contentDescription = title,
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop,
-                )
-            } else {
-                Text(
-                    text = title,
-                    modifier = Modifier.padding(horizontal = NuvioTokens.Space.s14),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = tokens.colors.textMuted,
-                    textAlign = TextAlign.Center,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
+                    onError = { imageFailed = true },
+                    onSuccess = { imageFailed = false },
                 )
             }
 
@@ -246,7 +265,14 @@ fun NuvioPosterCard(
                 }
             }
 
+            LuxoGlassRatingBadge(
+                ratingText = ratingText,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(NuvioTokens.Space.s6),
+            )
             NuvioPosterWatchedOverlay(isWatched = isWatched)
+        }
         }
         if (shouldShowTitleBelow) {
             Text(

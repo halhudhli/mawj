@@ -106,7 +106,7 @@ object TmdbMetadataService {
             val isCjkLanguage = language.startsWith("ja") ||
                 language.startsWith("ko") ||
                 language.startsWith("zh")
-            val shouldFetchEnglishPerson = language != "ar" &&
+            val shouldFetchEnglishPerson = language != "en" &&
                 (
                     person.biography.isNullOrBlank() ||
                         (
@@ -116,7 +116,7 @@ object TmdbMetadataService {
                                 (person.originalName == null || containsCjkOrHangul(person.originalName))
                             )
                     )
-            val shouldFetchEnglishCredits = language != "ar" &&
+            val shouldFetchEnglishCredits = language != "en" &&
                 !isCjkLanguage &&
                 personCreditsContainCjkTitles(credits)
 
@@ -153,7 +153,7 @@ object TmdbMetadataService {
             }
             val englishTitlesById = englishCreditTitlesById(englishCredits)
 
-            val biography = if (person.biography.isNullOrBlank() && language != "ar") {
+            val biography = if (person.biography.isNullOrBlank() && language != "en") {
                 englishPerson?.biography
             } else {
                 person.biography
@@ -527,7 +527,7 @@ object TmdbMetadataService {
                 language.startsWith("ko") ||
                 language.startsWith("zh")
             val englishTitlesById = if (
-                language != "ar" &&
+                language != "en" &&
                 !isCjkLanguage &&
                 discoverResultsContainCjkTitles(results)
             ) {
@@ -1024,7 +1024,16 @@ object TmdbMetadataService {
         )
 
         val genres = details.genres.mapNotNull { it.name?.trim()?.takeIf(String::isNotBlank) }
+        // Luxo: Arabic first; when TMDB has no Arabic overview, use the English one instead of leaving it empty.
         val description = details.overview?.trim()?.takeIf(String::isNotBlank)
+            ?: if (!normalizedLanguage.startsWith("en")) {
+                fetch<TmdbDetailsResponse>(
+                    endpoint = "$mediaType/$numericId",
+                    query = mapOf("language" to "en-US"),
+                )?.overview?.trim()?.takeIf(String::isNotBlank)
+            } else {
+                null
+            }
         val releaseInfo = details.releaseDate ?: details.firstAirDate
         val localizedTitle = listOf(details.title, details.name).firstNotNullOfOrNull { it?.trim()?.takeIf(String::isNotBlank) }
         val people = buildPeople(
@@ -1119,12 +1128,12 @@ object TmdbMetadataService {
         return runCatching {
             val englishCredits = fetch<TmdbCreditsResponse>(
                 endpoint = "$mediaType/$numericId/credits",
-                query = mapOf("language" to "ar-SA"),
+                query = mapOf("language" to "en-US"),
             )
             val englishTvDetails = if (mediaType == "tv" && details.createdBy.isNotEmpty()) {
                 fetch<TmdbDetailsResponse>(
                     endpoint = "tv/$numericId",
-                    query = mapOf("language" to "ar-SA"),
+                    query = mapOf("language" to "en-US"),
                 )
             } else {
                 null
@@ -1533,6 +1542,8 @@ internal fun normalizeTmdbLanguage(language: String?): String {
     }
     return when (normalized) {
         "es-419" -> "es-MX"
+        // Luxo: TMDB stores most Arabic translations under ar-SA.
+        "ar" -> "ar-SA"
         else -> normalized
     }
 }

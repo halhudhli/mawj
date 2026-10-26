@@ -16,6 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.padding
+import com.nuvio.app.core.ui.luxoPosterFocusEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -119,36 +124,61 @@ private fun PosterGridTile(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val shape = RoundedCornerShape(cornerRadiusDp.dp)
+        val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        val imageUrl = item.poster?.takeIf { it.isNotBlank() }
+            ?: item.rawPosterUrl?.takeIf { it.isNotBlank() }
+            ?: item.banner?.takeIf { it.isNotBlank() }
+        val fallbackUrl = listOfNotNull(item.rawPosterUrl, item.banner)
+            .firstOrNull { it.isNotBlank() && it != imageUrl }
+        var imageFailed by remember(imageUrl, fallbackUrl) { mutableStateOf(false) }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(item.posterShape.posterGridAspectRatio())
-                .clip(RoundedCornerShape(cornerRadiusDp.dp))
+                .luxoPosterFocusEffect(shape = shape, interactionSource = interactionSource, imageUrl = imageUrl),
+        ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(shape)
                 .background(MaterialTheme.colorScheme.surface)
                 .nuvioCardDepth(
-                    shape = RoundedCornerShape(cornerRadiusDp.dp),
+                    shape = shape,
                     surface = NuvioCardDepthSurface.Posters,
                 )
                 .posterCardClickable(
                     onClick = onClick,
                     onLongClick = onLongClick,
-                    zoomImageUrl = item.poster,
+                    zoomImageUrl = imageUrl,
                     zoomCornerRadius = cornerRadiusDp.dp,
+                    interactionSource = interactionSource,
                 ),
+            contentAlignment = Alignment.Center,
         ) {
-            if (item.poster != null) {
+            if (imageUrl == null || imageFailed) {
+                Text(
+                    text = item.name,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (imageUrl != null) {
                 val platformContext = coil3.compose.LocalPlatformContext.current
-                val hasFallback = !(item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster).isNullOrBlank() && (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster) != item.poster
-                val imageModel = remember(item.poster, (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster), platformContext) {
-                    if (hasFallback) {
+                val imageModel = remember(imageUrl, fallbackUrl, platformContext) {
+                    if (fallbackUrl != null) {
                         coil3.request.ImageRequest.Builder(platformContext)
-                            .data(item.poster)
+                            .data(imageUrl)
                             .memoryCacheKeyExtras(
-                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)!!)
+                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to fallbackUrl)
                             )
                             .build()
                     } else {
-                        item.poster
+                        imageUrl
                     }
                 }
                 AsyncImage(
@@ -156,9 +186,16 @@ private fun PosterGridTile(
                     contentDescription = item.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
+                    onError = { imageFailed = true },
+                    onSuccess = { imageFailed = false },
                 )
             }
+            com.nuvio.app.core.ui.LuxoGlassRatingBadge(
+                ratingText = item.imdbRating,
+                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp),
+            )
             NuvioPosterWatchedOverlay(isWatched = isWatched)
+        }
         }
         if (!hideLabels) {
             Text(
