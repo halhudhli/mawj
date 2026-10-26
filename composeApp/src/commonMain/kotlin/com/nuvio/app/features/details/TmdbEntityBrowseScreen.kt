@@ -356,7 +356,7 @@ private fun EntityIdentitySidebar(
                     model = header.logo,
                     contentDescription = header.name,
                     modifier = Modifier.matchParentSize(),
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                 )
             }
         } else {
@@ -536,7 +536,7 @@ private fun EntityHeroSection(
                     model = header.logo,
                     contentDescription = header.name,
                     modifier = Modifier.height(44.dp),
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))

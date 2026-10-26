@@ -74,7 +74,7 @@ internal fun StreamCard(
     outlined: Boolean = false,
 ) {
     val partyLabel = if (isCurrent) null else LocalStreamHighlight.current(stream)
-    val cardShape = RoundedCornerShape(12.dp)
+    val cardShape = RoundedCornerShape(14.dp)
     val badgeImages = stream.badges.filter { it.imageURL.isNotBlank() }
     val hasBadges = badgeImages.isNotEmpty() || (showFileSizeBadges && stream.behaviorHints.videoSize != null)
     Row(
@@ -190,7 +190,7 @@ internal fun StreamCard(
                         contentDescription = stream.addonName,
                         modifier = Modifier
                             .size(28.dp)
-                            .clip(RoundedCornerShape(6.dp)),
+                            .clip(RoundedCornerShape(14.dp)),
                         contentScale = ContentScale.Fit,
                     )
                 }
@@ -234,7 +234,7 @@ internal fun StreamCardSkeleton(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.05f))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),

@@ -261,7 +261,7 @@ private fun DebugLogTextPanel(
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 },
-                fontFamily = FontFamily.Monospace,
+                fontFamily = androidx.compose.material3.MaterialTheme.typography.bodyLarge.fontFamily,
                 softWrap = false,
             )
         }

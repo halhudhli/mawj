@@ -226,7 +226,7 @@ internal fun PauseMetadataOverlay(
                 AsyncImage(
                     model = logoUrl,
                     contentDescription = title,
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                     alignment = Alignment.BottomStart,
                     modifier = Modifier.height(logoHeight),
                     onError = { logoLoadError = true },

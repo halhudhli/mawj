@@ -138,13 +138,13 @@ private fun PosterGridTile(
         ) {
             if (item.poster != null) {
                 val platformContext = coil3.compose.LocalPlatformContext.current
-                val hasFallback = !item.rawPosterUrl.isNullOrBlank() && item.rawPosterUrl != item.poster
-                val imageModel = remember(item.poster, item.rawPosterUrl, platformContext) {
+                val hasFallback = !(item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster).isNullOrBlank() && (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster) != item.poster
+                val imageModel = remember(item.poster, (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster), platformContext) {
                     if (hasFallback) {
                         coil3.request.ImageRequest.Builder(platformContext)
                             .data(item.poster)
                             .memoryCacheKeyExtras(
-                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to item.rawPosterUrl!!)
+                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to (item.rawPosterUrl?.takeIf { it.isNotBlank() } ?: item.poster)!!)
                             )
                             .build()
                     } else {

@@ -63,7 +63,7 @@ internal fun StreamInfoOverlay(
                         AsyncImage(
                             model = addonLogo,
                             contentDescription = addonName,
-                            contentScale = ContentScale.Fit,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)),
                         )
                         Spacer(Modifier.width(12.dp))

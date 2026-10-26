@@ -921,7 +921,7 @@ private fun CloudLibrarySearchField(
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         placeholder = { Text(stringResource(Res.string.cloud_library_search_label)) },
         leadingIcon = {
             Icon(
@@ -1306,7 +1306,7 @@ private fun CloudLibraryFileRow(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
     ) {
         Column(

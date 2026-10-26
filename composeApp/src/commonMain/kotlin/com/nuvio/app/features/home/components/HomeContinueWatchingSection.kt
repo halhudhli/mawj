@@ -75,7 +75,7 @@ import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import com.nuvio.app.core.i18n.localizedEpisodeTitle
 
-private val ContinueWatchingStatusBadgeShape = RoundedCornerShape(4.dp)
+private val ContinueWatchingStatusBadgeShape = RoundedCornerShape(14.dp)
 private val ContinueWatchingNewEpisodeBadgeColor = Color(0xFF1D4ED8)
 private val ContinueWatchingNewSeasonBadgeColor = Color(0xFFB45309)
 private const val ContinueWatchingLandscapeCardScale = 1.2f
@@ -407,7 +407,7 @@ fun ContinueWatchingStylePreview(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
             .padding(horizontal = 12.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -427,7 +427,7 @@ private fun CardStylePreview() {
         modifier = Modifier
             .width(100.dp)
             .height(56.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)),
     ) {
         Box(
@@ -491,7 +491,7 @@ private fun WideCardPreview() {
         modifier = Modifier
             .width(100.dp)
             .height(60.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)),
     ) {
         Box(
@@ -542,7 +542,7 @@ private fun PosterCardPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(90.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)),
         ) {
             Box(
@@ -923,7 +923,7 @@ private fun ContinueWatchingWideCard(
             width = layout.widePosterStripWidth,
             blurred = shouldBlurArtwork,
             fallbackUrl = item.fallbackUrlForArtwork(artworkUrl),
-            contentScale = if (item.isCloudLibraryItem()) ContentScale.Fit else ContentScale.Crop,
+            contentScale = if (item.isCloudLibraryItem()) ContentScale.Crop else ContentScale.Crop,
             modifier = Modifier.fillMaxHeight(),
         )
         Column(
@@ -1068,7 +1068,7 @@ private fun ContinueWatchingPosterCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .then(if (shouldBlurArtwork) Modifier.blur(18.dp) else Modifier),
-                    contentScale = if (item.isCloudLibraryItem()) ContentScale.Fit else ContentScale.Crop,
+                    contentScale = if (item.isCloudLibraryItem()) ContentScale.Crop else ContentScale.Crop,
                 )
             }
             if (item.shufflePlayback) ShuffleBadge(Modifier.align(Alignment.TopStart).padding(8.dp))

@@ -1368,7 +1368,7 @@ private fun TmdbEpisodeRatingBadge(
                 painter = painterResource(if (isImdb) Res.drawable.rating_imdb else Res.drawable.rating_tmdb),
                 contentDescription = stringResource(if (isImdb) Res.string.source_imdb else Res.string.source_tmdb),
                 modifier = Modifier.size(logoSize),
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
             )
         }
         Text(

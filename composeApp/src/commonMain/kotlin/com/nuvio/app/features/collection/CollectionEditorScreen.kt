@@ -548,7 +548,7 @@ private fun FolderListItem(
             if (folder.coverEmoji != null) {
                 Surface(
                     modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -1871,7 +1871,7 @@ private fun PickerOptionRow(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val rowShape = RoundedCornerShape(12.dp)
+    val rowShape = RoundedCornerShape(14.dp)
     val bgColor = if (selected) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
     } else {
@@ -2584,9 +2584,9 @@ private fun GenrePickerOptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

@@ -242,7 +242,7 @@ fun HomeSkeletonRow(
             modifier = Modifier
                 .width(140.dp)
                 .height(18.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(brush),
         )
         Row(
