@@ -31,7 +31,19 @@ import kotlinx.coroutines.flow.emptyFlow
 internal object LuxoContentType {
     const val MOVIE = "movie"
     const val SERIES = "series"
+    const val ANIME = "anime"
 }
+
+/** Anime rows: anime-typed catalogs (Kitsu and friends) or rows named for anime. */
+internal fun HomeCatalogSection.isAnimeSection(): Boolean {
+    if (target.contentType.equals(LuxoContentType.ANIME, ignoreCase = true)) return true
+    val text = "$title $subtitle $addonName".lowercase()
+    return listOf("anime", "أنمي", "انمي", "kitsu", "anilist", "myanimelist", "crunchyroll").any { it in text }
+}
+
+internal fun MetaPreview.isAnimeTitle(): Boolean =
+    type.equals(LuxoContentType.ANIME, ignoreCase = true) ||
+        genres.any { genre -> genre.lowercase().let { it.contains("anime") || it.contains("أنمي") } }
 
 /**
  * A Cinemata-style section tab (Movies / Series): every home catalog row of one content type,
@@ -48,14 +60,43 @@ internal fun LuxoTypeBrowseScreen(
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
 ) {
     val homeUiState by HomeRepository.uiState.collectAsStateWithLifecycle()
-    val sections = remember(homeUiState.sections, contentType) {
+    val isAnime = contentType == LuxoContentType.ANIME
+    val animeTabOn = rememberLuxoFeatures().animeSection
+    val sections = remember(homeUiState.sections, contentType, animeTabOn) {
         homeUiState.sections.filter { section ->
-            section.items.isNotEmpty() &&
-                section.target.contentType.equals(contentType, ignoreCase = true)
+            section.items.isNotEmpty() && if (isAnime) {
+                section.isAnimeSection()
+            } else {
+                section.target.contentType.equals(contentType, ignoreCase = true) && !(animeTabOn && section.isAnimeSection())
+            }
         }
     }
-    val smartSections by produceState(initialValue = emptyList<HomeCatalogSection>(), contentType) {
-        value = runCatching { LuxoSmartCollections.load(contentType) }.getOrDefault(emptyList())
+    val smartSections by produceState(initialValue = emptyList<HomeCatalogSection>(), contentType, homeUiState.sections) {
+        value = if (isAnime) {
+            // Anime titles hiding inside the general rows, gathered into one row.
+            val gathered = homeUiState.sections
+                .filterNot { it.isAnimeSection() }
+                .flatMap { it.items }
+                .filter { it.isAnimeTitle() }
+                .distinctBy { "${it.type}:${it.id}" }
+            val first = homeUiState.sections.firstOrNull()
+            if (gathered.size >= 3 && first != null) {
+                listOf(
+                    first.copy(
+                        key = "luxo_anime_gathered",
+                        title = "أنمي من كتالوجاتك",
+                        subtitle = "",
+                        items = gathered,
+                        availableItemCount = gathered.size,
+                        hasMore = false,
+                    ),
+                )
+            } else {
+                emptyList()
+            }
+        } else {
+            runCatching { LuxoSmartCollections.load(contentType) }.getOrDefault(emptyList())
+        }
     }
     val visibleSmartSections = remember(smartSections) {
         smartSections.filter { it.items.isNotEmpty() }
@@ -110,7 +151,10 @@ internal fun LuxoTypeBrowseScreen(
             visibleSmartSections.isNotEmpty() -> Unit
             else -> item(key = "empty") {
                 Text(
-                    text = lx(
+                    text = if (isAnime) lx(
+                        "ما فيه أقسام أنمي للحين. أضف إضافة أنمي مثل Anime Kitsu من الإعدادات ← الإضافات، وفعّل أقسامها في الشاشة الرئيسية.",
+                        "No anime rows yet. Add an anime addon such as Anime Kitsu in Settings → Addons and enable its catalogs on the home screen.",
+                    ) else lx(
                         "ما فيه أقسام هنا للحين. أضف إضافة مثل Cinemata من الإعدادات ← الإضافات، وفعّل أقسامها في الشاشة الرئيسية.",
                         "Nothing here yet. Add an addon such as Cinemata in Settings → Addons and enable its catalogs on the home screen.",
                     ),

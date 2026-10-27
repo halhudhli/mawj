@@ -118,7 +118,27 @@ internal fun LazyListScope.settingsRootContent(
     showAboutSection: Boolean = true,
     showAdvancedSection: Boolean = true,
     showSupportersContributorsPage: Boolean = true,
+    luxoHub: Boolean = false,
 ) {
+    if (luxoHub) {
+        luxoProfileHubContent(
+            isTablet = isTablet,
+            onProfileClick = onSwitchProfileClick,
+            onAccountClick = onAccountClick,
+            onWatchPartyClick = onWatchPartyClick,
+            onTrackingClick = onTrackingClick,
+            onAppearanceClick = onAppearanceClick,
+            onContentDiscoveryClick = onContentDiscoveryClick,
+            onPlaybackClick = onPlaybackClick,
+            onIntegrationsClick = onIntegrationsClick,
+            onNotificationsClick = onNotificationsClick,
+            onAdvancedClick = onAdvancedClick,
+            onCheckForUpdatesClick = onCheckForUpdatesClick,
+            onLicensesAttributionsClick = onLicensesAttributionsClick,
+        )
+        luxoSettingsFooter(isTablet = isTablet, showWordmark = true)
+        return
+    }
     if (showAccountSection && onSwitchProfileClick != null) {
         item {
             SettingsProfileCard(isTablet = isTablet, onClick = onSwitchProfileClick)
@@ -280,13 +300,17 @@ internal fun LazyListScope.settingsRootContent(
             }
         }
     }
+    luxoSettingsFooter(isTablet = isTablet, showWordmark = showAboutSection)
+}
+
+internal fun LazyListScope.luxoSettingsFooter(isTablet: Boolean, showWordmark: Boolean) {
     item {
         androidx.compose.foundation.layout.Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = if (isTablet) 20.dp else 16.dp),
         ) {
-            if (showAboutSection) {
+            if (showWordmark) {
                 MemberBrandWordmark(
                     height = if (isTablet) 30.dp else 26.dp,
                     modifier = Modifier.align(Alignment.CenterHorizontally),

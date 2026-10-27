@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -124,7 +125,10 @@ internal fun MainTabsDestination(
             label = "luxo_nav_hide",
         )
         var tonightOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        val luxoHaptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+        val luxoHapticsOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().haptics
         val onTabLongPressed: (AppScreenTab) -> Unit = { tab ->
+            if (luxoHapticsOn) luxoHaptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
             when (tab) {
                 AppScreenTab.Home -> tonightOpen = true
                 AppScreenTab.Search -> {
@@ -332,6 +336,8 @@ internal fun mainFloatingNavigationItems(
     val moviesLabel = com.nuvio.app.features.luxo.lx("أفلام", "Movies")
     val seriesLabel = com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
     val listsLabel = com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+    val animeLabel = com.nuvio.app.features.luxo.lx("أنمي", "Anime")
+    val animeOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().animeSection
     val ids = com.nuvio.app.features.luxo.LuxoNavTabIds
     val tabs = buildList {
         add(
@@ -365,6 +371,18 @@ internal fun mainFloatingNavigationItems(
                     label = seriesLabel,
                     id = ids.SERIES,
                     onLongClick = longPress(AppScreenTab.Series),
+                ),
+            )
+        }
+        if (animeOn) {
+            add(
+                FloatingNavigationItem(
+                    selected = highlightedTab == AppScreenTab.Anime,
+                    onClick = { onTabSelected(AppScreenTab.Anime) },
+                    icon = Icons.Filled.Animation,
+                    label = animeLabel,
+                    id = ids.ANIME,
+                    onLongClick = longPress(AppScreenTab.Anime),
                 ),
             )
         }
@@ -451,10 +469,13 @@ internal fun MainClassicNavigationBar(
     val moviesLabel = com.nuvio.app.features.luxo.lx("أفلام", "Movies")
     val seriesLabel = com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
     val listsLabel = com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+    val animeLabel = com.nuvio.app.features.luxo.lx("أنمي", "Anime")
+    val animeOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().animeSection
     val entries = buildList<Pair<String, @Composable com.nuvio.app.core.ui.NuvioNavigationBarScope.() -> Unit>> {
         add(luxoNavEntry(ids.HOME) { NavItem(highlightedTab == AppScreenTab.Home, { onTabSelected(AppScreenTab.Home) }, Icons.Filled.Home, homeLabel) })
         if (luxoNav.showMovies) add(luxoNavEntry(ids.MOVIES) { NavItem(highlightedTab == AppScreenTab.Movies, { onTabSelected(AppScreenTab.Movies) }, Icons.Filled.Movie, moviesLabel) })
         if (luxoNav.showSeries) add(luxoNavEntry(ids.SERIES) { NavItem(highlightedTab == AppScreenTab.Series, { onTabSelected(AppScreenTab.Series) }, Icons.Filled.VideoLibrary, seriesLabel) })
+        if (animeOn) add(luxoNavEntry(ids.ANIME) { NavItem(highlightedTab == AppScreenTab.Anime, { onTabSelected(AppScreenTab.Anime) }, Icons.Filled.Animation, animeLabel) })
         if (luxoNav.showLists) add(luxoNavEntry(ids.LISTS) { NavItem(highlightedTab == AppScreenTab.Lists, { onTabSelected(AppScreenTab.Lists) }, Icons.Filled.Bookmarks, listsLabel) })
         add(luxoNavEntry(ids.SEARCH) { NavItem(highlightedTab == AppScreenTab.Search, { onTabSelected(AppScreenTab.Search) }, Res.drawable.sidebar_search, searchLabel) })
         add(luxoNavEntry(ids.LIBRARY) { NavItem(highlightedTab == AppScreenTab.Library, { onTabSelected(AppScreenTab.Library) }, Res.drawable.sidebar_library, libraryLabel) })

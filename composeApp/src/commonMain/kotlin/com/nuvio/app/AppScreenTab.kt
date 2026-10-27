@@ -6,6 +6,7 @@ enum class AppScreenTab {
     Home,
     Movies,
     Series,
+    Anime,
     Lists,
     Search,
     Library,
@@ -24,6 +25,7 @@ internal fun AppScreenTab.toNativeNavigationTab(): NativeNavigationTab = when (t
     // The iOS native tab bar has no section tabs; they live in the Compose bars only.
     AppScreenTab.Movies -> NativeNavigationTab.Home
     AppScreenTab.Series -> NativeNavigationTab.Home
+    AppScreenTab.Anime -> NativeNavigationTab.Home
     AppScreenTab.Lists -> NativeNavigationTab.Home
     AppScreenTab.Search -> NativeNavigationTab.Search
     AppScreenTab.Library -> NativeNavigationTab.Library

@@ -29,6 +29,8 @@ import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.PictureInPictureAlt
@@ -222,6 +224,12 @@ internal fun PlayerControlActions(
     val secondaryActions = listOfNotNull(
         LuxoPlayerBridge.onCompanionClick?.let {
             PlayerControlAction("رفيق Luxo", it, icon = Icons.Rounded.AutoAwesome)
+        },
+        LuxoPlayerBridge.onScreenshotClick?.let {
+            PlayerControlAction("لقطة شاشة", it, icon = Icons.Rounded.PhotoCamera)
+        },
+        LuxoPlayerBridge.onAbLoopClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.abLoopLabel, it, icon = Icons.Rounded.Repeat)
         },
         LuxoPlayerBridge.onSleepTimerClick?.let {
             PlayerControlAction(

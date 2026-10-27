@@ -330,6 +330,9 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 )
             }
         }
+        if (!isMiniPresentation && com.nuvio.app.features.luxo.rememberLuxoFeatures().ambientGlow) {
+            LuxoAmbientGlow(isPlaying = playbackSnapshot.isPlaying, modifier = Modifier.fillMaxSize())
+        }
 
         if (!isMiniPresentation) {
         AnimatedVisibility(

@@ -9,4 +9,7 @@
     <files-path
         name="nuvio_downloads"
         path="downloads/" />
+    <cache-path
+        name="luxo_share"
+        path="luxo_share/" />
 </paths>

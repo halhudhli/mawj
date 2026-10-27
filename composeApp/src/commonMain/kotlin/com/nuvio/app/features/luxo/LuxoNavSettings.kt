@@ -26,16 +26,18 @@ object LuxoNavTabIds {
     const val HOME = "home"
     const val MOVIES = "movies"
     const val SERIES = "series"
+    const val ANIME = "anime"
     const val LISTS = "lists"
     const val SEARCH = "search"
     const val LIBRARY = "library"
     const val LIVE_TV = "livetv"
-    val DEFAULT_ORDER = listOf(HOME, MOVIES, SERIES, LISTS, SEARCH, LIBRARY, LIVE_TV)
+    val DEFAULT_ORDER = listOf(HOME, MOVIES, SERIES, ANIME, LISTS, SEARCH, LIBRARY, LIVE_TV)
 
     fun label(id: String): String = when (id) {
         HOME -> "الرئيسية · Home"
         MOVIES -> "أفلام · Movies"
         SERIES -> "مسلسلات · Series"
+        ANIME -> "أنمي · Anime"
         LISTS -> "قوائمي · Lists"
         SEARCH -> "بحث · Search"
         LIBRARY -> "المكتبة · Library"

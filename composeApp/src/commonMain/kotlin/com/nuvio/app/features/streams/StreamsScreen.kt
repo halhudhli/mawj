@@ -1463,6 +1463,23 @@ internal fun rememberStreamSearchResult(
     uiState: StreamsUiState,
     query: String,
     enabled: Boolean,
+): StreamSearchResult {
+    val luxo = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+    val ranked = remember(uiState, luxo.streamRanking, luxo.hideCamReleases) {
+        if (!luxo.streamRanking && !luxo.hideCamReleases) {
+            uiState
+        } else {
+            uiState.copy(groups = LuxoStreamRanking.apply(uiState.groups, luxo.streamRanking, luxo.hideCamReleases))
+        }
+    }
+    return rememberStreamSearchResultRanked(ranked, query, enabled)
+}
+
+@Composable
+private fun rememberStreamSearchResultRanked(
+    uiState: StreamsUiState,
+    query: String,
+    enabled: Boolean,
 ): StreamSearchResult = remember(uiState, query, enabled) {
     val terms = if (enabled) query.trim().lowercase().split(' ').filter { it.isNotEmpty() } else emptyList()
     if (terms.isEmpty()) return@remember StreamSearchResult(uiState, isEmptyBecauseOfSearch = false)

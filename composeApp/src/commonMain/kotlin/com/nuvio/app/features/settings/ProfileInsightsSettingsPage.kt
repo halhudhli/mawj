@@ -423,6 +423,8 @@ private fun ProfileInsightsBody(
                 onPosterClick = onPosterClick,
             )
             LuxoUpcomingCalendarCard(episodes = upcomingEpisodes)
+            LuxoAchievementsCard(isTablet = isTablet)
+            LuxoWatchHeatmapCard(isTablet = isTablet)
         }
     }
 

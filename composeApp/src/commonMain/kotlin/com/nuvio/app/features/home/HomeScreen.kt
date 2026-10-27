@@ -1190,8 +1190,19 @@ fun HomeScreen(
                         )
 
                         // Luxo: «وش أشوف الليلة؟»
+                        item(key = "luxo_season") {
+                            com.nuvio.app.features.luxo.LuxoSeasonBanner(
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
+                            )
+                        }
                         item(key = "luxo_tonight") {
                             com.nuvio.app.features.luxo.LuxoTonightCard(
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
+                            )
+                        }
+                        item(key = "luxo_discovery") {
+                            com.nuvio.app.features.luxo.LuxoDiscoveryCard(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
                             )

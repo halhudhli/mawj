@@ -61,7 +61,7 @@ internal object LuxoDateStyle {
     }
 
     /** Arithmetical (tabular) Islamic calendar; may differ from Umm al-Qura by about a day. */
-    private fun gregorianToHijri(year: Int, month: Int, day: Int): Triple<Int, Int, Int> {
+    fun gregorianToHijri(year: Int, month: Int, day: Int): Triple<Int, Int, Int> {
         // Gregorian -> Julian Day Number.
         val a = (14 - month) / 12
         val yy = year + 4800 - a

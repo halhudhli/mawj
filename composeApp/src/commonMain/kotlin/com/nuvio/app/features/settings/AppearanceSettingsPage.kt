@@ -157,6 +157,20 @@ internal fun LazyListScope.appearanceSettingsContent(
     }
     item {
         SettingsSection(
+            title = lx("إضافات Luxo", "Luxo extras"),
+            isTablet = isTablet,
+        ) {
+            SettingsGroup(isTablet = isTablet) {
+                if (com.nuvio.app.features.luxo.rememberLuxoFeatures().themeStudio) {
+                    LuxoThemeStudio(isTablet = isTablet)
+                    SettingsGroupDivider(isTablet = isTablet)
+                }
+                LuxoFeatureSwitches(isTablet = isTablet)
+            }
+        }
+    }
+    item {
+        SettingsSection(
             title = stringResource(Res.string.settings_appearance_section_theme),
             isTablet = isTablet,
         ) {

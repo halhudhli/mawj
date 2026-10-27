@@ -21,6 +21,10 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,10 @@ internal object LuxoPlayerBridge {
     var sleepLabel by mutableStateOf<String?>(null)
     var onSleepTimerClick by mutableStateOf<(() -> Unit)?>(null)
     var onCompanionClick by mutableStateOf<(() -> Unit)?>(null)
+    var onScreenshotClick by mutableStateOf<(() -> Unit)?>(null)
+    var onAbLoopClick by mutableStateOf<(() -> Unit)?>(null)
+    var abLoopLabel by mutableStateOf("تكرار مقطع")
+    var toast by mutableStateOf<String?>(null)
 }
 
 private const val SLEEP_END_OF_EPISODE = -1L
@@ -61,6 +69,70 @@ internal fun LuxoPlayerExtrasHost(
     // Absolute deadline in "playback-clock" ms counted down while playing; 0 = off.
     var sleepRemainingMs by remember { mutableLongStateOf(0L) }
     var sleepAtEpisodeEnd by remember { mutableStateOf(false) }
+
+    val features = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+    val scope = rememberCoroutineScope()
+    // A-B loop: first tap marks A, second marks B, third clears.
+    var loopStart by remember { mutableLongStateOf(-1L) }
+    var loopEnd by remember { mutableLongStateOf(-1L) }
+    LaunchedEffect(loopStart, loopEnd, positionMs) {
+        if (loopStart >= 0 && loopEnd > loopStart && positionMs >= loopEnd) {
+            currentController?.seekTo(loopStart)
+        }
+    }
+    LuxoPlayerBridge.abLoopLabel = when {
+        loopStart < 0 -> "تكرار مقطع · حدد البداية"
+        loopEnd < 0 -> "تكرار مقطع · حدد النهاية"
+        else -> "إيقاف تكرار المقطع"
+    }
+    DisposableEffect(features.playerScreenshot, features.playerAbLoop) {
+        LuxoPlayerBridge.onScreenshotClick = if (features.playerScreenshot) {
+            {
+                scope.launch {
+                    val saved = luxoSaveVideoScreenshot(title)
+                    LuxoPlayerBridge.toast = if (saved) "انحفظت اللقطة في الصور ← Luxo 📸" else "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
+                    delay(2_500L)
+                    LuxoPlayerBridge.toast = null
+                }
+            }
+        } else {
+            null
+        }
+        LuxoPlayerBridge.onAbLoopClick = if (features.playerAbLoop) {
+            {
+                when {
+                    loopStart < 0 -> loopStart = currentPosition
+                    loopEnd < 0 -> {
+                        if (currentPosition > loopStart + 1_000L) {
+                            loopEnd = currentPosition
+                            currentController?.seekTo(loopStart)
+                        }
+                    }
+                    else -> {
+                        loopStart = -1L
+                        loopEnd = -1L
+                    }
+                }
+            }
+        } else {
+            null
+        }
+        onDispose {
+            LuxoPlayerBridge.onScreenshotClick = null
+            LuxoPlayerBridge.onAbLoopClick = null
+        }
+    }
+    LuxoPlayerBridge.toast?.let { message ->
+        androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(bottom = 96.dp), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+            Text(
+                message,
+                color = androidx.compose.ui.graphics.Color.White,
+                modifier = Modifier
+                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f), androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+        }
+    }
 
     DisposableEffect(Unit) {
         LuxoPlayerBridge.onSleepTimerClick = { sleepSheetOpen = true }

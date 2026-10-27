@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Bookmarks
@@ -233,6 +234,17 @@ internal fun AppTabHost(
                 )
             }
 
+            AppScreenTab.Anime -> {
+                com.nuvio.app.features.luxo.LuxoTypeBrowseScreen(
+                    contentType = com.nuvio.app.features.luxo.LuxoContentType.ANIME,
+                    title = com.nuvio.app.features.luxo.lx("أنمي", "Anime"),
+                    modifier = Modifier.fillMaxSize(),
+                    onCatalogClick = actions.onCatalogClick,
+                    onPosterClick = actions.onPosterClick,
+                    onPosterLongClick = actions.onPosterLongClick,
+                )
+            }
+
             AppScreenTab.Lists -> {
                 com.nuvio.app.features.luxo.LuxoListsScreen(
                     modifier = Modifier.fillMaxSize(),
@@ -361,12 +373,14 @@ internal fun TabletFloatingTopBar(
                 listOf(
                     Triple(AppScreenTab.Movies, luxoNav.showMovies, Icons.Filled.Movie),
                     Triple(AppScreenTab.Series, luxoNav.showSeries, Icons.Filled.VideoLibrary),
+                    Triple(AppScreenTab.Anime, com.nuvio.app.features.luxo.rememberLuxoFeatures().animeSection, Icons.Filled.Animation),
                     Triple(AppScreenTab.Lists, luxoNav.showLists, Icons.Filled.Bookmarks),
                 ).forEach { (sectionTab, visible, sectionIcon) ->
                     if (!visible) return@forEach
                     val sectionLabel = when (sectionTab) {
                         AppScreenTab.Movies -> com.nuvio.app.features.luxo.lx("أفلام", "Movies")
                         AppScreenTab.Lists -> com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+                        AppScreenTab.Anime -> com.nuvio.app.features.luxo.lx("أنمي", "Anime")
                         else -> com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
                     }
                     TabletTopPillItem(

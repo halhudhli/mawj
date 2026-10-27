@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -55,6 +56,8 @@ internal fun LuxoDetailsActions(title: LuxoSavedTitle, modifier: Modifier = Modi
     }
     var showRating by remember { mutableStateOf(false) }
     var showLists by remember { mutableStateOf(false) }
+    var showShare by remember { mutableStateOf(false) }
+    val features = rememberLuxoFeatures()
 
     Column(
         modifier = modifier.navigationBarsPadding().padding(start = 16.dp, bottom = 16.dp),
@@ -83,7 +86,13 @@ internal fun LuxoDetailsActions(title: LuxoSavedTitle, modifier: Modifier = Modi
                 if (rating != null) Text(LuxoDateStyle.digits(luxoStarsLabel(rating.score)))
             }
         }
+        if (features.shareCard) {
+            SmallFloatingActionButton(onClick = { showShare = true }) {
+                Icon(Icons.Rounded.Share, contentDescription = lx("مشاركة", "Share"))
+            }
+        }
     }
+    if (showShare) LuxoShareCardDialog(title = title, onDismiss = { showShare = false })
 
     if (showRating) LuxoRatingSheet(title = title, existing = rating, onDismiss = { showRating = false })
     if (showLists) LuxoAddToListSheet(title = title, onDismiss = { showLists = false })
@@ -94,6 +103,8 @@ internal fun LuxoDetailsActions(title: LuxoSavedTitle, modifier: Modifier = Modi
 internal fun LuxoRatingSheet(title: LuxoSavedTitle, existing: LuxoRating?, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var score by remember { mutableIntStateOf(existing?.score ?: 0) }
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val hapticsOn = rememberLuxoFeatures().haptics
     var note by remember { mutableStateOf(existing?.note.orEmpty()) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
@@ -122,6 +133,7 @@ internal fun LuxoRatingSheet(title: LuxoSavedTitle, existing: LuxoRating?, onDis
                             .clickable {
                                 // Tap once for a full star, again on the same star for a half star.
                                 score = if (score == star * 2) star * 2 - 1 else star * 2
+                                if (hapticsOn) haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                             },
                     )
                 }

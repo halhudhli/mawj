@@ -737,6 +737,7 @@ private fun MobileSettingsScreen(
 
         val watchPartyRowClick = watchPartyRow(onWatchPartyClick)
         val profileDrawsOwnChrome = page == SettingsPage.Profile && showInternalHeader && !LocalUseNativeNavigation.current
+        val phoneLuxoHubOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().profileHub
         ProfileInsightsPullToRefresh(enabled = page == SettingsPage.Profile) {
         NuvioScreen(
             modifier = Modifier.nestedScroll(rootSearchRevealConnection),
@@ -802,6 +803,7 @@ private fun MobileSettingsScreen(
                             },
                             onWatchPartyClick = watchPartyRowClick,
                             showSupportersContributorsPage = AppFeaturePolicy.supportersContributorsPageEnabled,
+                            luxoHub = phoneLuxoHubOn,
                         )
                     }
                 }
@@ -1130,8 +1132,9 @@ private fun TabletSettingsScreen(
 
     val saveableStateHolder = rememberSaveableStateHolder()
 
+    val luxoHubOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().profileHub
     Row(modifier = Modifier.fillMaxSize()) {
-        Surface(
+        if (!luxoHubOn) Surface(
             modifier = Modifier
                 .width(280.dp)
                 .fillMaxSize(),
@@ -1237,7 +1240,7 @@ private fun TabletSettingsScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                if (showInternalHeader) {
+                if (showInternalHeader && !(luxoHubOn && page == SettingsPage.Root && settingsSearchQuery.isBlank())) {
                     item {
                         val previousPage = page.previousPage()
                         TabletPageHeader(
@@ -1304,6 +1307,7 @@ private fun TabletSettingsScreen(
                                 showAboutSection = activeCategory == SettingsCategory.About,
                                 showAdvancedSection = activeCategory == SettingsCategory.Advanced,
                                 showSupportersContributorsPage = AppFeaturePolicy.supportersContributorsPageEnabled,
+                                luxoHub = luxoHubOn,
                             )
                         }
                     }
