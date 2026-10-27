@@ -376,6 +376,17 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         )
         RenderPlayerModals()
         RenderParty(runtime = runtime)
+        // LUXO: sleep timer + «رفيق Luxo» inside the player.
+        LuxoPlayerExtrasHost(
+            controller = playerController,
+            title = title,
+            seasonNumber = activeSeasonNumber,
+            episodeNumber = activeEpisodeNumber,
+            episodeTitle = activeEpisodeTitle,
+            positionMs = playbackSnapshot.positionMs,
+            durationMs = playbackSnapshot.durationMs,
+            isPlaying = playbackSnapshot.isPlaying,
+        )
         }
     }
 }

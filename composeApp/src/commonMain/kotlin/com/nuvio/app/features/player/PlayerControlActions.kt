@@ -27,6 +27,8 @@ import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.PictureInPictureAlt
@@ -216,7 +218,18 @@ internal fun PlayerControlActions(
             )
         },
     )
+    val luxoSleepLabel = LuxoPlayerBridge.sleepLabel
     val secondaryActions = listOfNotNull(
+        LuxoPlayerBridge.onCompanionClick?.let {
+            PlayerControlAction("رفيق Luxo", it, icon = Icons.Rounded.AutoAwesome)
+        },
+        LuxoPlayerBridge.onSleepTimerClick?.let {
+            PlayerControlAction(
+                luxoSleepLabel?.let { label -> "مؤقت النوم · $label" } ?: "مؤقت النوم",
+                it,
+                icon = Icons.Rounded.Bedtime,
+            )
+        },
         PlayerControlAction(
             stringResource(Res.string.compose_player_audio), onAudioClick,
             painter = appIconPainter(AppIconResource.PlayerAudioFilled),

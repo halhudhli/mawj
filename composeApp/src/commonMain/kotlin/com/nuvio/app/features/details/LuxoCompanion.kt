@@ -56,12 +56,15 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
         subjectKey = meta.id,
         subjectTitle = meta.name,
         context = LuxoCompanionApi.context(meta),
-        quickActions = listOf(
-            "ملخص بدون حرق" to LuxoCompanionApi.SUMMARY,
-            "عن الممثلين" to LuxoCompanionApi.CAST,
-            "ليش أشاهده؟" to LuxoCompanionApi.WHY,
-            "أعمال تشبهه" to LuxoCompanionApi.SIMILAR,
-        ),
+        quickActions = buildList {
+            luxoLastWatchedEpisode(meta.id)?.let { (season, episode) ->
+                add("ملخص اللي فات" to LuxoCompanionApi.recapPrompt(season, episode))
+            }
+            add("ملخص بدون حرق" to LuxoCompanionApi.SUMMARY)
+            add("عن الممثلين" to LuxoCompanionApi.CAST)
+            add("ليش أشاهده؟" to LuxoCompanionApi.WHY)
+            add("أعمال تشبهه" to LuxoCompanionApi.SIMILAR)
+        },
         questionLabel = "اسأل عن العمل (بدون حرق)",
         modifier = modifier,
     )
@@ -105,6 +108,27 @@ private fun LuxoCompanionPanel(
         icon = { Text("✨") },
     )
     if (!open) return
+    LuxoCompanionSheet(
+        subjectKey = subjectKey,
+        subjectTitle = subjectTitle,
+        context = context,
+        quickActions = quickActions,
+        questionLabel = questionLabel,
+        onDismiss = { open = false },
+    )
+}
+
+/** The companion sheet itself; [onDismiss] closes it. Used by the floating button and the player. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun LuxoCompanionSheet(
+    subjectKey: String,
+    subjectTitle: String,
+    context: String,
+    quickActions: List<Pair<String, String>>,
+    questionLabel: String,
+    onDismiss: () -> Unit,
+) {
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -124,7 +148,7 @@ private fun LuxoCompanionPanel(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = { open = false }, sheetState = sheetState) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -232,6 +256,11 @@ internal object LuxoCompanionApi {
         person.biography?.let { append("\nالسيرة من TMDB: ").append(it.take(1500)) }
     }
 
+    /** Recap of everything up to (and including) the episode the viewer reached — nothing after it. */
+    fun recapPrompt(season: Int, episode: Int): String =
+        "المشاهد توقف عند الموسم $season الحلقة $episode. لخّص له أحداث المسلسل من البداية حتى نهاية هذه الحلقة فقط " +
+            "بنقاط مرتبة، ليتذكر القصة قبل أن يكمل. ممنوع ذكر أي حدث يقع بعد هذه الحلقة."
+
     fun loadKey(): String? = AppFileCache.read(KEY_PATH)?.trim()?.takeIf { it.isNotEmpty() }
     fun saveKey(value: String) = AppFileCache.write(KEY_PATH, value)
 
@@ -271,4 +300,17 @@ internal object LuxoCompanionApi {
             if (error is CancellationException) throw error
             "تعذّر الاتصال بـ Gemini. تأكد من الإنترنت ومن صحة المفتاح."
         }
+}
+
+/** Furthest episode (season, episode) the viewer reached for a series, from progress and watched history. */
+internal fun luxoLastWatchedEpisode(metaId: String): Pair<Int, Int>? {
+    val fromProgress = com.nuvio.app.features.watchprogress.WatchProgressRepository.uiState.value.entries
+        .filter { it.parentMetaId == metaId }
+        .mapNotNull { entry -> entry.seasonNumber?.let { s -> entry.episodeNumber?.let { e -> s to e } } }
+    val fromWatched = com.nuvio.app.features.watched.WatchedRepository.uiState.value.items
+        .filter { it.id == metaId }
+        .mapNotNull { item -> item.season?.let { s -> item.episode?.let { e -> s to e } } }
+    return (fromProgress + fromWatched)
+        .filter { (season, _) -> season > 0 }
+        .maxWithOrNull(compareBy<Pair<Int, Int>> { it.first }.thenBy { it.second })
 }
