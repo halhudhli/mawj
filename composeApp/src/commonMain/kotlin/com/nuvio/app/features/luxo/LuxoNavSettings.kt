@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 data class LuxoNavSettings(
     val showMovies: Boolean = true,
     val showSeries: Boolean = true,
+    val showLists: Boolean = true,
 )
 
 object LuxoNavSettingsRepository {

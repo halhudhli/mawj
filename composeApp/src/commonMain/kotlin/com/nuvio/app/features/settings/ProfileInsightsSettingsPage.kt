@@ -3561,4 +3561,16 @@ private fun luxoTasteContext(
     appendLine("خلّصت: " + titles(ProfileInsightCollectionKind.Completed, 40))
     appendLine("شاهدت مؤخراً: " + titles(ProfileInsightCollectionKind.Watched, 40))
     appendLine("في مكتبتي: " + titles(ProfileInsightCollectionKind.Library, 30))
+    val userData = com.nuvio.app.features.luxo.LuxoUserData.state.value
+    if (userData.ratings.isNotEmpty()) {
+        appendLine("تقييماتي الشخصية (من 5):")
+        userData.ratings.values.sortedByDescending { it.score }.take(60).forEach { rating ->
+            append("- ${rating.title.name}: ${com.nuvio.app.features.luxo.luxoStarsLabel(rating.score)}")
+            if (rating.note.isNotBlank()) append(" — ${rating.note}")
+            appendLine()
+        }
+    }
+    userData.lists.filter { it.items.isNotEmpty() }.forEach { list ->
+        appendLine("قائمتي «${list.name}»: " + list.items.take(20).joinToString("، ") { it.name })
+    }
 }

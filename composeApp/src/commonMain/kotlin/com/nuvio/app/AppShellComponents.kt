@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Tv
@@ -232,6 +233,13 @@ internal fun AppTabHost(
                 )
             }
 
+            AppScreenTab.Lists -> {
+                com.nuvio.app.features.luxo.LuxoListsScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onPosterClick = actions.onPosterClick,
+                )
+            }
+
             AppScreenTab.Search -> {
                 SearchScreen(
                     modifier = Modifier.fillMaxSize(),
@@ -353,12 +361,13 @@ internal fun TabletFloatingTopBar(
                 listOf(
                     Triple(AppScreenTab.Movies, luxoNav.showMovies, Icons.Filled.Movie),
                     Triple(AppScreenTab.Series, luxoNav.showSeries, Icons.Filled.VideoLibrary),
+                    Triple(AppScreenTab.Lists, luxoNav.showLists, Icons.Filled.Bookmarks),
                 ).forEach { (sectionTab, visible, sectionIcon) ->
                     if (!visible) return@forEach
-                    val sectionLabel = if (sectionTab == AppScreenTab.Movies) {
-                        com.nuvio.app.features.luxo.lx("أفلام", "Movies")
-                    } else {
-                        com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
+                    val sectionLabel = when (sectionTab) {
+                        AppScreenTab.Movies -> com.nuvio.app.features.luxo.lx("أفلام", "Movies")
+                        AppScreenTab.Lists -> com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+                        else -> com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
                     }
                     TabletTopPillItem(
                         label = sectionLabel,

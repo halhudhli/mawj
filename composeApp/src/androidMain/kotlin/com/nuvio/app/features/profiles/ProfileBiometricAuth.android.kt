@@ -50,6 +50,9 @@ actual object ProfileBiometricAuth {
 
     private fun activity(): FragmentActivity? = activityReference?.get()
 
+    /** Luxo: the host activity for the app-lock prompt. */
+    internal fun hostActivity(): FragmentActivity? = activity()
+
     actual fun isAvailable(): Boolean {
         val host = activity() ?: return false
         val keyguard = host.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager

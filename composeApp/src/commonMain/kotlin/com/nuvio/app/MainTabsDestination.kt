@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -285,6 +286,16 @@ internal fun mainFloatingNavigationItems(
             ),
         )
     }
+    if (luxoNav.showLists) {
+        add(
+            FloatingNavigationItem(
+                selected = highlightedTab == AppScreenTab.Lists,
+                onClick = { onTabSelected(AppScreenTab.Lists) },
+                icon = Icons.Filled.Bookmarks,
+                label = com.nuvio.app.features.luxo.lx("قوائمي", "Lists"),
+            ),
+        )
+    }
     add(
         FloatingNavigationItem(
             selected = highlightedTab == AppScreenTab.Search,
@@ -362,6 +373,14 @@ internal fun MainClassicNavigationBar(
                 onClick = { onTabSelected(AppScreenTab.Series) },
                 icon = Icons.Filled.VideoLibrary,
                 contentDescription = com.nuvio.app.features.luxo.lx("مسلسلات", "Series"),
+            )
+        }
+        if (luxoNav.showLists) {
+            NavItem(
+                selected = highlightedTab == AppScreenTab.Lists,
+                onClick = { onTabSelected(AppScreenTab.Lists) },
+                icon = Icons.Filled.Bookmarks,
+                contentDescription = com.nuvio.app.features.luxo.lx("قوائمي", "Lists"),
             )
         }
         NavItem(

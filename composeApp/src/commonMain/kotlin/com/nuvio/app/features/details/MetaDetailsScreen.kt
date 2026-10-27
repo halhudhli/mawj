@@ -2029,6 +2029,16 @@ fun MetaDetailsScreen(
         // LUXO: «رفيق Luxo»
         displayedMeta?.let { meta ->
             LuxoCompanion(meta = meta, modifier = Modifier.align(Alignment.BottomEnd))
+            com.nuvio.app.features.luxo.LuxoDetailsActions(
+                title = com.nuvio.app.features.luxo.LuxoSavedTitle(
+                    id = meta.id,
+                    type = meta.type,
+                    name = meta.name,
+                    poster = meta.poster,
+                    banner = meta.background,
+                ),
+                modifier = Modifier.align(Alignment.BottomStart),
+            )
         }
     }
 }

@@ -45,6 +45,7 @@ fun App(
     appGateController: AppGateController? = null,
 ) {
     AppEnvironment {
+      androidx.compose.foundation.layout.Box {
         AppGate(
             initialTab = initialTab,
             initialRoute = initialRoute,
@@ -65,6 +66,8 @@ fun App(
             nativeProfileSwitcherController = nativeProfileSwitcherController,
             appGateController = appGateController,
         )
+        com.nuvio.app.features.luxo.LuxoAppLockOverlay()
+      }
     }
 }
 

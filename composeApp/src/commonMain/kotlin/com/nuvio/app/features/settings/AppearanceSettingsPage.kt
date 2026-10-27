@@ -567,6 +567,16 @@ private fun LuxoNavTabSwitches(isTablet: Boolean) {
             com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(showSeries = checked) }
         },
     )
+    SettingsGroupDivider(isTablet = isTablet)
+    SettingsSwitchRow(
+        title = lx("قسم «قوائمي» في الشريط السفلي", "\"My lists\" tab in the bottom bar"),
+        description = lx("قوائمك الخاصة مثل «أفلام الويكند» وأفضل اللي قيّمتيه", "Your own lists and your top-rated titles"),
+        checked = navSettings.showLists,
+        isTablet = isTablet,
+        onCheckedChange = { checked ->
+            com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(showLists = checked) }
+        },
+    )
 }
 
 @androidx.compose.runtime.Composable
@@ -633,6 +643,18 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
         com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository.uiState
     }.collectAsStateWithLifecycle()
     var recapOpen by remember { mutableStateOf(false) }
+    val appLock by com.nuvio.app.features.luxo.LuxoAppLock.enabled.collectAsStateWithLifecycle()
+    SettingsSwitchRow(
+        title = lx("قفل التطبيق بالبصمة 🔒", "Lock the app 🔒"),
+        description = lx(
+            "يطلب البصمة أو رمز الجوال كل ما فتحتي Luxo أو رجعتي له بعد 30 ثانية",
+            "Asks for your fingerprint or device lock when you open Luxo or return after 30 seconds",
+        ),
+        checked = appLock,
+        isTablet = isTablet,
+        onCheckedChange = { com.nuvio.app.features.luxo.LuxoAppLock.setEnabled(it) },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
     val hijriDates by com.nuvio.app.features.luxo.LuxoDateStyle.hijri.collectAsStateWithLifecycle()
     val arabicDigits by com.nuvio.app.features.luxo.LuxoDateStyle.arabicDigits.collectAsStateWithLifecycle()
 
