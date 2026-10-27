@@ -422,6 +422,7 @@ private fun ProfileInsightsBody(
                 items = insightCollections[ProfileInsightCollectionKind.Completed]?.items.orEmpty(),
                 onPosterClick = onPosterClick,
             )
+            LuxoUpcomingCalendarCard(episodes = upcomingEpisodes)
         }
     }
 
@@ -3572,5 +3573,67 @@ private fun luxoTasteContext(
     }
     userData.lists.filter { it.items.isNotEmpty() }.forEach { list ->
         appendLine("قائمتي «${list.name}»: " + list.items.take(20).joinToString("، ") { it.name })
+    }
+}
+
+
+@Composable
+private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
+    if (episodes.isEmpty()) return
+    val tokens = MaterialTheme.nuvio
+    var message by remember { mutableStateOf<String?>(null) }
+    NuvioSurfaceCard(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = com.nuvio.app.features.luxo.lx("تنزل قريب 📅", "Coming up 📅"),
+                style = MaterialTheme.typography.titleMedium,
+                color = tokens.colors.textPrimary,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = com.nuvio.app.features.luxo.lx(
+                    "اضغطي 📅 عشان تضيفين موعد الحلقة لتقويم جوالك مع تذكير",
+                    "Tap 📅 to save the air date to your phone's calendar with a reminder",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = tokens.colors.textMuted,
+            )
+            episodes.take(12).forEach { episode ->
+                val episodeLabel = listOfNotNull(
+                    episode.seasonNumber?.let { season -> episode.episodeNumber?.let { "S${season}E$it" } },
+                    episode.subtitle?.takeIf { it.isNotBlank() },
+                ).joinToString(" · ")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = episode.item.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = tokens.colors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = listOf(
+                                com.nuvio.app.core.format.formatReleaseDateForDisplay(episode.dateIso),
+                                episodeLabel,
+                            ).filter { it.isNotBlank() }.joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = tokens.colors.textMuted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    androidx.compose.material3.TextButton(onClick = {
+                        val ok = com.nuvio.app.features.luxo.luxoAddToCalendar(
+                            title = "${episode.item.name}${if (episodeLabel.isNotBlank()) " — $episodeLabel" else ""}",
+                            dateIso = episode.dateIso,
+                            description = com.nuvio.app.features.luxo.lx("حلقة جديدة في Luxo", "New episode on Luxo"),
+                        )
+                        if (!ok) message = com.nuvio.app.features.luxo.lx("ما لقيت تطبيق تقويم", "No calendar app found")
+                    }) { Text("📅") }
+                }
+            }
+            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = tokens.colors.textMuted) }
+        }
     }
 }

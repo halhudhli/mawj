@@ -26,11 +26,21 @@ internal data class GitHubReleaseDto(
 internal data class GitHubAssetDto(
     val name: String,
     @SerialName("browser_download_url") val browserDownloadUrl: String,
+    /** API URL of the asset; the only way to download from a private repo (with a token). */
+    @SerialName("url") val apiUrl: String? = null,
     val size: Long? = null,
     @SerialName("content_type") val contentType: String? = null,
 )
 
 internal class NoChannelReleaseException : IllegalStateException()
+
+/** Luxo: the repo is private, so update checks/downloads use a read-only token baked in at build time. */
+internal fun luxoGitHubHeaders(accept: String): Map<String, String> = buildMap {
+    put("Accept", accept)
+    put("User-Agent", "LuxoApp")
+    put("X-GitHub-Api-Version", "2022-11-28")
+    LuxoUpdateConfig.TOKEN.takeIf { it.isNotBlank() }?.let { put("Authorization", "Bearer $it") }
+}
 
 internal const val GITHUB_API_BASE = "https://api.github.com"
 internal const val GITHUB_OWNER = "halhudhli"
@@ -46,10 +56,7 @@ internal object AppUpdaterRepository {
         val response = httpRequestRaw(
             method = "GET",
             url = "$GITHUB_API_BASE/repos/$GITHUB_OWNER/$GITHUB_REPO/${releasePath(channel)}",
-            headers = mapOf(
-                "Accept" to "application/vnd.github+json",
-                "User-Agent" to "NuvioMobile",
-            ),
+            headers = luxoGitHubHeaders("application/vnd.github+json"),
             body = "",
         )
         currentCoroutineContext().ensureActive()
@@ -85,7 +92,7 @@ internal object AppUpdaterRepository {
                 notes = release.body.orEmpty(),
                 releaseUrl = release.htmlUrl,
                 assetName = asset.name,
-                assetUrl = asset.browserDownloadUrl,
+                assetUrl = if (LuxoUpdateConfig.TOKEN.isNotBlank()) asset.apiUrl ?: asset.browserDownloadUrl else asset.browserDownloadUrl,
                 assetSizeBytes = asset.size,
             )
         }

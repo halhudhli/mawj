@@ -94,6 +94,13 @@ object AndroidAppUpdaterPlatform {
 
             val request = Request.Builder()
                 .url(assetUrl)
+                .apply {
+                    // Private-repo assets come from the API URL; OkHttp drops the token on the
+                    // redirect to GitHub's file host.
+                    if (assetUrl.startsWith("https://api.github.com/")) {
+                        luxoGitHubHeaders("application/octet-stream").forEach { (name, value) -> header(name, value) }
+                    }
+                }
                 .build()
 
             httpClient.newCall(request).execute().use { response ->

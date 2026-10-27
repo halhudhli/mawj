@@ -643,6 +643,18 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
         com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository.uiState
     }.collectAsStateWithLifecycle()
     var recapOpen by remember { mutableStateOf(false) }
+    val autoTranslate by com.nuvio.app.features.player.LuxoSubtitleTranslator.enabled.collectAsStateWithLifecycle()
+    SettingsSwitchRow(
+        title = lx("ترجمة الترجمات للعربي تلقائياً ✨", "Auto-translate subtitles to Arabic ✨"),
+        description = lx(
+            "إذا الحلقة ما لها ترجمة عربية، رفيق Luxo يترجم الإنجليزية ويضيفها «عربي ✨ ترجمة Luxo». يحتاج مفتاح Gemini",
+            "When there's no Arabic subtitle, Luxo Companion translates the English one. Needs a Gemini key",
+        ),
+        checked = autoTranslate,
+        isTablet = isTablet,
+        onCheckedChange = { com.nuvio.app.features.player.LuxoSubtitleTranslator.setEnabled(it) },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
     val appLock by com.nuvio.app.features.luxo.LuxoAppLock.enabled.collectAsStateWithLifecycle()
     SettingsSwitchRow(
         title = lx("قفل التطبيق بالبصمة 🔒", "Lock the app 🔒"),

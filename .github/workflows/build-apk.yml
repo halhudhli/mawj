@@ -9,6 +9,9 @@ concurrency:
   group: build-apk-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -64,6 +67,8 @@ jobs:
           OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
           PREMIUMIZE_CLIENT_ID: ${{ secrets.PREMIUMIZE_CLIENT_ID }}
           INTRODB_API_URL: ${{ secrets.INTRODB_API_URL }}
+          # مفتاح قراءة فقط عشان التطبيق يشوف التحديثات (المستودع خاص)
+          LUXO_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN }}
         run: |
           set -o pipefail
           ./gradlew :androidApp:assembleFullDebug \
@@ -71,6 +76,8 @@ jobs:
             -Pnuvio.ios.distribution=appstore \
             -Pluxo.abi=arm64-v8a \
             -Pluxo.fastDebug=true \
+            -Pnuvio.app.versionName=1.0.${{ github.run_number }} \
+            -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace 2>&1 | tee build.log
 
@@ -94,3 +101,20 @@ jobs:
           path: androidApp/build/outputs/apk/full/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      # ينشر كل بناء ناجح كإصدار، والتطبيق يشيك عليه ويحدّث نفسه
+      - name: Publish release for in-app updates
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          APK=$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)
+          cp "$APK" "Luxo-${VERSION}-arm64-v8a.apk"
+          git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
+          gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" \
+            --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
+          # نخلي آخر 5 إصدارات بس
+          gh release list --limit 100 --json tagName -q '.[5:][].tagName' | while read -r tag; do
+            gh release delete "$tag" --yes --cleanup-tag || true
+          done

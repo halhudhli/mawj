@@ -120,7 +120,7 @@ internal object SettingsConfigTransfer {
 
     fun exportFileName(): String {
         val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        return "nuvio-settings-$date.json"
+        return "luxo-settings-$date.json"
     }
 
     fun export(includeCredentials: Boolean): String {
@@ -153,6 +153,7 @@ internal object SettingsConfigTransfer {
                     put("general", exportGeneralSettings())
                     put("p2p", exportP2pSettings())
                     put("discord_rpc", exportDiscordSettings(includeCredentials))
+                    put("luxo", exportLuxoSettings(includeCredentials))
                     if (includeCredentials) {
                         put("live_tv", exportLiveTvSettings())
                         put("addons", exportAddons())
@@ -274,6 +275,7 @@ internal object SettingsConfigTransfer {
             section("plugins") { value -> importPlugins(value.jsonObject) }
         }
         section("home") { value -> importHomeSettings(value.jsonObject) }
+        section("luxo") { value -> importLuxoSettings(value.jsonObject) }
         HomeRepository.applyCurrentSettings()
         return failures
     }
@@ -320,6 +322,32 @@ internal object SettingsConfigTransfer {
 
     private fun JsonObject.strings(key: String): List<String> =
         (get(key) as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.orEmpty()
+
+    // Luxo: splash, fonts, poster look, nav tabs, dates, lists, ratings, app lock (and the Gemini key
+    // when credentials are included). Most of these take effect after the app restarts.
+    private fun exportLuxoSettings(includeCredentials: Boolean): JsonObject = buildJsonObject {
+        put(
+            "prefs",
+            buildJsonObject {
+                com.nuvio.app.features.luxo.LuxoPrefsStorage.all()
+                    .filterKeys { it != "widget_continue_lines" }
+                    .forEach { (key, value) -> put(key, value) }
+            },
+        )
+        if (includeCredentials) {
+            com.nuvio.app.features.details.LuxoCompanionApi.loadKey()?.let { put("gemini_api_key", it) }
+        }
+    }
+
+    private fun importLuxoSettings(payload: JsonObject) {
+        (payload["prefs"] as? JsonObject)?.forEach { (key, value) ->
+            (value as? JsonPrimitive)?.contentOrNull?.let { com.nuvio.app.features.luxo.LuxoPrefsStorage.save(key, it) }
+        }
+        payload.string("gemini_api_key")?.takeIf { it.isNotBlank() }?.let {
+            com.nuvio.app.features.details.LuxoCompanionApi.saveKey(it)
+        }
+        com.nuvio.app.features.luxo.LuxoUserData.reload()
+    }
 
     private fun exportCustomPosterSettings(): JsonObject = buildJsonObject {
         put("pattern", CustomPosterUrlStorage.loadPattern().orEmpty().trim())

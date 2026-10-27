@@ -27,4 +27,7 @@ internal actual object LuxoPrefsStorage {
     actual fun save(key: String, value: String) {
         preferences?.edit()?.putString(key, value)?.apply()
     }
+
+    actual fun all(): Map<String, String> =
+        preferences?.all.orEmpty().mapNotNull { (key, value) -> (value as? String)?.let { key to it } }.toMap()
 }

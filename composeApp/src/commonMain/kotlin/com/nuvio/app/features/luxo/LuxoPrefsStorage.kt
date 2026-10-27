@@ -7,4 +7,7 @@ package com.nuvio.app.features.luxo
 internal expect object LuxoPrefsStorage {
     fun load(key: String): String?
     fun save(key: String, value: String)
+
+    /** Every stored key/value, for backups. */
+    fun all(): Map<String, String>
 }

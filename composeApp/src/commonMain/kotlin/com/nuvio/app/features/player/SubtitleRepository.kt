@@ -38,12 +38,14 @@ object SubtitleRepository {
             _error.value = null
             _addonSubtitles.value = emptyList()
 
+            val englishCandidates = MutableStateFlow<List<AddonSubtitle>>(emptyList())
             val requests = addonSubtitleRequests(type, videoId)
             // LUXO: SubDL + add-ons, Arabic only
             _loadingProgress.value = SubtitleLoadingProgress(total = requests.size + 1)
             if (requests.isNotEmpty()) {
                 loadAddonSubtitles(requests) { request, subtitles ->
                     _addonSubtitles.update { it + subtitles.filter(LuxoSubtitleProviders::isArabic) }
+                    englishCandidates.update { it + subtitles.filter(LuxoSubtitleTranslator::isEnglish) }
                     _loadingProgress.update { progress ->
                         progress?.copy(completed = progress.completed + 1, addonName = request.addonName)
                     }
@@ -53,6 +55,18 @@ object SubtitleRepository {
             _addonSubtitles.update { current -> (current + builtIn).distinctBy { it.url } }
             _loadingProgress.update { progress ->
                 progress?.copy(completed = progress.completed + 1, addonName = "SubDL")
+            }
+
+            // LUXO: no Arabic subtitle → translate an English one with Luxo Companion.
+            val shouldTranslate = _addonSubtitles.value.isEmpty() &&
+                englishCandidates.value.isNotEmpty() &&
+                LuxoSubtitleTranslator.canTranslate()
+            if (shouldTranslate) {
+                _loadingProgress.update { progress ->
+                    progress?.copy(addonName = "ترجمة Luxo ✨")
+                }
+                val translated = englishCandidates.value.take(2).firstNotNullOfOrNull { LuxoSubtitleTranslator.translate(it) }
+                if (translated != null) _addonSubtitles.update { it + translated }
             }
 
             if (_addonSubtitles.value.isEmpty()) {
