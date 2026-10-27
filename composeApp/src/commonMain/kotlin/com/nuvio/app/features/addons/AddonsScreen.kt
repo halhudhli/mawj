@@ -619,7 +619,6 @@ private fun AddonIconBadge(
             .then(
                 if (luxoLook) {
                     Modifier
-                        .shadow(12.dp, RoundedCornerShape(22.dp), ambientColor = accents.first(), spotColor = accents.first())
                         .border(1.5.dp, androidx.compose.ui.graphics.Brush.linearGradient(accents), RoundedCornerShape(22.dp))
                         .padding(3.dp)
                 } else {

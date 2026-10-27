@@ -15,6 +15,8 @@ import kotlinx.serialization.json.Json
 data class LuxoFeatures(
     val luxoDesign: Boolean = true,
     val luxoDock: Boolean = true,
+    /** 0 = no glow, 1 = soft (default), 2 = strong. */
+    val glowLevel: Int = 1,
     val profileHub: Boolean = true,
     val passTilt: Boolean = true,
     val seasonalThemes: Boolean = true,

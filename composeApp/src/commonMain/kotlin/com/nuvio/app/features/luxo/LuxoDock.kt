@@ -77,6 +77,7 @@ internal fun LuxoDockBar(
     if (items.isEmpty()) return
     val tokens = MaterialTheme.nuvio
     val accents = luxoAccentColors()
+    val glow = com.nuvio.app.core.ui.luxoGlowAmount()
     val showLabels = rememberLuxoNavSettings().showLabels
     val shimmer = rememberInfiniteTransition(label = "dock_shimmer")
     val sweep by shimmer.animateFloat(
@@ -105,7 +106,7 @@ internal fun LuxoDockBar(
                     // Accent pool of light under the dock.
                     drawOval(
                         brush = Brush.radialGradient(
-                            listOf(accents.first().copy(alpha = 0.28f), Color.Transparent),
+                            listOf(accents.first().copy(alpha = 0.22f * glow), Color.Transparent),
                             center = Offset(size.width / 2f, size.height * (if (onTop) 0.1f else 0.9f)),
                             radius = size.width * 0.6f,
                         ),
@@ -125,7 +126,7 @@ internal fun LuxoDockBar(
                     val x = size.width * (sweep * 1.4f - 0.2f)
                     drawRoundRect(
                         brush = Brush.horizontalGradient(
-                            listOf(Color.Transparent, accents.last().copy(alpha = 0.55f), Color.Transparent),
+                            listOf(Color.Transparent, accents.last().copy(alpha = 0.12f + 0.3f * glow), Color.Transparent),
                             startX = x - size.width * 0.18f,
                             endX = x + size.width * 0.18f,
                         ),
@@ -139,7 +140,7 @@ internal fun LuxoDockBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             items.forEach { item ->
-                LuxoDockItem(item = item, showLabel = showLabels, accents = accents)
+                LuxoDockItem(item = item, showLabel = showLabels, accents = accents, glow = glow)
             }
         }
     }
@@ -147,7 +148,8 @@ internal fun LuxoDockBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accents: List<Color>) {
+private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accents: List<Color>, glow: Float) {
+    val onPill = if (com.nuvio.app.core.ui.luxoAccentIsLight()) Color(0xFF111111) else Color.White
     val tokens = MaterialTheme.nuvio
     val selected = item.selected
     val bounce = remember { Animatable(1f) }
@@ -170,7 +172,7 @@ private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accen
                 .drawBehind {
                     if (burst.value in 0.01f..0.99f) {
                         drawCircle(
-                            color = accents.first().copy(alpha = (1f - burst.value) * 0.7f),
+                            color = accents.first().copy(alpha = (1f - burst.value) * (0.25f + 0.45f * glow)),
                             radius = size.minDimension / 2f * (0.6f + burst.value * 1.1f),
                             style = Stroke(width = (1f - burst.value) * 4.dp.toPx()),
                         )
@@ -182,8 +184,8 @@ private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accen
                 .height(46.dp)
                 .animateContentSize(spring(dampingRatio = 0.7f, stiffness = 420f))
                 .then(
-                    if (selected) {
-                        Modifier.shadow(12.dp, pillShape, ambientColor = accents.first(), spotColor = accents.first())
+                    if (selected && glow > 0.5f) {
+                        Modifier.shadow(8.dp, pillShape, ambientColor = accents.first(), spotColor = accents.first())
                     } else {
                         Modifier
                     },
@@ -208,9 +210,9 @@ private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accen
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                val tint = if (selected) Color.White else tokens.colors.textMuted
+                val tint = if (selected) onPill else tokens.colors.textMuted
                 when {
-                    item.content != null -> item.content.invoke(item.onClick, if (selected) Color.White else null)
+                    item.content != null -> item.content.invoke(item.onClick, if (selected) onPill else null)
                     item.icon != null -> Icon(item.icon, item.label, Modifier.size(24.dp), tint = tint)
                     item.drawable != null -> Icon(painterResource(item.drawable), item.label, Modifier.size(24.dp), tint = tint)
                 }
@@ -225,7 +227,7 @@ private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accen
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = item.label,
-                        color = Color.White,
+                        color = onPill,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         maxLines = 1,

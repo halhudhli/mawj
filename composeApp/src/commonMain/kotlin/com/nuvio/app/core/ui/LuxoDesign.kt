@@ -43,6 +43,30 @@ import com.nuvio.app.features.luxo.rememberLuxoFeatures
 @Composable
 fun luxoDesignOn(): Boolean = rememberLuxoFeatures().luxoDesign
 
+/**
+ * How much glow to draw: the user's choice (none / soft / strong), softened further when the
+ * accent is very light (a white accent glows as a harsh white blob otherwise).
+ */
+@Composable
+fun luxoGlowAmount(): Float {
+    val level = rememberLuxoFeatures().glowLevel
+    val base = when (level) {
+        0 -> 0f
+        2 -> 1f
+        else -> 0.45f
+    }
+    val accent = MaterialTheme.nuvio.colors.accent
+    val luminance = 0.2126f * accent.red + 0.7152f * accent.green + 0.0722f * accent.blue
+    return if (luminance > 0.75f) base * 0.35f else base
+}
+
+/** True when the accent is near white, so content on it should be dark. */
+@Composable
+fun luxoAccentIsLight(): Boolean {
+    val accent = MaterialTheme.nuvio.colors.accent
+    return 0.2126f * accent.red + 0.7152f * accent.green + 0.0722f * accent.blue > 0.75f
+}
+
 /** Two-or-more colours of the current theme accent, for gradients. */
 @Composable
 fun luxoAccentColors(): List<Color> {
@@ -56,7 +80,8 @@ fun luxoAccentColors(): List<Color> {
  * and a soft top highlight.
  */
 @Composable
-fun Modifier.luxoGlass(shape: Shape, glow: Float = 1f): Modifier {
+fun Modifier.luxoGlass(shape: Shape, glowScale: Float = 1f): Modifier {
+    val glow = glowScale * luxoGlowAmount()
     val tokens = MaterialTheme.nuvio
     val accents = luxoAccentColors()
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -88,9 +113,9 @@ fun Modifier.luxoGlass(shape: Shape, glow: Float = 1f): Modifier {
             1.dp,
             Brush.linearGradient(
                 listOf(
-                    accents.first().copy(alpha = 0.42f * glow),
+                    accents.first().copy(alpha = 0.10f + 0.30f * glow),
                     Color.White.copy(alpha = 0.06f),
-                    accents.last().copy(alpha = 0.22f * glow),
+                    accents.last().copy(alpha = 0.06f + 0.16f * glow),
                 ),
             ),
             shape,
@@ -120,24 +145,21 @@ fun LuxoSwitch(
         label = "luxo_switch",
     )
     val glow by animateFloatAsState(if (checked) 1f else 0f, tween(260), label = "luxo_switch_glow")
-    val thumbColor by animateColorAsState(if (checked) Color.White else tokens.colors.textMuted, label = "luxo_thumb")
+    val lightAccent = luxoAccentIsLight()
+    val thumbColor by animateColorAsState(
+        when {
+            checked && lightAccent -> tokens.colors.background
+            checked -> Color.White
+            else -> tokens.colors.textMuted
+        },
+        label = "luxo_thumb",
+    )
     val shape = RoundedCornerShape(50)
     Box(
         modifier = modifier
             .width(52.dp)
             .height(30.dp)
             .alpha(if (enabled) 1f else 0.45f)
-            .drawBehind {
-                if (glow > 0f) {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            listOf(accents.first().copy(alpha = 0.35f * glow), Color.Transparent),
-                            radius = size.width * 0.9f,
-                        ),
-                        radius = size.width * 0.9f,
-                    )
-                }
-            }
             .clip(shape)
             .background(tokens.colors.borderDefault.copy(alpha = 0.9f))
             .background(Brush.horizontalGradient(accents.map { it.copy(alpha = glow) }))
@@ -161,7 +183,6 @@ fun LuxoSwitch(
                     val squash = 1f + (1f - kotlin.math.abs(position)) * 0.25f
                     scaleX = squash
                 }
-                .shadow(4.dp, CircleShape)
                 .clip(CircleShape)
                 .background(thumbColor),
         )
@@ -190,7 +211,6 @@ fun LuxoAccentBar(modifier: Modifier = Modifier, width: Dp = 34.dp) {
         modifier
             .width(width)
             .height(4.dp)
-            .shadow(6.dp, RoundedCornerShape(50), ambientColor = accents.first(), spotColor = accents.first())
             .clip(RoundedCornerShape(50))
             .background(Brush.horizontalGradient(accents)),
     )
@@ -201,19 +221,21 @@ fun LuxoAccentBar(modifier: Modifier = Modifier, width: Dp = 34.dp) {
 fun Modifier.luxoAurora(enabled: Boolean): Modifier {
     if (!enabled) return this
     val accents = luxoAccentColors()
+    val glow = luxoGlowAmount()
+    if (glow <= 0f) return this
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     return drawBehind {
         val startX = if (isRtl) size.width * 0.85f else size.width * 0.15f
         val endX = if (isRtl) size.width * 0.2f else size.width * 0.8f
         val r1 = size.width * 0.75f
         drawCircle(
-            Brush.radialGradient(listOf(accents.first().copy(alpha = 0.16f), Color.Transparent), center = Offset(startX, -r1 * 0.25f), radius = r1),
+            Brush.radialGradient(listOf(accents.first().copy(alpha = 0.16f * glow), Color.Transparent), center = Offset(startX, -r1 * 0.25f), radius = r1),
             radius = r1,
             center = Offset(startX, -r1 * 0.25f),
         )
         val r2 = size.width * 0.55f
         drawCircle(
-            Brush.radialGradient(listOf(accents.last().copy(alpha = 0.10f), Color.Transparent), center = Offset(endX, r2 * 0.1f), radius = r2),
+            Brush.radialGradient(listOf(accents.last().copy(alpha = 0.10f * glow), Color.Transparent), center = Offset(endX, r2 * 0.1f), radius = r2),
             radius = r2,
             center = Offset(endX, r2 * 0.1f),
         )

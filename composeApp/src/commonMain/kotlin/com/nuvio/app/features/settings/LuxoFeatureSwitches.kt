@@ -1,6 +1,7 @@
 package com.nuvio.app.features.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import com.nuvio.app.features.luxo.LuxoFeatures
 import com.nuvio.app.features.luxo.LuxoFeaturesRepository
 import com.nuvio.app.features.luxo.lx
@@ -104,6 +105,19 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.themeStudio }, { f, v -> f.copy(themeStudio = v) },
         ),
     )
+    LuxoBlock(isTablet) {
+        LuxoLabel(lx("شدة التوهج", "Glow strength"))
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+            listOf(0 to lx("بدون", "None"), 1 to lx("هادئ", "Soft"), 2 to lx("قوي", "Strong")).forEach { (level, label) ->
+                androidx.compose.material3.FilterChip(
+                    selected = features.glowLevel == level,
+                    onClick = { LuxoFeaturesRepository.update { it.copy(glowLevel = level) } },
+                    label = { androidx.compose.material3.Text(label) },
+                )
+            }
+        }
+    }
+    SettingsGroupDivider(isTablet = isTablet)
     switches.forEachIndexed { index, item ->
         if (index > 0) SettingsGroupDivider(isTablet = isTablet)
         SettingsSwitchRow(

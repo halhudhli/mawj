@@ -382,8 +382,8 @@ fun NuvioPrimaryButton(
             .fillMaxWidth()
             .height(NuvioTokens.Space.s48 + NuvioTokens.Space.s4)
             .then(
-                if (luxoLook && enabled) {
-                    Modifier.shadow(14.dp, buttonShape, ambientColor = luxoAccentColors().first(), spotColor = luxoAccentColors().first())
+                if (luxoLook && enabled && luxoGlowAmount() > 0.5f) {
+                    Modifier.shadow(10.dp, buttonShape, ambientColor = luxoAccentColors().first(), spotColor = luxoAccentColors().first())
                 } else {
                     Modifier
                 },

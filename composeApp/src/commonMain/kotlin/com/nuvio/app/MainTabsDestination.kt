@@ -139,9 +139,12 @@ internal fun MainTabsDestination(
                 else -> onTabSelected(tab)
             }
         }
-        val floatingBarOnTop = navBarStyleSetting != NavBarStyle.CLASSIC && navBarPosition == NavBarPosition.TOP
+        val luxoDockOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock
+        // Luxo Dock takes over from every bar style, CLASSIC included.
+        val effectiveNavBarStyle = if (luxoDockOn && navBarStyleSetting == NavBarStyle.CLASSIC) NavBarStyle.EXPANDED else navBarStyleSetting
+        val floatingBarOnTop = effectiveNavBarStyle != NavBarStyle.CLASSIC && navBarPosition == NavBarPosition.TOP
         // The backdrop source is only consumed by the custom floating bar, not native or CLASSIC navigation.
-        val floatingBarVisible = tabsRouteActive && !useNativeBottomTabs && navBarStyleSetting != NavBarStyle.CLASSIC && !useSideRail
+        val floatingBarVisible = tabsRouteActive && !useNativeBottomTabs && effectiveNavBarStyle != NavBarStyle.CLASSIC && !useSideRail
         val navBarBackdrop = if (floatingBarVisible) rememberNuvioBackdrop() else null
         val floatingNavigationItems = mainFloatingNavigationItems(
             highlightedTab = highlightedTab,
@@ -161,7 +164,7 @@ internal fun MainTabsDestination(
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                if (tabsRouteActive && !isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC && !useSideRail) {
+                if (tabsRouteActive && !isTabletLayout && !useNativeBottomTabs && effectiveNavBarStyle == NavBarStyle.CLASSIC && !useSideRail) {
                     MainClassicNavigationBar(
                         modifier = Modifier.graphicsLayer {
                             translationY = size.height * navHideProgress
@@ -182,7 +185,7 @@ internal fun MainTabsDestination(
                         useSideRail -> 0.dp
                         // A top pill floats over the content like the tablet CLASSIC bar, so
                         // nothing needs to be kept clear at the bottom.
-                        tabsRouteActive && navBarStyleSetting != NavBarStyle.CLASSIC && !floatingBarOnTop -> 72.dp
+                        tabsRouteActive && effectiveNavBarStyle != NavBarStyle.CLASSIC && !floatingBarOnTop -> 72.dp
                         else -> 0.dp
                     },
                     LocalNuvioNavBarScrollState provides navBarScrollState,
@@ -212,7 +215,7 @@ internal fun MainTabsDestination(
                 // CLASSIC keeps the previous per-form-factor chrome: a top rail on
                 // tablet/landscape and the solid bottom bar on phones. Every other
                 // style now uses the floating pill at the bottom on all sizes.
-                if (isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC && !useSideRail) {
+                if (isTabletLayout && !useNativeBottomTabs && effectiveNavBarStyle == NavBarStyle.CLASSIC && !useSideRail) {
                     TabletFloatingTopBar(
                         selectedTab = highlightedTab,
                         showLiveTv = showLiveTvInNavigation,
@@ -223,7 +226,7 @@ internal fun MainTabsDestination(
                 }
 
                 if (floatingBarVisible) {
-                    when (navBarStyleSetting) {
+                    when (effectiveNavBarStyle) {
                         NavBarStyle.EXPANDED -> navBarScrollState.expand()
                         NavBarStyle.COMPACT -> navBarScrollState.collapse()
                         else -> {}
@@ -540,6 +543,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
     val density = LocalDensity.current
     val highlightedTab = AppScreenTab.Settings
     val luxoNav = luxoNavSettingsState()
+    val dockOnHere = com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock
     val useSideRail = when (luxoNav.placementValue) {
         com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
         com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> isWideLandscape
@@ -568,7 +572,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                 modifier = Modifier.align(Alignment.CenterStart),
             )
         }
-        style == NavBarStyle.CLASSIC && isTabletLayout -> {
+        style == NavBarStyle.CLASSIC && isTabletLayout && !dockOnHere -> {
             SideEffect { onBottomOverlayChanged(0.dp) }
             TabletFloatingTopBar(
                 selectedTab = highlightedTab,
@@ -579,7 +583,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                 modifier = Modifier.align(Alignment.TopCenter),
             )
         }
-        style == NavBarStyle.CLASSIC -> {
+        style == NavBarStyle.CLASSIC && !dockOnHere -> {
             Box(
                 Modifier.align(Alignment.BottomCenter).onSizeChanged {
                     onBottomOverlayChanged(with(density) { it.height.toDp() })
@@ -594,7 +598,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                 )
             }
         }
-        com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock -> {
+        dockOnHere -> {
             val onTop = position == NavBarPosition.TOP
             SideEffect { onBottomOverlayChanged(if (onTop) 0.dp else 72.dp) }
             com.nuvio.app.features.luxo.LuxoDockBar(
