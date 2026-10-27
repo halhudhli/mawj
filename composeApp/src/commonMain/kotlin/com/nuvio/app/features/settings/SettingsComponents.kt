@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import com.nuvio.app.core.ui.luxoGlass
 import com.nuvio.app.core.ui.luxoEnter
