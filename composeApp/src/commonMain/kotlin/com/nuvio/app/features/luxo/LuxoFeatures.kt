@@ -17,6 +17,13 @@ data class LuxoFeatures(
     val luxoDock: Boolean = true,
     /** 0 = no glow, 1 = soft (default), 2 = strong. */
     val glowLevel: Int = 1,
+    val trailerFit: Boolean = true,
+    val heroTilt: Boolean = true,
+    val timeTint: Boolean = true,
+    val countdown: Boolean = true,
+    val diary: Boolean = true,
+    val challenge: Boolean = true,
+    val wrapped: Boolean = true,
     val profileHub: Boolean = true,
     val passTilt: Boolean = true,
     val seasonalThemes: Boolean = true,

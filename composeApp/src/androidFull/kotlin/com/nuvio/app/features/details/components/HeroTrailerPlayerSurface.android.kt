@@ -195,9 +195,12 @@ actual fun HeroTrailerPlayerSurface(
         }
     }
 
-    LaunchedEffect(exoPlayer, hasRenderedFirstFrame) {
+    // Luxo: show the whole trailer instead of cropping it to fill a tall hero.
+    val luxoFitTrailer = com.nuvio.app.features.luxo.rememberLuxoFeatures().trailerFit
+    LaunchedEffect(luxoFitTrailer) { playerContainer?.setFitWhenCropped(luxoFitTrailer) }
+    LaunchedEffect(exoPlayer, hasRenderedFirstFrame, luxoFitTrailer) {
         letterboxZoom = 1f
-        if (!hasRenderedFirstFrame) return@LaunchedEffect
+        if (!hasRenderedFirstFrame || luxoFitTrailer) return@LaunchedEffect
         val tracker = LetterboxTracker()
         val sampler = LetterboxSampler()
         try {
@@ -225,6 +228,7 @@ actual fun HeroTrailerPlayerSurface(
         factory = { viewContext ->
             HeroTrailerTextureContainer(viewContext).apply {
                 layoutParams = android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                setFitWhenCropped(luxoFitTrailer)
                 attachPlayer(exoPlayer)
                 playerContainer = this
             }
@@ -245,6 +249,15 @@ private class HeroTrailerTextureContainer(
     private val textureTransform = Matrix()
     private var videoAspectRatio = 16f / 9f
     private var attachedPlayer: ExoPlayer? = null
+    private var fitWhenCropped = false
+
+    fun setFitWhenCropped(enabled: Boolean) {
+        if (fitWhenCropped == enabled) return
+        fitWhenCropped = enabled
+        // Transparent outside the picture so the artwork shows around a fitted trailer.
+        textureView.isOpaque = !enabled
+        updateTextureTransform()
+    }
 
     init {
         clipChildren = true
@@ -290,7 +303,15 @@ private class HeroTrailerTextureContainer(
 
         val viewAspectRatio = viewWidth / viewHeight
         textureTransform.reset()
-        if (viewAspectRatio > videoAspectRatio) {
+        val cropFraction = 1f - minOf(viewAspectRatio, videoAspectRatio) / maxOf(viewAspectRatio, videoAspectRatio)
+        if (fitWhenCropped && cropFraction > 0.2f) {
+            // Fit: the whole frame stays visible.
+            if (viewAspectRatio > videoAspectRatio) {
+                textureTransform.setScale(videoAspectRatio / viewAspectRatio, 1f, viewWidth / 2f, viewHeight / 2f)
+            } else {
+                textureTransform.setScale(1f, viewAspectRatio / videoAspectRatio, viewWidth / 2f, viewHeight / 2f)
+            }
+        } else if (viewAspectRatio > videoAspectRatio) {
             val scaleY = viewAspectRatio / videoAspectRatio
             textureTransform.setScale(1f, scaleY, viewWidth / 2f, viewHeight / 2f)
         } else {

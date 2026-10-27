@@ -48,7 +48,9 @@ private fun luxoBadges(stats: LuxoPassStats): List<LuxoBadge> {
     val userData by LuxoUserData.state.collectAsStateWithLifecycle()
     val discovered = userData.lists.firstOrNull { it.name == "من طابور الاستكشاف" }?.items?.size ?: 0
     val total = stats.movies + stats.episodes
+    val (challengeDone, challengeGoal) = rememberChallengeProgress()
     return listOf(
+        LuxoBadge("🎯", lx("بطل الشهر", "Monthly champ"), lx("خلّص تحدي الشهر", "Finish the monthly challenge"), challengeGoal > 0 && challengeDone >= challengeGoal),
         LuxoBadge("🎟️", lx("أول تذكرة", "First ticket"), lx("أول عمل", "First title"), total >= 1),
         LuxoBadge("🎬", lx("عشرة أفلام", "Ten films"), lx("10 أفلام", "10 movies"), stats.movies >= 10),
         LuxoBadge("🍿", lx("سينمائي", "Cinephile"), lx("50 فيلم", "50 movies"), stats.movies >= 50),

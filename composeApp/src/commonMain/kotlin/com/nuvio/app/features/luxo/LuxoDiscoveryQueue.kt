@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -110,18 +113,25 @@ private fun saveLiked(item: MetaPreview) {
     }
 }
 
-private suspend fun loadDiscoveryQueue(): List<MetaPreview> {
-    val smart = listOf(LuxoContentType.MOVIE, LuxoContentType.SERIES)
-        .flatMap { type -> runCatching { LuxoSmartCollections.load(type) }.getOrDefault(emptyList()) }
+private fun discoveryCandidates(items: List<MetaPreview>): List<MetaPreview> {
     val rated = LuxoUserData.state.value.ratings.keys
-    return (HomeRepository.uiState.value.sections + smart)
-        .flatMap { it.items }
+    return items
         .filter { !it.poster.isNullOrBlank() }
         .distinctBy { "${it.type}:${it.id}" }
         .filterNot { LuxoDiscoverySeen.contains("${it.type}:${it.id}") || LuxoUserData.key(it.type, it.id) in rated }
-        .shuffled()
-        .take(60)
 }
+
+/** Instant: what the home screen already loaded. */
+private fun quickDiscoveryQueue(): List<MetaPreview> =
+    discoveryCandidates(HomeRepository.uiState.value.sections.flatMap { it.items }).shuffled().take(40)
+
+/** Slower: smart collections from the network, appended once they arrive. */
+private suspend fun extraDiscoveryItems(): List<MetaPreview> =
+    discoveryCandidates(
+        listOf(LuxoContentType.MOVIE, LuxoContentType.SERIES)
+            .flatMap { type -> runCatching { LuxoSmartCollections.load(type) }.getOrDefault(emptyList()) }
+            .flatMap { it.items },
+    ).shuffled().take(30)
 
 /** Entry card shown on Home and in the section tabs. */
 @Composable
@@ -173,7 +183,13 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
     var round by remember { mutableStateOf(0) }
     val haptics = LocalHapticFeedback.current
     val hapticsOn = rememberLuxoFeatures().haptics
-    LaunchedEffect(round) { queue = loadDiscoveryQueue() }
+    LaunchedEffect(round) {
+        val quick = quickDiscoveryQueue()
+        if (quick.isNotEmpty()) queue = quick
+        val extra = extraDiscoveryItems()
+        val current = queue.orEmpty()
+        queue = (current + extra).distinctBy { "${it.type}:${it.id}" }
+    }
 
     fun decide(item: MetaPreview, like: Boolean) {
         if (hapticsOn) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -196,6 +212,14 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
                 .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
                 .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
         ) {
+            queue?.firstOrNull()?.let { top ->
+                AsyncImage(
+                    model = luxoHighResImage(top.banner ?: top.poster, maxBackdrop1080 = true),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().blur(40.dp).graphicsLayer { alpha = 0.35f },
+                )
+            }
             Column(Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -212,7 +236,10 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
                 Box(Modifier.weight(1f).fillMaxWidth().widthIn(max = 460.dp), contentAlignment = Alignment.Center) {
                     val items = queue
                     when {
-                        items == null -> CircularProgressIndicator()
+                        items == null -> LuxoSkeletonBox(
+                            Modifier.fillMaxHeight().aspectRatio(2f / 3f, matchHeightConstraintsFirst = true),
+                            corner = 28.dp,
+                        )
                         items.isEmpty() -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("🎉", fontSize = 42.sp)
                             Text(
@@ -287,8 +314,10 @@ private fun LuxoSwipeCard(item: MetaPreview, depth: Int, onDecide: (Boolean) -> 
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
             .padding(top = (depth * 10).dp)
+            // A real poster shape (2:3), never stretched to the screen width.
+            .fillMaxHeight()
+            .aspectRatio(2f / 3f, matchHeightConstraintsFirst = true)
             .graphicsLayer {
                 val scale = 1f - depth * 0.05f
                 scaleX = scale
@@ -327,7 +356,7 @@ private fun LuxoSwipeCard(item: MetaPreview, depth: Int, onDecide: (Boolean) -> 
             ),
     ) {
         AsyncImage(
-            model = item.poster,
+            model = luxoHighResImage(item.poster),
             contentDescription = item.name,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().background(Color(0xFF1A1F2B)),

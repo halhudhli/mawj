@@ -143,10 +143,12 @@ internal fun LuxoTypeBrowseScreen(
                 )
             }
             homeUiState.isLoading -> item(key = "loading") {
-                androidx.compose.foundation.layout.Box(
-                    modifier = Modifier.fillMaxWidth().padding(48.dp),
-                    contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator() }
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(24.dp),
+                ) {
+                    repeat(3) { LuxoSkeletonPosterRow() }
+                }
             }
             visibleSmartSections.isNotEmpty() -> Unit
             else -> item(key = "empty") {

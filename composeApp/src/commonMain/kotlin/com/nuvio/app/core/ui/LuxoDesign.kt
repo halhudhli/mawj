@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.features.luxo.rememberLuxoFeatures
+import kotlinx.datetime.toLocalDateTime
 
 /** Whether Luxo's own look is on (it can be switched back to the original look). */
 @Composable
@@ -220,9 +221,17 @@ fun LuxoAccentBar(modifier: Modifier = Modifier, width: Dp = 34.dp) {
 @Composable
 fun Modifier.luxoAurora(enabled: Boolean): Modifier {
     if (!enabled) return this
-    val accents = luxoAccentColors()
+    val baseAccents = luxoAccentColors()
     val glow = luxoGlowAmount()
     if (glow <= 0f) return this
+    // Luxo: warmer light around sunset, cooler and calmer at night.
+    val timeTintOn = rememberLuxoFeatures().timeTint
+    val hour = remember { luxoLocalHour() }
+    val accents = if (!timeTintOn) baseAccents else when (hour) {
+        in 16..18 -> listOf(lerpColor(baseAccents.first(), Color(0xFFFF9A5C), 0.55f), lerpColor(baseAccents.last(), Color(0xFFFFD27B), 0.5f))
+        in 19..23, in 0..4 -> listOf(lerpColor(baseAccents.first(), Color(0xFF4F6BFF), 0.5f), lerpColor(baseAccents.last(), Color(0xFF7B5CFF), 0.45f))
+        else -> baseAccents
+    }
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     return drawBehind {
         val startX = if (isRtl) size.width * 0.85f else size.width * 0.15f
@@ -244,3 +253,8 @@ fun Modifier.luxoAurora(enabled: Boolean): Modifier {
 
 @Suppress("unused")
 private val LuxoCenter = Alignment.Center
+
+
+fun luxoLocalHour(): Int = runCatching {
+    kotlin.time.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).hour
+}.getOrDefault(12)

@@ -1201,6 +1201,12 @@ fun HomeScreen(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
                             )
                         }
+                        item(key = "luxo_countdown") {
+                            com.nuvio.app.features.luxo.LuxoCountdownStrip(
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 14.dp),
+                            )
+                        }
                         item(key = "luxo_discovery") {
                             com.nuvio.app.features.luxo.LuxoDiscoveryCard(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },

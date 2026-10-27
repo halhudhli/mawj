@@ -439,6 +439,8 @@ internal fun HomeHeroSection(
                             .height(layout.heroHeight)
                             .heroStretchZoom(stretchPx),
                     ) {
+                        val luxoTiltOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().heroTilt
+                        val luxoTilt = com.nuvio.app.features.luxo.rememberLuxoTilt(luxoTiltOn)
                         visiblePages.forEach { layer ->
                             val item = items[layer.itemIndex]
                             val artworkUrl = heroArtworkUrl(item, effectiveArtworkSource)
@@ -457,11 +459,13 @@ internal fun HomeHeroSection(
                                                 visibility > 0f -> 1f
                                                 else -> 0f
                                             }
-                                            translationX = -offset * heroWidthPx * artworkParallax
-                                            translationY = if (isCardStyle) 0f else heroBackgroundScrollTranslationY(scrollOffsetPx)
-                                            scaleX = artworkBaseScale *
+                                            // Luxo: the artwork drifts a little with the device tilt.
+                                            val tiltScale = if (luxoTiltOn) 1.05f else 1f
+                                            translationX = -offset * heroWidthPx * artworkParallax + luxoTilt.x * 14.dp.toPx()
+                                            translationY = (if (isCardStyle) 0f else heroBackgroundScrollTranslationY(scrollOffsetPx)) + luxoTilt.y * 10.dp.toPx()
+                                            scaleX = artworkBaseScale * tiltScale *
                                                 if (isCardStyle) 1f else heroBackgroundScrollScale(scrollOffsetPx)
-                                            scaleY = artworkBaseScale *
+                                            scaleY = artworkBaseScale * tiltScale *
                                                 if (isCardStyle) 1f else heroBackgroundScrollScale(scrollOffsetPx)
                                         },
                                     alignment = if (layout.isTablet) Alignment.TopCenter else Alignment.Center,

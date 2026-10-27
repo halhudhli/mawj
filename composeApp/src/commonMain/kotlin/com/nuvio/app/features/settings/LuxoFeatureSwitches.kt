@@ -100,6 +100,41 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.ambientGlow }, { f, v -> f.copy(ambientGlow = v) },
         ),
         LuxoFeatureSwitch(
+            lx("العد التنازلي للحلقات ⏳", "Episode countdown ⏳"),
+            lx("في الرئيسية، وصفحة كاملة مقسّمة: كيدراما، أجنبي، أنمي، وأقسامك الخاصة", "On Home, plus a full page split into K-drama, international, anime and your own sections"),
+            { it.countdown }, { f, v -> f.copy(countdown = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("مذكراتي 📔", "My diary 📔"),
+            lx("كل مشاهداتك بالتاريخ مع تقييمك وملاحظتك، في صفحة «ذوقي»", "Everything you watched by date, in My taste"),
+            { it.diary }, { f, v -> f.copy(diary = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تحدي الشهر 🎯", "Monthly challenge 🎯"),
+            lx("هدف لعدد الأفلام أو الحلقات بالشهر مع حلقة تقدم ووسام", "A movies or episodes goal with a progress ring and a badge"),
+            { it.challenge }, { f, v -> f.copy(challenge = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("سنتك في Luxo 🎬", "Your year in Luxo 🎬"),
+            lx("ملخص السنة على شكل ستوريز تقدر تشاركها", "Your year as shareable stories"),
+            { it.wrapped }, { f, v -> f.copy(wrapped = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الإعلان كامل بدون قص", "Show the whole trailer"),
+            lx("إعلان صفحة الفيلم يظهر كامل بدل ما يتكبّر ويقص نص الفيديو", "The title-page trailer shows in full instead of being zoomed and cropped"),
+            { it.trailerFit }, { f, v -> f.copy(trailerFit = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("خلفية الرئيسية تتحرك مع الميلان", "Home artwork follows tilt"),
+            lx("صورة الفيلم الكبيرة فوق تتحرك شوي مع ميلان الجهاز", "The big artwork drifts slightly as the device tilts"),
+            { it.heroTilt }, { f, v -> f.copy(heroTilt = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ألوان حسب الوقت 🌅", "Time-of-day colours 🌅"),
+            lx("الإضاءة أعلى الشاشات تدفى وقت المغرب وتهدى بالليل", "The glow warms at sunset and cools at night"),
+            { it.timeTint }, { f, v -> f.copy(timeTint = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("استوديو الثيمات", "Theme studio"),
             lx("ألوان Luxo الجاهزة وتركيب ألوانك ومشاركتها بكود", "Luxo palettes, your own mix and a shareable code"),
             { it.themeStudio }, { f, v -> f.copy(themeStudio = v) },
