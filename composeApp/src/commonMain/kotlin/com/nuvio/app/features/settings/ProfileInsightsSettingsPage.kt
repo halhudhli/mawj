@@ -3582,6 +3582,8 @@ private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
     if (episodes.isEmpty()) return
     val tokens = MaterialTheme.nuvio
     var message by remember { mutableStateOf<String?>(null) }
+    val calendarDescription = com.nuvio.app.features.luxo.lx("حلقة جديدة في Luxo", "New episode on Luxo")
+    val noCalendarMessage = com.nuvio.app.features.luxo.lx("ما لقيت تطبيق تقويم", "No calendar app found")
     NuvioSurfaceCard(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
@@ -3627,9 +3629,9 @@ private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
                         val ok = com.nuvio.app.features.luxo.luxoAddToCalendar(
                             title = "${episode.item.name}${if (episodeLabel.isNotBlank()) " — $episodeLabel" else ""}",
                             dateIso = episode.dateIso,
-                            description = com.nuvio.app.features.luxo.lx("حلقة جديدة في Luxo", "New episode on Luxo"),
+                            description = calendarDescription,
                         )
-                        if (!ok) message = com.nuvio.app.features.luxo.lx("ما لقيت تطبيق تقويم", "No calendar app found")
+                        if (!ok) message = noCalendarMessage
                     }) { Text("📅") }
                 }
             }
