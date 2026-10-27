@@ -110,7 +110,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HAS_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN != '' }}
           HAS_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY != '' }}
-          HAS_TRAKT: ${{ secrets.TRAKT_CLIENT_ID != '' && secrets.TRAKT_CLIENT_SECRET != '' }}
+          HAS_TRAKT_ID: ${{ secrets.TRAKT_CLIENT_ID != '' }}
+          HAS_TRAKT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET != '' }}
           HAS_SIMKL: ${{ secrets.SIMKL_CLIENT_ID != '' }}
           HAS_MDBLIST: ${{ secrets.MDBLIST_API_KEY != '' }}
         run: |
@@ -119,7 +120,7 @@ jobs:
           cp "$APK" "Luxo-${VERSION}-arm64-v8a.apk"
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
           echo "" >> notes.txt
-          echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt=${HAS_TRAKT} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
+          echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt-id=${HAS_TRAKT_ID} trakt-secret=${HAS_TRAKT_SECRET} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
             gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" --clobber
           else

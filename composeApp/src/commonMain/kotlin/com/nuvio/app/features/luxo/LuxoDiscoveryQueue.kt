@@ -157,11 +157,11 @@ internal fun LuxoDiscoveryCard(
     ) {
         Text("🧭", style = MaterialTheme.typography.headlineSmall)
         Column(modifier = Modifier.weight(1f)) {
-            Text(lx("طابور الاستكشاف", "Discovery queue"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(lx("طابور الاستكشاف", "Discovery queue"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
             Text(
                 lx("اسحب يمين للي يعجبك ويسار للي ما يعجبك", "Swipe right to keep, left to skip"),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
             )
         }
     }

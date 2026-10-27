@@ -278,7 +278,9 @@ internal object LuxoCompanionApi {
 
     /** Models to try, best first; filled from the key's own model list the first time. */
     private var modelChain: List<String>? = null
-    private val fallbackModels = listOf("gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite")
+    /** Luxo's chosen model: fast, stable, supports Google Search grounding. */
+    private const val PINNED_MODEL = "gemini-3.5-flash-lite"
+    private val fallbackModels = listOf(PINNED_MODEL, "gemini-flash-lite-latest", "gemini-flash-latest", "gemini-2.5-flash-lite")
 
     private suspend fun models(key: String): List<String> {
         modelChain?.let { return it }
@@ -307,7 +309,8 @@ internal object LuxoCompanionApi {
                 { if ("lite" in it) 1 else 0 },
             ).thenByDescending { it },
         )
-        val chain = (fallbackModels.filter { listed.isEmpty() || it in listed } + ranked).distinct().take(5)
+        // The pinned model always goes first, then the others only as a safety net.
+        val chain = (listOf(PINNED_MODEL) + fallbackModels.filter { listed.isEmpty() || it in listed } + ranked).distinct().take(5)
         if (listed.isNotEmpty()) modelChain = chain
         return chain.ifEmpty { fallbackModels }
     }
@@ -321,7 +324,13 @@ internal object LuxoCompanionApi {
         try {
             var lastError: String? = null
             for (model in models(key)) {
-                for (withSearch in if (search) listOf(true, false) else listOf(false)) {
+                val attempts = if (model == PINNED_MODEL) listOf(true, true, false) else listOf(true, false)
+                val searchModes = if (search) attempts.map { true } + false else attempts.map { false }
+                var tries = 0
+                var searchRefused = false
+                for (searchWanted in searchModes) {
+                    val withSearch = searchWanted && !searchRefused
+                    tries += 1
                     val body = buildJsonObject {
                         put("contents", buildJsonArray {
                             add(buildJsonObject {
@@ -360,9 +369,22 @@ internal object LuxoCompanionApi {
                     lastError = error ?: "رمز ${response.status}"
                     when (response.status) {
                         // The search tool isn't allowed on this model/key: try the same model without it.
-                        400 -> if (withSearch) continue else break
-                        // Busy, rate-limited or unknown model: move on to the next model.
-                        429, 500, 502, 503, 504, 404 -> break
+                        400 -> if (withSearch) {
+                            searchRefused = true
+                            continue
+                        } else {
+                            break
+                        }
+                        // Busy: wait a moment and retry the same model, then move on.
+                        429, 500, 502, 503, 504 -> {
+                            if (tries < searchModes.size) {
+                                kotlinx.coroutines.delay(1_500L * tries)
+                                continue
+                            }
+                            break
+                        }
+                        // Unknown model on this key: next model.
+                        404 -> break
                         // Bad key or permission: no point trying other models.
                         else -> return "ما قدر الرفيق يرد: $lastError"
                     }

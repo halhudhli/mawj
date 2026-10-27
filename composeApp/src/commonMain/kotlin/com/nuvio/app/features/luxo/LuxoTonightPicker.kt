@@ -89,11 +89,11 @@ internal fun LuxoTonightCard(
     ) {
         Text("✨", style = MaterialTheme.typography.headlineSmall)
         Column(modifier = Modifier.weight(1f)) {
-            Text(lx("وش أشوف الليلة؟", "What should I watch tonight?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(lx("وش أشوف الليلة؟", "What should I watch tonight?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
             Text(
                 lx("اختر مزاجك ونقترح لك من الكتالوج", "Pick a mood and get picks from your catalog"),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
             )
         }
     }

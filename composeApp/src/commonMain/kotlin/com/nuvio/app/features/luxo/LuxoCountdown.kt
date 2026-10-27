@@ -211,62 +211,143 @@ private fun rememberUpcoming(): List<LibraryUpcomingEpisode> {
 
 // ------------------------------------------------------------------ home strip
 
-/** Home: the next episodes as countdown rings; "All" opens the full page. */
+/** One show in the home strip, from the library (followed) or from the world schedule. */
+private data class StripEntry(
+    val key: String,
+    val title: String,
+    val poster: String?,
+    val airMs: Long?,
+    val epochDay: Long,
+    val preview: MetaPreview?,
+    val followed: Boolean,
+)
+
+internal object LuxoHomeStripPicks {
+    private const val KEY = "countdown_home_picks"
+    /** Empty = automatic (followed shows, nearest first). */
+    var picks by androidx.compose.runtime.mutableStateOf(load())
+        private set
+
+    private fun load(): List<String> =
+        LuxoPrefsStorage.load(KEY)?.split('\n')?.filter { it.isNotBlank() }.orEmpty()
+
+    fun toggle(key: String) {
+        picks = if (key in picks) picks - key else picks + key
+        LuxoPrefsStorage.save(KEY, picks.joinToString("\n"))
+    }
+
+    fun clear() {
+        picks = emptyList()
+        LuxoPrefsStorage.save(KEY, "")
+    }
+}
+
+@Composable
+private fun rememberStripEntries(): List<StripEntry> {
+    val episodes = rememberUpcoming()
+    val world by LuxoWorldCountdown.items.collectAsStateWithLifecycle()
+    val today = remember { luxoTodayEpochDay() }
+    return remember(episodes, world) {
+        val followed = episodes.distinctBy { it.item.seriesKey() }.map { ep ->
+            StripEntry(
+                key = "lib:" + ep.item.seriesKey(),
+                title = ep.item.name,
+                poster = ep.item.poster,
+                airMs = null,
+                epochDay = luxoEpochDay(ep.dateIso),
+                preview = ep.item.toPreview(),
+                followed = true,
+            )
+        }
+        val followedNames = followed.map { it.title.lowercase() }.toSet()
+        val others = world.orEmpty().filter { it.title.lowercase() !in followedNames }.map { air ->
+            StripEntry(
+                key = air.key,
+                title = air.title,
+                poster = air.poster,
+                airMs = air.airMs,
+                epochDay = (air.airMs + 3 * 3_600_000L) / 86_400_000L,
+                preview = air.imdb?.let { MetaPreview(id = it, type = "series", name = air.title, poster = air.poster) },
+                followed = false,
+            )
+        }
+        (followed + others).sortedBy { it.airMs ?: (it.epochDay * 86_400_000L) }.filter { it.epochDay >= today }
+    }
+}
+
+/** Home: the chosen shows as countdown rings; "All" opens the full page, ✎ picks the shows. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifier = Modifier) {
     if (!rememberLuxoFeatures().countdown) return
-    val episodes = rememberUpcoming()
+    LaunchedEffect(Unit) { LuxoWorldCountdown.refresh() }
+    val entries = rememberStripEntries()
+    val picks = LuxoHomeStripPicks.picks
     var pageOpen by remember { mutableStateOf(false) }
-    if (episodes.isEmpty()) {
-        // Nothing followed yet: still offer the world countdown.
-        Row(
-            modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(Brush.horizontalGradient(luxoAccentColors().map { it.copy(alpha = 0.22f) }))
-                .clickable { pageOpen = true }
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("⏳", fontSize = 26.sp)
-            Column(Modifier.weight(1f)) {
-                Text(lx("العد التنازلي للحلقات", "Episode countdown"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(lx("الحلقات الجاية حول العالم بعداد مباشر", "Upcoming episodes worldwide, live"), fontSize = 12.sp, color = MaterialTheme.nuvio.colors.textMuted)
-            }
-        }
-        if (pageOpen) LuxoCountdownPage(onDismiss = { pageOpen = false }, onOpen = { item -> pageOpen = false; onOpen(item) })
-        return
-    }
+    var picking by remember { mutableStateOf(false) }
     val today = remember { luxoTodayEpochDay() }
     val tokens = MaterialTheme.nuvio
+    val shown = if (picks.isEmpty()) entries.filter { it.followed }.take(12) else entries.filter { it.key in picks }
+
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(lx("العد التنازلي ⏳", "Countdown ⏳"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(
+                lx("العد التنازلي ⏳", "Countdown ⏳"),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = tokens.colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                lx("✎ اختيار", "✎ Choose"),
+                color = tokens.colors.textMuted,
+                modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { picking = true }.padding(6.dp),
+            )
+            Spacer(Modifier.width(6.dp))
             Text(
                 lx("الكل ‹", "All ›"),
                 color = tokens.colors.accent,
                 modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { pageOpen = true }.padding(6.dp),
             )
         }
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            episodes.distinctBy { it.item.seriesKey() }.take(10).forEach { ep ->
-                val days = luxoEpochDay(ep.dateIso) - today
-                Column(
-                    Modifier.width(92.dp).clip(RoundedCornerShape(16.dp)).clickable { onOpen(ep.item.toPreview()) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(Modifier.size(84.dp), contentAlignment = Alignment.Center) {
-                        CountdownRing(days, Modifier.size(84.dp), stroke = 4f)
-                        AsyncImage(
-                            model = ep.item.poster,
-                            contentDescription = ep.item.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(70.dp).clip(CircleShape),
-                        )
+        if (shown.isEmpty()) {
+            Text(
+                lx("اختر المسلسلات اللي تبيها هنا من «✎ اختيار»", "Pick the shows to show here with “✎ Choose”"),
+                color = tokens.colors.textMuted,
+                fontSize = 13.sp,
+                modifier = Modifier.clip(RoundedCornerShape(14.dp)).clickable { picking = true }.padding(vertical = 8.dp),
+            )
+        } else {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                shown.forEach { entry ->
+                    val days = entry.epochDay - today
+                    Column(
+                        Modifier
+                            .width(104.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .combinedClickable(
+                                onClick = { entry.preview?.let(onOpen) },
+                                onLongClick = { picking = true },
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
+                            CountdownRing(days, Modifier.size(96.dp), stroke = 4f)
+                            AsyncImage(
+                                model = coil3.request.ImageRequest.Builder(coil3.compose.LocalPlatformContext.current)
+                                    .data(luxoHighResImage(entry.poster))
+                                    // Ask for a sharp copy even though it's drawn small.
+                                    .size(480, 720)
+                                    .build(),
+                                contentDescription = entry.title,
+                                contentScale = ContentScale.Crop,
+                                filterQuality = androidx.compose.ui.graphics.FilterQuality.High,
+                                modifier = Modifier.size(82.dp).clip(CircleShape),
+                            )
+                        }
+                        Text(daysLabel(days), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tokens.colors.textPrimary, maxLines = 1)
+                        Text(entry.title, fontSize = 11.sp, color = tokens.colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text(daysLabel(days), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tokens.colors.textPrimary, maxLines = 1)
-                    Text(ep.item.name, fontSize = 11.sp, color = tokens.colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -279,6 +360,71 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
                 onOpen(item)
             },
         )
+    }
+    if (picking) LuxoStripPicker(entries, onDismiss = { picking = false })
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
+    val tokens = MaterialTheme.nuvio
+    var query by remember { mutableStateOf("") }
+    val picks = LuxoHomeStripPicks.picks
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(lx("مسلسلات الشريط في الرئيسية", "Shows on the Home strip"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        if (picks.isEmpty()) lx("الحين تلقائي: متابعاتك الأقرب موعداً", "Automatic: your followed shows") else lx("${picks.size} مختار", "${picks.size} chosen"),
+                        fontSize = 12.sp,
+                        color = tokens.colors.textMuted,
+                    )
+                }
+                if (picks.isNotEmpty()) {
+                    TextButton(onClick = { LuxoHomeStripPicks.clear() }) { Text(lx("رجّعه تلقائي", "Reset")) }
+                }
+            }
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                placeholder = { Text(lx("ابحث عن مسلسل…", "Search a show…")) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            val filtered = entries.filter { query.isBlank() || it.title.contains(query.trim(), ignoreCase = true) }
+            LazyColumn(Modifier.fillMaxWidth().height(460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(filtered, key = { it.key }) { entry ->
+                    val on = entry.key in picks
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (on) tokens.colors.accent.copy(alpha = 0.14f) else Color.Transparent)
+                            .clickable { LuxoHomeStripPicks.toggle(entry.key) }
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        AsyncImage(
+                            model = luxoHighResImage(entry.poster),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f)),
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(entry.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                (if (entry.followed) lx("⭐ متابَع · ", "⭐ Following · ") else "") + daysLabel(entry.epochDay - luxoTodayEpochDay()),
+                                fontSize = 12.sp,
+                                color = tokens.colors.textMuted,
+                            )
+                        }
+                        Text(if (on) "✓" else "＋", fontWeight = FontWeight.Black, fontSize = 18.sp, color = if (on) tokens.colors.accent else tokens.colors.textMuted)
+                    }
+                }
+            }
+        }
     }
 }
 
