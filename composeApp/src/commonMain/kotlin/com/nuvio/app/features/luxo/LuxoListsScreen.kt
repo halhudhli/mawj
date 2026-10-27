@@ -103,7 +103,7 @@ internal fun LuxoListsScreen(
             item(key = "empty") {
                 Text(
                     text = lx(
-                        "سوّي قائمة باسمك مثل «أفلام الويكند» أو «أشوفها مع صديقتي»، وأضيفي لها من صفحة أي فيلم أو مسلسل بزر القائمة 📋",
+                        "أنشئ قائمة باسم مثل «أفلام الويكند» أو «مع الأصدقاء»، والإضافة لها من صفحة أي فيلم أو مسلسل بزر القائمة 📋",
                         "Create a list like \"Weekend movies\", then add titles from any title page with the list button 📋",
                     ),
                     style = MaterialTheme.typography.bodyMedium,
@@ -213,7 +213,7 @@ private fun LuxoListRow(
         }
         if (items.isEmpty()) {
             Text(
-                text = lx("فاضية · أضيفي لها من صفحة أي عمل", "Empty · add titles from any title page"),
+                text = lx("فاضية · الإضافة من صفحة أي عمل", "Empty · add titles from any title page"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -304,7 +304,7 @@ private fun LuxoTitlesSheet(
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (onRemove != null) {
                 Text(
-                    lx("اضغطي مطولاً على أي عمل عشان تشيلينه", "Long-press a title to remove it"),
+                    lx("الضغط المطوّل على أي عمل يشيله من القائمة", "Long-press a title to remove it"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

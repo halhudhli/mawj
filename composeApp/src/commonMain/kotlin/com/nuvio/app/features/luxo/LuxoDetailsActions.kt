@@ -128,7 +128,7 @@ internal fun LuxoRatingSheet(title: LuxoSavedTitle, existing: LuxoRating?, onDis
             }
             Text(
                 text = if (score == 0) {
-                    lx("اضغطي على النجوم · مرتين للنص نجمة", "Tap the stars · twice for a half star")
+                    lx("الضغط على النجمة يعطي نجمة كاملة · ومرتين نص نجمة", "Tap the stars · twice for a half star")
                 } else {
                     LuxoDateStyle.digits("${luxoStarsLabel(score)} / 5")
                 },

@@ -3513,7 +3513,7 @@ private fun LuxoTasteSummaryCard(
             )
             Text(
                 text = com.nuvio.app.features.luxo.lx(
-                    "رفيق Luxo يقرأ كل اللي شفتيه وقاعد تشوفينه (من حسابك) ويوصف ذوقك ويقترح عليك",
+                    "رفيق Luxo يقرأ سجل المشاهدة كامل (من الحساب)، يوصف الذوق ويقترح أعمال تناسبه",
                     "Luxo Companion reads everything you've watched (from your account), describes your taste and suggests what's next",
                 ),
                 style = MaterialTheme.typography.bodyMedium,
@@ -3533,7 +3533,7 @@ private fun LuxoTasteSummaryCard(
                 "وش أشوف بعدها؟" to "اقترح 6 أعمال ما شفتها تناسب ذوقي، مع سطر لكل عمل يوضح ليش.",
                 "وش ما كملته؟" to "من القائمة اللي قاعد أتابعها، رتّب لي وش الأولى أكمله وليش.",
             ),
-            questionLabel = com.nuvio.app.features.luxo.lx("اسأل عن ذوقك", "Ask about your taste"),
+            questionLabel = com.nuvio.app.features.luxo.lx("سؤال عن الذوق", "Ask about your taste"),
             onDismiss = { open = false },
         )
     }
@@ -3594,7 +3594,7 @@ private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
             )
             Text(
                 text = com.nuvio.app.features.luxo.lx(
-                    "اضغطي 📅 عشان تضيفين موعد الحلقة لتقويم جوالك مع تذكير",
+                    "زر 📅 يضيف موعد الحلقة لتقويم الجوال مع تذكير",
                     "Tap 📅 to save the air date to your phone's calendar with a reminder",
                 ),
                 style = MaterialTheme.typography.bodySmall,

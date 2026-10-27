@@ -570,7 +570,7 @@ private fun LuxoNavTabSwitches(isTablet: Boolean) {
     SettingsGroupDivider(isTablet = isTablet)
     SettingsSwitchRow(
         title = lx("قسم «قوائمي» في الشريط السفلي", "\"My lists\" tab in the bottom bar"),
-        description = lx("قوائمك الخاصة مثل «أفلام الويكند» وأفضل اللي قيّمتيه", "Your own lists and your top-rated titles"),
+        description = lx("القوائم الخاصة مثل «أفلام الويكند» والأعمال الأعلى تقييماً", "Your own lists and your top-rated titles"),
         checked = navSettings.showLists,
         isTablet = isTablet,
         onCheckedChange = { checked ->
@@ -659,7 +659,7 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("قفل التطبيق بالبصمة 🔒", "Lock the app 🔒"),
         description = lx(
-            "يطلب البصمة أو رمز الجوال كل ما فتحتي Luxo أو رجعتي له بعد 30 ثانية",
+            "يطلب البصمة أو رمز الجوال عند فتح Luxo أو الرجوع له بعد 30 ثانية",
             "Asks for your fingerprint or device lock when you open Luxo or return after 30 seconds",
         ),
         checked = appLock,
@@ -690,7 +690,7 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("تنبيه الحلقات الجديدة", "New episode alerts"),
         description = notifications.errorMessage ?: lx(
-            "إشعار أول ما تنزل حلقة جديدة لأي مسلسل في مكتبتك",
+            "إشعار أول ما تنزل حلقة جديدة لأي مسلسل في المكتبة",
             "A notification when a series in your library gets a new episode",
         ),
         checked = notifications.isEnabled,
@@ -703,7 +703,7 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsNavigationRow(
         title = lx("شهرك في Luxo ✨", "Your month in Luxo ✨"),
         description = lx(
-            "رفيق Luxo يلخّص مشاهداتك آخر 30 يوم وذوقك، ويقترح عليك",
+            "رفيق Luxo يلخّص مشاهدات آخر 30 يوم والذوق، ويقترح أعمال جديدة",
             "Luxo Companion sums up your last 30 days of watching and suggests what's next",
         ),
         isTablet = isTablet,
@@ -719,7 +719,7 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
                 "وش ذوقي؟" to "حلّل ذوقي من هذه المشاهدات في 5 نقاط قصيرة.",
                 "وش أشوف بعدها؟" to "اقترح 5 أعمال تناسب ذوقي مع سطر لكل عمل.",
             ),
-            questionLabel = lx("اسأل عن مشاهداتك", "Ask about your watching"),
+            questionLabel = lx("سؤال عن المشاهدات", "Ask about your watching"),
             onDismiss = { recapOpen = false },
         )
     }
