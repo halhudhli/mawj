@@ -11,7 +11,11 @@ internal actual object LuxoPrefsStorage {
     internal var filesDir: java.io.File? = null
         private set
 
+    internal var appContext: Context? = null
+        private set
+
     fun initialize(context: Context) {
+        if (appContext == null) appContext = context.applicationContext
         if (filesDir == null) filesDir = context.applicationContext.filesDir
         if (preferences == null) {
             preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)

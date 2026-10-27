@@ -68,6 +68,32 @@ internal object LuxoTmdbSearch {
         )
     }
 
+    /**
+     * Any TMDB list endpoint (discover, trending…) as playable previews: results are mapped to IMDb
+     * ids so addon streams resolve. Returns an empty list without a TMDB key.
+     */
+    suspend fun fetchList(endpoint: String, query: Map<String, String>, type: String, limit: Int = 20): List<MetaPreview> {
+        val settings = TmdbSettingsRepository.snapshot()
+        val apiKey = TmdbSettingsRepository.effectiveApiKey().takeIf { it.isNotBlank() } ?: return emptyList()
+        val mediaType = if (type == LuxoContentType.MOVIE) "movie" else "tv"
+        val url = buildTmdbUrl(
+            endpoint = endpoint,
+            apiKey = apiKey,
+            query = query + ("language" to normalizeTmdbLanguage(settings.language)),
+        )
+        val results = runCatching { json.decodeFromString<SearchResponse>(httpGetText(url)).results }
+            .getOrDefault(emptyList())
+            .take(limit)
+        return coroutineScope {
+            results.map { result ->
+                async {
+                    val imdbId = runCatching { TmdbService.tmdbToImdb(result.id, mediaType) }.getOrNull()
+                    result.toPreview(id = imdbId ?: "tmdb:${result.id}", type = type)
+                }
+            }.awaitAll()
+        }
+    }
+
     private fun SearchResult.toPreview(id: String, type: String): MetaPreview {
         val poster = posterPath?.takeIf { it.isNotBlank() }?.let { "${IMAGE_BASE}w342$it" }
         return MetaPreview(
@@ -99,5 +125,6 @@ internal object LuxoTmdbSearch {
         @SerialName("release_date") val releaseDate: String? = null,
         @SerialName("first_air_date") val firstAirDate: String? = null,
         @SerialName("vote_average") val voteAverage: Double? = null,
+        @SerialName("genre_ids") val genreIds: List<Int> = emptyList(),
     )
 }

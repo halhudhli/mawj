@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +54,12 @@ internal fun LuxoTypeBrowseScreen(
                 section.target.contentType.equals(contentType, ignoreCase = true)
         }
     }
+    val smartSections by produceState(initialValue = emptyList<HomeCatalogSection>(), contentType) {
+        value = runCatching { LuxoSmartCollections.load(contentType) }.getOrDefault(emptyList())
+    }
+    val visibleSmartSections = remember(smartSections) {
+        smartSections.filter { it.items.isNotEmpty() }
+    }
     val listState = rememberLazyListState()
     ScreenActivityEffect(scrollToTopRequests) { active ->
         if (!active) return@ScreenActivityEffect
@@ -72,6 +79,19 @@ internal fun LuxoTypeBrowseScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
+        item(key = "luxo_tonight") {
+            LuxoTonightCard(
+                onOpen = { item -> onPosterClick?.invoke(item) },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        items(visibleSmartSections, key = { it.key }) { section ->
+            HomeCatalogRowSection(
+                section = section,
+                onPosterClick = onPosterClick,
+                onPosterLongClick = onPosterLongClick,
+            )
+        }
         when {
             sections.isNotEmpty() -> items(sections, key = { it.key }) { section ->
                 HomeCatalogRowSection(
@@ -87,6 +107,7 @@ internal fun LuxoTypeBrowseScreen(
                     contentAlignment = Alignment.Center,
                 ) { CircularProgressIndicator() }
             }
+            visibleSmartSections.isNotEmpty() -> Unit
             else -> item(key = "empty") {
                 Text(
                     text = lx(

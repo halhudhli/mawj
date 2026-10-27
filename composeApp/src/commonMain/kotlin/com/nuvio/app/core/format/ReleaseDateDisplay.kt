@@ -12,8 +12,15 @@ internal fun formatReleaseDate(
     includeYear: Boolean,
     localeTag: String = Locale.current.toLanguageTag(),
 ): String {
-    val date = parseEpisodeReleaseLocalDate(raw) ?: return raw
-    return formatCalendarDate(date, localeTag, includeYear)
+    val date = parseEpisodeReleaseLocalDate(raw) ?: return com.nuvio.app.features.luxo.LuxoDateStyle.digits(raw)
+    val style = com.nuvio.app.features.luxo.LuxoDateStyle
+    val text = if (style.hijri.value) {
+        style.formatHijri(date, includeYear, arabic = localeTag.startsWith("ar", ignoreCase = true))
+            ?: formatCalendarDate(date, localeTag, includeYear)
+    } else {
+        formatCalendarDate(date, localeTag, includeYear)
+    }
+    return style.digits(text)
 }
 
 internal expect fun formatCalendarDate(isoDate: String, localeTag: String, includeYear: Boolean): String

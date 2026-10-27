@@ -566,6 +566,14 @@ fun HomeScreen(
         )
     }
     val hasContinueWatchingRows = continueWatchingItems.isNotEmpty() || upcomingItems.isNotEmpty()
+    // Luxo: keep the «تابع المشاهدة» home-screen widget in sync.
+    LaunchedEffect(continueWatchingItems) {
+        com.nuvio.app.features.luxo.luxoPublishContinueWatching(
+            continueWatchingItems.take(3).map { item ->
+                listOf(item.title, item.subtitle).filter { it.isNotBlank() }.joinToString(" · ")
+            },
+        )
+    }
 
     ScreenActivityEffect(activeProfileId, continueWatchingItems.isNotEmpty(), hasUserScrolledContinueWatching) { active ->
         if (!active) return@ScreenActivityEffect
@@ -1180,6 +1188,14 @@ fun HomeScreen(
                             onItemLongPress = onContinueWatchingLongPress,
                         disintegrationRequest = continueWatchingDisintegrationRequest,
                         )
+
+                        // Luxo: «وش أشوف الليلة؟»
+                        item(key = "luxo_tonight") {
+                            com.nuvio.app.features.luxo.LuxoTonightCard(
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
+                            )
+                        }
 
                         keyedEnabledHomeItems.forEach { keyedSettingsItem ->
                             val settingsItem = keyedSettingsItem.value

@@ -120,5 +120,12 @@ internal object LuxoCatalogLocalizer {
         @SerialName("poster_path") val posterPath: String? = null,
         @SerialName("backdrop_path") val backdropPath: String? = null,
         @SerialName("vote_average") val voteAverage: Double? = null,
-    )
+        @SerialName("genre_ids") val genreIds: List<Int> = emptyList(),
+        val genres: List<Genre> = emptyList(),
+    ) {
+        val allGenreIds: List<Int> get() = genreIds.ifEmpty { genres.map { it.id } }
+    }
+
+    @Serializable
+    internal data class Genre(val id: Int = 0)
 }

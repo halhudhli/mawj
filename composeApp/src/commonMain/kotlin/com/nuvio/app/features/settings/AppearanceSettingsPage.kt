@@ -140,6 +140,8 @@ internal fun LazyListScope.appearanceSettingsContent(
                 LuxoNavTabSwitches(isTablet = isTablet)
                 SettingsGroupDivider(isTablet = isTablet)
                 LuxoLookControls(isTablet = isTablet)
+                SettingsGroupDivider(isTablet = isTablet)
+                LuxoExtrasControls(isTablet = isTablet)
             }
         }
     }
@@ -622,4 +624,69 @@ private fun LuxoLookControls(isTablet: Boolean) {
             com.nuvio.app.features.details.MetaScreenSettingsRepository.setBlurUnwatchedEpisodes(checked)
         },
     )
+}
+
+@androidx.compose.runtime.Composable
+private fun LuxoExtrasControls(isTablet: Boolean) {
+    val notifications by remember {
+        com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository.ensureLoaded()
+        com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    var recapOpen by remember { mutableStateOf(false) }
+    val hijriDates by com.nuvio.app.features.luxo.LuxoDateStyle.hijri.collectAsStateWithLifecycle()
+    val arabicDigits by com.nuvio.app.features.luxo.LuxoDateStyle.arabicDigits.collectAsStateWithLifecycle()
+
+    SettingsSwitchRow(
+        title = lx("التاريخ الهجري", "Hijri dates"),
+        description = lx("تواريخ نزول الأفلام والحلقات بالهجري", "Show release and air dates in the Hijri calendar"),
+        checked = hijriDates,
+        isTablet = isTablet,
+        onCheckedChange = { com.nuvio.app.features.luxo.LuxoDateStyle.setHijri(it) },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
+    SettingsSwitchRow(
+        title = lx("أرقام عربية (١٢٣)", "Arabic numerals (١٢٣)"),
+        description = lx("عرض أرقام التواريخ بالأرقام العربية", "Show date digits as Arabic-Indic numerals"),
+        checked = arabicDigits,
+        isTablet = isTablet,
+        onCheckedChange = { com.nuvio.app.features.luxo.LuxoDateStyle.setArabicDigits(it) },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
+
+    SettingsSwitchRow(
+        title = lx("تنبيه الحلقات الجديدة", "New episode alerts"),
+        description = notifications.errorMessage ?: lx(
+            "إشعار أول ما تنزل حلقة جديدة لأي مسلسل في مكتبتك",
+            "A notification when a series in your library gets a new episode",
+        ),
+        checked = notifications.isEnabled,
+        isTablet = isTablet,
+        onCheckedChange = { checked ->
+            com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository.setEnabled(checked)
+        },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
+    SettingsNavigationRow(
+        title = lx("شهرك في Luxo ✨", "Your month in Luxo ✨"),
+        description = lx(
+            "رفيق Luxo يلخّص مشاهداتك آخر 30 يوم وذوقك، ويقترح عليك",
+            "Luxo Companion sums up your last 30 days of watching and suggests what's next",
+        ),
+        isTablet = isTablet,
+        onClick = { recapOpen = true },
+    )
+    if (recapOpen) {
+        com.nuvio.app.features.details.LuxoCompanionSheet(
+            subjectKey = "month_recap",
+            subjectTitle = lx("شهرك في Luxo", "Your month in Luxo"),
+            context = remember { com.nuvio.app.features.luxo.LuxoMonthRecap.context() },
+            quickActions = listOf(
+                "ملخص شهري" to "اكتب الملخص الشهري الآن.",
+                "وش ذوقي؟" to "حلّل ذوقي من هذه المشاهدات في 5 نقاط قصيرة.",
+                "وش أشوف بعدها؟" to "اقترح 5 أعمال تناسب ذوقي مع سطر لكل عمل.",
+            ),
+            questionLabel = lx("اسأل عن مشاهداتك", "Ask about your watching"),
+            onDismiss = { recapOpen = false },
+        )
+    }
 }
