@@ -133,7 +133,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 internal enum class TrackingBrand(val displayName: String) {
-    NUVIO("Nuvio"),
+    NUVIO("Luxo"),
     TRAKT("Trakt"),
     SIMKL("Simkl"),
     MDBLIST("MDBList"),

@@ -56,6 +56,14 @@ jobs:
           # اختياري: لو أضفت مفتاح TMDB كـ secret يندمج في التطبيق وتطلع العناوين والأوصاف بالعربي تلقائياً
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+          # اختيارية: أي مفتاح تضيفه كـ secret يشغّل الخدمة المرتبطة فيه
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+          TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
+          SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+          MDBLIST_CLIENT_ID: ${{ secrets.MDBLIST_CLIENT_ID }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+          PREMIUMIZE_CLIENT_ID: ${{ secrets.PREMIUMIZE_CLIENT_ID }}
+          INTRODB_API_URL: ${{ secrets.INTRODB_API_URL }}
         run: |
           set -o pipefail
           ./gradlew :androidApp:assembleFullDebug \

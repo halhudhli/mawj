@@ -99,7 +99,8 @@ suspend fun fetchCatalogPage(
         null
     }
     return CatalogPage(
-        items = parsed.items,
+        // Luxo: posters, titles and descriptions from TMDB (Arabic first), addon artwork as fallback.
+        items = com.nuvio.app.features.luxo.LuxoCatalogLocalizer.localize(parsed.items),
         rawItemCount = parsed.rawItemCount,
         nextSkip = nextSkip,
     )

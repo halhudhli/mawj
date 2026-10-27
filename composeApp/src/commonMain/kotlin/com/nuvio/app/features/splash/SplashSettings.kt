@@ -27,7 +27,7 @@ data class SplashSettings(
     val backgroundColor: Int = 0x0D0D0D,
     /** 0xRRGGBB — colour of stars / waves / particles / gradient accent. */
     val accentColor: Int = 0xC9CDD4,
-    val logoVariant: SplashLogoVariant = SplashLogoVariant.SILVER,
+    val logoVariant: SplashLogoVariant = SplashLogoVariant.ORIGINAL,
     /** DEFAULT shows the image wordmark; the others write "LUXO" in that font. */
     val logoFont: SplashLogoFont = SplashLogoFont.DEFAULT,
     /** 0xRRGGBB — colour of the written "LUXO". */
