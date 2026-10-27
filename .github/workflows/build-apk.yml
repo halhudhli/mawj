@@ -112,8 +112,12 @@ jobs:
           APK=$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)
           cp "$APK" "Luxo-${VERSION}-arm64-v8a.apk"
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
-          gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" \
-            --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" --clobber
+          else
+            gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" \
+              --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
+          fi
           # نخلي آخر 5 إصدارات بس
           gh release list --limit 100 --json tagName -q '.[5:][].tagName' | while read -r tag; do
             gh release delete "$tag" --yes --cleanup-tag || true
