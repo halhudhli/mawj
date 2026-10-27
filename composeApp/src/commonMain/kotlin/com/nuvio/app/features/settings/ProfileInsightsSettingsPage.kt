@@ -404,6 +404,24 @@ private fun ProfileInsightsBody(
             ) {
                 ProfileTasteCard(stats = stats, factsProgress = factsProgress)
             }
+            LuxoTasteSummaryCard(
+                stats = stats,
+                collections = insightCollections,
+                profileName = profileName,
+            )
+            LuxoInsightPosterRow(
+                title = com.nuvio.app.features.luxo.lx("قاعد أتابعها", "Watching now"),
+                items = (
+                    insightCollections[ProfileInsightCollectionKind.Continue]?.items.orEmpty() +
+                        insightCollections[ProfileInsightCollectionKind.Ongoing]?.items.orEmpty()
+                    ).distinctBy { it.lookupId ?: it.id },
+                onPosterClick = onPosterClick,
+            )
+            LuxoInsightPosterRow(
+                title = com.nuvio.app.features.luxo.lx("خلّصتها", "Finished"),
+                items = insightCollections[ProfileInsightCollectionKind.Completed]?.items.orEmpty(),
+                onPosterClick = onPosterClick,
+            )
         }
     }
 
@@ -3439,3 +3457,108 @@ private val profileHourTokenRegex = Regex("""(?i)(\d+)\s*h(?:ours?)?""")
 private val profileMinuteTokenRegex = Regex("""(?i)(\d+)\s*m(?:in(?:ute)?s?)?""")
 private val profileHourMinuteColonRegex = Regex("""^\s*(\d+)\s*:\s*(\d{1,2})\s*$""")
 private val profileDigitsOnlyRegex = Regex("""^\s*(\d+)\s*$""")
+
+
+// ---- Luxo: «ذوقي» additions ----
+
+@Composable
+private fun LuxoInsightPosterRow(
+    title: String,
+    items: List<ProfileInsightPosterItem>,
+    onPosterClick: ((MetaPreview) -> Unit)?,
+) {
+    if (items.isEmpty()) return
+    val tokens = MaterialTheme.nuvio
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "$title · ${com.nuvio.app.features.luxo.LuxoDateStyle.digits(items.size.toString())}",
+            style = MaterialTheme.typography.titleMedium,
+            color = tokens.colors.textPrimary,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(items.take(30).size) { index ->
+                val item = items[index]
+                Box(modifier = Modifier.width(108.dp)) {
+                    ProfileInsightPosterTile(item = item, onClick = onPosterClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LuxoTasteSummaryCard(
+    stats: ProfileInsightsStats,
+    collections: Map<ProfileInsightCollectionKind, ProfileInsightCollection>,
+    profileName: String,
+) {
+    val tokens = MaterialTheme.nuvio
+    var open by remember { mutableStateOf(false) }
+    NuvioSurfaceCard(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().clickable { open = true },
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = com.nuvio.app.features.luxo.lx("وصف ذوقي ✨", "My taste ✨"),
+                style = MaterialTheme.typography.titleMedium,
+                color = tokens.colors.textPrimary,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = com.nuvio.app.features.luxo.lx(
+                    "رفيق Luxo يقرأ كل اللي شفتيه وقاعد تشوفينه (من حسابك) ويوصف ذوقك ويقترح عليك",
+                    "Luxo Companion reads everything you've watched (from your account), describes your taste and suggests what's next",
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = tokens.colors.textMuted,
+            )
+        }
+    }
+    if (open) {
+        val context = remember(stats, collections) { luxoTasteContext(stats, collections, profileName) }
+        com.nuvio.app.features.details.LuxoCompanionSheet(
+            subjectKey = "profile_taste",
+            subjectTitle = com.nuvio.app.features.luxo.lx("ذوقي", "My taste"),
+            context = context,
+            quickActions = listOf(
+                "وصف ذوقي" to "اكتب وصفاً قصيراً وممتعاً لذوقي في المشاهدة (4-5 أسطر) بناءً على هذه البيانات.",
+                "أنماطي" to "وش الأنماط اللي تلاحظها في مشاهداتي؟ (أنواع، أجواء، فترات، ممثلين متكررين) في نقاط قصيرة.",
+                "وش أشوف بعدها؟" to "اقترح 6 أعمال ما شفتها تناسب ذوقي، مع سطر لكل عمل يوضح ليش.",
+                "وش ما كملته؟" to "من القائمة اللي قاعد أتابعها، رتّب لي وش الأولى أكمله وليش.",
+            ),
+            questionLabel = com.nuvio.app.features.luxo.lx("اسأل عن ذوقك", "Ask about your taste"),
+            onDismiss = { open = false },
+        )
+    }
+}
+
+private fun luxoTasteContext(
+    stats: ProfileInsightsStats,
+    collections: Map<ProfileInsightCollectionKind, ProfileInsightCollection>,
+    profileName: String,
+): String = buildString {
+    fun titles(kind: ProfileInsightCollectionKind, limit: Int): String =
+        collections[kind]?.items.orEmpty().take(limit).joinToString("، ") { item ->
+            listOfNotNull(item.title, item.secondaryText?.takeIf { it.isNotBlank() }).joinToString(" — ")
+        }.ifBlank { "لا شيء" }
+    appendLine("ملف المشاهدة لـ $profileName:")
+    appendLine("أفلام مشاهدة: ${stats.watchedMovieCount}، حلقات مشاهدة: ${stats.episodesWatchedCount}")
+    appendLine("مسلسلات مكتملة/أعمال منتهية: ${stats.completedCount}، مسلسلات جارية: ${stats.ongoingSeriesCount}")
+    appendLine("وقت المشاهدة المسجل: ${stats.trackedDurationMs / 3_600_000} ساعة تقريباً")
+    stats.topGenre?.let { appendLine("أكثر نوع: $it") }
+    if (stats.tasteSegments.isNotEmpty()) {
+        appendLine("توزيع الأنواع: " + stats.tasteSegments.joinToString("، ") { "${it.label} ${(it.share * 100).toInt()}%" })
+    }
+    appendLine("نسبة الأفلام مقابل المسلسلات: أفلام ${(stats.movieShare * 100).toInt()}%")
+    appendLine("قاعد أتابع الحين: " + titles(ProfileInsightCollectionKind.Continue, 15))
+    appendLine("مسلسلات جارية: " + titles(ProfileInsightCollectionKind.Ongoing, 15))
+    appendLine("خلّصت: " + titles(ProfileInsightCollectionKind.Completed, 40))
+    appendLine("شاهدت مؤخراً: " + titles(ProfileInsightCollectionKind.Watched, 40))
+    appendLine("في مكتبتي: " + titles(ProfileInsightCollectionKind.Library, 30))
+}

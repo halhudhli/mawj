@@ -461,11 +461,10 @@ internal fun AppGate(
                 if (allowCachedProfileAccess) {
                     enterProfileGate(cachedProfiles, syncOnEnter = false)
                 } else {
-                    // Luxo: no Nuvio account or sign-in screen — go straight to a local profile.
                     ProfileRepository.clearInMemory()
                     profileSelectionLoading = false
                     profileSelectionTransitionActive = false
-                    AuthRepository.signInAnonymously()
+                    gateScreen = AppGateScreen.Auth.name
                 }
             }
             is AuthState.Authenticated -> {
@@ -591,8 +590,7 @@ internal fun AppGate(
                                 profileState.profiles.isEmpty() &&
                                 (authState as? AuthState.Authenticated)?.isAnonymous == true
                         if (isForcedGuestProfileCreation) {
-                            // Luxo: there's no sign-in screen to go back to; a profile is required.
-                            Unit
+                            gateScope.launch { AuthRepository.signOut() }
                         } else {
                             gateScreen = profileEditReturnScreen
                         }
@@ -713,7 +711,11 @@ internal fun AppGate(
                         profileEditReturnScreen = AppGateScreen.ProfileSelection.name
                         gateScreen = AppGateScreen.ProfileEdit.name
                     },
-                    onSignInWithAccount = null,
+                    onSignInWithAccount = if ((authState as? AuthState.Authenticated)?.isAnonymous == true) {
+                        { gateScope.launch { AuthRepository.signOut() } }
+                    } else {
+                        null
+                    },
                     interactionEnabled = !profileSelectionLoading,
                     onBack = onBack,
                     activeProfileIndex = if (autoSkipProfileSelection) null else profileState.activeProfile?.profileIndex,
