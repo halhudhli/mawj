@@ -145,7 +145,7 @@ internal fun LuxoCompanionSheet(
         busy = true
         answer = null
         scope.launch {
-            answer = LuxoCompanionApi.ask(k, context + "\n\n" + prompt)
+            answer = LuxoCompanionApi.ask(k, context + "\n\n" + prompt, search = true)
             busy = false
         }
     }
@@ -231,7 +231,6 @@ internal fun LuxoCompanionSheet(
 
 internal object LuxoCompanionApi {
     private const val KEY_PATH = "luxo/gemini_api_key"
-    private const val MODEL = "gemini-flash-latest"
     private val json = Json { ignoreUnknownKeys = true }
 
     const val SUMMARY = "اكتب ملخصاً قصيراً وممتعاً للقصة بدون أي حرق للأحداث، في 4 إلى 6 أسطر."
@@ -277,42 +276,100 @@ internal object LuxoCompanionApi {
         meta.description?.let { append("\nالوصف الرسمي: ").append(it.take(1200)) }
     }
 
-    suspend fun ask(key: String, prompt: String): String =
-        try {
-            val body = buildJsonObject {
-                put("contents", buildJsonArray {
-                    add(buildJsonObject {
-                        put("parts", buildJsonArray { add(buildJsonObject { put("text", prompt) }) })
-                    })
-                })
-            }.toString()
-            // New AI Studio keys ("AQ." auth keys) only work in the x-goog-api-key header,
-            // not as ?key= in the URL, so send it as a header (older AIza keys accept both).
-            val response = kotlinx.coroutines.withTimeoutOrNull(60_000L) {
+    /** Models to try, best first; filled from the key's own model list the first time. */
+    private var modelChain: List<String>? = null
+    private val fallbackModels = listOf("gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite")
+
+    private suspend fun models(key: String): List<String> {
+        modelChain?.let { return it }
+        val listed = runCatching {
+            val response = kotlinx.coroutines.withTimeoutOrNull(15_000L) {
                 com.nuvio.app.features.addons.httpRequestRaw(
-                    method = "POST",
-                    url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent",
-                    headers = mapOf(
-                        "Content-Type" to "application/json",
-                        "x-goog-api-key" to key.trim(),
-                    ),
-                    body = body,
+                    method = "GET",
+                    url = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+                    headers = mapOf("x-goog-api-key" to key.trim()),
+                    body = "",
                 )
-            } ?: return "الرفيق تأخر في الرد. جرّب مرة ثانية بعد شوي."
-            val root = runCatching { json.parseToJsonElement(response.body).jsonObject }.getOrNull()
-            val error = (root?.get("error") as? JsonObject)?.get("message")?.jsonPrimitive?.contentOrNull
-            when {
-                error != null -> "ما قدر الرفيق يرد: $error"
-                response.status !in 200..299 -> "ما قدر الرفيق يرد (رمز ${response.status}). تأكد من مفتاح Gemini."
-                else -> {
-                    val candidates = root?.get("candidates") as? JsonArray
-                    val parts = (candidates?.firstOrNull() as? JsonObject)
-                        ?.get("content")?.jsonObject?.get("parts") as? JsonArray
-                    parts?.mapNotNull { (it as? JsonObject)?.get("text")?.jsonPrimitive?.contentOrNull }
-                        ?.joinToString("")?.trim()?.takeIf { it.isNotEmpty() }
-                        ?: "ما وصل رد، جرّب مرة ثانية."
-                }
+            } ?: return@runCatching emptyList()
+            val arr = json.parseToJsonElement(response.body).jsonObject["models"] as? JsonArray ?: return@runCatching emptyList()
+            arr.mapNotNull { element ->
+                val obj = element as? JsonObject ?: return@mapNotNull null
+                val name = obj["name"]?.jsonPrimitive?.contentOrNull?.removePrefix("models/") ?: return@mapNotNull null
+                val methods = (obj["supportedGenerationMethods"] as? JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull }.orEmpty()
+                name.takeIf { "generateContent" in methods && "flash" in it && "image" !in it && "tts" !in it && "audio" !in it && "live" !in it }
             }
+        }.getOrDefault(emptyList())
+        // Prefer the moving "-latest" aliases, then stable names, then previews; flash before flash-lite.
+        val ranked = listed.sortedWith(
+            compareBy<String>(
+                { if (it.endsWith("-latest")) 0 else 1 },
+                { if ("preview" in it || "exp" in it) 1 else 0 },
+                { if ("lite" in it) 1 else 0 },
+            ).thenByDescending { it },
+        )
+        val chain = (fallbackModels.filter { listed.isEmpty() || it in listed } + ranked).distinct().take(5)
+        if (listed.isNotEmpty()) modelChain = chain
+        return chain.ifEmpty { fallbackModels }
+    }
+
+    /**
+     * Asks Gemini. Busy/overloaded models (503/429) or missing ones (404) fall through to the next
+     * model, so "high demand" on one model doesn't leave the companion silent. With [search] the
+     * answer can use Google Search for fresh facts.
+     */
+    suspend fun ask(key: String, prompt: String, search: Boolean = false): String =
+        try {
+            var lastError: String? = null
+            for (model in models(key)) {
+                for (withSearch in if (search) listOf(true, false) else listOf(false)) {
+                    val body = buildJsonObject {
+                        put("contents", buildJsonArray {
+                            add(buildJsonObject {
+                                put("parts", buildJsonArray { add(buildJsonObject { put("text", prompt) }) })
+                            })
+                        })
+                        if (withSearch) {
+                            put("tools", buildJsonArray { add(buildJsonObject { put("google_search", buildJsonObject { }) }) })
+                        }
+                    }.toString()
+                    // New AI Studio keys ("AQ." auth keys) only work in the x-goog-api-key header.
+                    val response = kotlinx.coroutines.withTimeoutOrNull(60_000L) {
+                        com.nuvio.app.features.addons.httpRequestRaw(
+                            method = "POST",
+                            url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent",
+                            headers = mapOf("Content-Type" to "application/json", "x-goog-api-key" to key.trim()),
+                            body = body,
+                        )
+                    }
+                    if (response == null) {
+                        lastError = "الرفيق تأخر في الرد"
+                        break
+                    }
+                    val root = runCatching { json.parseToJsonElement(response.body).jsonObject }.getOrNull()
+                    val error = (root?.get("error") as? JsonObject)?.get("message")?.jsonPrimitive?.contentOrNull
+                    if (response.status in 200..299 && error == null) {
+                        val candidates = root?.get("candidates") as? JsonArray
+                        val parts = (candidates?.firstOrNull() as? JsonObject)
+                            ?.get("content")?.jsonObject?.get("parts") as? JsonArray
+                        val text = parts?.mapNotNull { (it as? JsonObject)?.get("text")?.jsonPrimitive?.contentOrNull }
+                            ?.joinToString("")?.trim()?.takeIf { it.isNotEmpty() }
+                        if (text != null) return text
+                        lastError = "ما وصل رد"
+                        break
+                    }
+                    lastError = error ?: "رمز ${response.status}"
+                    when (response.status) {
+                        // The search tool isn't allowed on this model/key: try the same model without it.
+                        400 -> if (withSearch) continue else break
+                        // Busy, rate-limited or unknown model: move on to the next model.
+                        429, 500, 502, 503, 504, 404 -> break
+                        // Bad key or permission: no point trying other models.
+                        else -> return "ما قدر الرفيق يرد: $lastError"
+                    }
+                }
+                kotlinx.coroutines.delay(400L)
+            }
+            "Gemini مشغول الحين على كل الموديلات المتاحة (${lastError ?: "بدون تفاصيل"}). جرّب بعد دقيقة."
         } catch (error: Exception) {
             if (error is CancellationException) throw error
             "تعذّر الاتصال بـ Gemini. تأكد من الإنترنت ومن صحة المفتاح."

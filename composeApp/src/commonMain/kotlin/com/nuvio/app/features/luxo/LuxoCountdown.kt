@@ -217,7 +217,27 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
     if (!rememberLuxoFeatures().countdown) return
     val episodes = rememberUpcoming()
     var pageOpen by remember { mutableStateOf(false) }
-    if (episodes.isEmpty()) return
+    if (episodes.isEmpty()) {
+        // Nothing followed yet: still offer the world countdown.
+        Row(
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(Brush.horizontalGradient(luxoAccentColors().map { it.copy(alpha = 0.22f) }))
+                .clickable { pageOpen = true }
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("⏳", fontSize = 26.sp)
+            Column(Modifier.weight(1f)) {
+                Text(lx("العد التنازلي للحلقات", "Episode countdown"), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(lx("الحلقات الجاية حول العالم بعداد مباشر", "Upcoming episodes worldwide, live"), fontSize = 12.sp, color = MaterialTheme.nuvio.colors.textMuted)
+            }
+        }
+        if (pageOpen) LuxoCountdownPage(onDismiss = { pageOpen = false }, onOpen = { item -> pageOpen = false; onOpen(item) })
+        return
+    }
     val today = remember { luxoTodayEpochDay() }
     val tokens = MaterialTheme.nuvio
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -270,6 +290,7 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
     val episodes = rememberUpcoming()
     val store by LuxoCountdownStore.state.collectAsStateWithLifecycle()
     var selected by remember { mutableStateOf(LuxoCountdownSections.ALL) }
+    var worldMode by remember { mutableStateOf(true) }
     var moving by remember { mutableStateOf<LibraryItem?>(null) }
     var adding by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<LuxoCountdownSection?>(null) }
@@ -304,6 +325,30 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
                         )
                     }
                     IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, null, tint = tokens.colors.textPrimary) }
+                }
+                // World (all airing series) vs. the series in the library.
+                Row(
+                    Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(tokens.colors.surface)
+                        .padding(4.dp),
+                ) {
+                    listOf(true to lx("🌐 كل المسلسلات", "🌐 Everything airing"), false to lx("⭐ متابعاتي", "⭐ Following")).forEach { (mode, label) ->
+                        Text(
+                            label,
+                            color = if (worldMode == mode) Color.White else tokens.colors.textMuted,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (worldMode == mode) Brush.horizontalGradient(accents) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)))
+                                .clickable { worldMode = mode }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+                if (worldMode) {
+                    LuxoWorldCountdownContent(onOpen = onOpen, modifier = Modifier.fillMaxWidth().weight(1f))
+                    return@Column
                 }
                 // Section chips
                 Row(

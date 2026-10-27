@@ -110,13 +110,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HAS_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN != '' }}
           HAS_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY != '' }}
+          HAS_TRAKT: ${{ secrets.TRAKT_CLIENT_ID != '' && secrets.TRAKT_CLIENT_SECRET != '' }}
+          HAS_SIMKL: ${{ secrets.SIMKL_CLIENT_ID != '' }}
+          HAS_MDBLIST: ${{ secrets.MDBLIST_API_KEY != '' }}
         run: |
           VERSION="1.0.${{ github.run_number }}"
           APK=$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)
           cp "$APK" "Luxo-${VERSION}-arm64-v8a.apk"
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
           echo "" >> notes.txt
-          echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} -->" >> notes.txt
+          echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt=${HAS_TRAKT} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
             gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" --clobber
           else
