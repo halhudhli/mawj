@@ -286,18 +286,32 @@ internal object LuxoCompanionApi {
                     })
                 })
             }.toString()
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent?key=$key"
-            val root = json.parseToJsonElement(httpPostJson(url, body)).jsonObject
-            val error = (root["error"] as? JsonObject)?.get("message")?.jsonPrimitive?.contentOrNull
-            if (error != null) {
-                "ما قدر الرفيق يرد: $error"
-            } else {
-                val candidates = root["candidates"] as? JsonArray
-                val parts = (candidates?.firstOrNull() as? JsonObject)
-                    ?.get("content")?.jsonObject?.get("parts") as? JsonArray
-                parts?.mapNotNull { (it as? JsonObject)?.get("text")?.jsonPrimitive?.contentOrNull }
-                    ?.joinToString("")?.trim()?.takeIf { it.isNotEmpty() }
-                    ?: "ما وصل رد، جرّب مرة ثانية."
+            // New AI Studio keys ("AQ." auth keys) only work in the x-goog-api-key header,
+            // not as ?key= in the URL, so send it as a header (older AIza keys accept both).
+            val response = kotlinx.coroutines.withTimeoutOrNull(60_000L) {
+                com.nuvio.app.features.addons.httpRequestRaw(
+                    method = "POST",
+                    url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent",
+                    headers = mapOf(
+                        "Content-Type" to "application/json",
+                        "x-goog-api-key" to key.trim(),
+                    ),
+                    body = body,
+                )
+            } ?: return "الرفيق تأخر في الرد. جرّب مرة ثانية بعد شوي."
+            val root = runCatching { json.parseToJsonElement(response.body).jsonObject }.getOrNull()
+            val error = (root?.get("error") as? JsonObject)?.get("message")?.jsonPrimitive?.contentOrNull
+            when {
+                error != null -> "ما قدر الرفيق يرد: $error"
+                response.status !in 200..299 -> "ما قدر الرفيق يرد (رمز ${response.status}). تأكد من مفتاح Gemini."
+                else -> {
+                    val candidates = root?.get("candidates") as? JsonArray
+                    val parts = (candidates?.firstOrNull() as? JsonObject)
+                        ?.get("content")?.jsonObject?.get("parts") as? JsonArray
+                    parts?.mapNotNull { (it as? JsonObject)?.get("text")?.jsonPrimitive?.contentOrNull }
+                        ?.joinToString("")?.trim()?.takeIf { it.isNotEmpty() }
+                        ?: "ما وصل رد، جرّب مرة ثانية."
+                }
             }
         } catch (error: Exception) {
             if (error is CancellationException) throw error

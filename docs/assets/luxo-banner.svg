@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B1035"/>
+      <stop offset="0.55" stop-color="#3A1250"/>
+      <stop offset="1" stop-color="#14283F"/>
+    </linearGradient>
+    <linearGradient id="foil" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#FF5FD2" stop-opacity="0"/>
+      <stop offset="0.35" stop-color="#FF5FD2" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#7BF7FF" stop-opacity="0.26"/>
+      <stop offset="0.65" stop-color="#FFF27B" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#B57BFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.6" stop-color="#F3D9FF"/>
+      <stop offset="1" stop-color="#FFB37A"/>
+    </linearGradient>
+    <mask id="ticket">
+      <rect x="40" y="30" width="1120" height="360" rx="42" fill="#fff"/>
+      <circle cx="880" cy="30" r="26" fill="#000"/>
+      <circle cx="880" cy="390" r="26" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#ticket)">
+    <rect x="40" y="30" width="1120" height="360" fill="url(#bg)"/>
+    <rect x="40" y="30" width="1120" height="360" fill="url(#foil)"/>
+    <g stroke="#FFFFFF" stroke-opacity="0.04">
+      <path d="M40 80 H1160 M40 130 H1160 M40 180 H1160 M40 230 H1160 M40 280 H1160 M40 330 H1160"/>
+    </g>
+  </g>
+  <line x1="880" y1="70" x2="880" y2="350" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3" stroke-dasharray="12 10"/>
+  <text x="100" y="110" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="8" fill="#FFFFFF" fill-opacity="0.75">LUXO PASS</text>
+  <text x="96" y="260" font-family="Helvetica, Arial, sans-serif" font-size="150" font-weight="900" letter-spacing="10" fill="url(#word)">LUXO</text>
+  <text x="100" y="325" font-family="Tahoma, Arial, sans-serif" font-size="34" fill="#FFFFFF" fill-opacity="0.85">أفلامك ومسلسلاتك… بلمسة فاخرة</text>
+  <text x="1020" y="150" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#FFFFFF" fill-opacity="0.6">SEAT</text>
+  <text x="1020" y="215" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="64" font-weight="900" fill="#FFFFFF">A-8</text>
+  <text x="1020" y="300" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#FFD86B">★ VIP</text>
+  <g fill="#FFFFFF" fill-opacity="0.85">
+    <rect x="670" y="72" width="4" height="40"/><rect x="678" y="72" width="2" height="40"/><rect x="684" y="72" width="6" height="40"/>
+    <rect x="694" y="72" width="2" height="40"/><rect x="700" y="72" width="4" height="40"/><rect x="708" y="72" width="2" height="40"/>
+    <rect x="714" y="72" width="6" height="40"/><rect x="724" y="72" width="3" height="40"/><rect x="731" y="72" width="2" height="40"/>
+    <rect x="737" y="72" width="5" height="40"/><rect x="746" y="72" width="2" height="40"/><rect x="752" y="72" width="4" height="40"/>
+    <rect x="760" y="72" width="2" height="40"/><rect x="766" y="72" width="6" height="40"/><rect x="776" y="72" width="3" height="40"/>
+    <rect x="783" y="72" width="2" height="40"/><rect x="789" y="72" width="4" height="40"/><rect x="797" y="72" width="2" height="40"/>
+  </g>
+</svg>
