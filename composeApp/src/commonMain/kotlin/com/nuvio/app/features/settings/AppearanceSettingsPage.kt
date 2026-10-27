@@ -147,6 +147,16 @@ internal fun LazyListScope.appearanceSettingsContent(
     }
     item {
         SettingsSection(
+            title = lx("شريط التنقل · Luxo", "Navigation · Luxo"),
+            isTablet = isTablet,
+        ) {
+            SettingsGroup(isTablet = isTablet) {
+                LuxoNavExtrasControls(isTablet = isTablet)
+            }
+        }
+    }
+    item {
+        SettingsSection(
             title = stringResource(Res.string.settings_appearance_section_theme),
             isTablet = isTablet,
         ) {

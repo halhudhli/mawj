@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
@@ -107,9 +109,35 @@ internal fun MainTabsDestination(
         } else {
             null
         }
+        val luxoNav = luxoNavSettingsState()
+        // Luxo: a side rail on the reading-start edge (RTL puts it on the right).
+        val useSideRail = tabsRouteActive && !useNativeBottomTabs && when (luxoNav.placementValue) {
+            com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
+            com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> maxWidth > maxHeight && maxWidth >= 700.dp
+            com.nuvio.app.features.luxo.LuxoNavPlacement.BAR -> false
+        }
+        val navHide = remember { com.nuvio.app.features.luxo.LuxoNavHideState() }
+        androidx.compose.runtime.LaunchedEffect(selectedTab) { navHide.hidden = false }
+        val navHidden = luxoNav.hideOnScroll && navHide.hidden
+        val navHideProgress by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (navHidden) 1f else 0f,
+            label = "luxo_nav_hide",
+        )
+        var tonightOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        val onTabLongPressed: (AppScreenTab) -> Unit = { tab ->
+            when (tab) {
+                AppScreenTab.Home -> tonightOpen = true
+                AppScreenTab.Search -> {
+                    onTabSelected(AppScreenTab.Search)
+                    onTabSelected(AppScreenTab.Search)
+                }
+                AppScreenTab.Library -> tabActions.onDownloadsClick()
+                else -> onTabSelected(tab)
+            }
+        }
         val floatingBarOnTop = navBarStyleSetting != NavBarStyle.CLASSIC && navBarPosition == NavBarPosition.TOP
         // The backdrop source is only consumed by the custom floating bar, not native or CLASSIC navigation.
-        val floatingBarVisible = tabsRouteActive && !useNativeBottomTabs && navBarStyleSetting != NavBarStyle.CLASSIC
+        val floatingBarVisible = tabsRouteActive && !useNativeBottomTabs && navBarStyleSetting != NavBarStyle.CLASSIC && !useSideRail
         val navBarBackdrop = if (floatingBarVisible) rememberNuvioBackdrop() else null
         val floatingNavigationItems = mainFloatingNavigationItems(
             highlightedTab = highlightedTab,
@@ -119,6 +147,7 @@ internal fun MainTabsDestination(
             onAddProfileRequested = onAddProfileRequested,
             backdrop = navBarBackdrop,
             defaultIconColorOverride = navBarDefaultIconColorOverride,
+            onTabLongPressed = onTabLongPressed,
         )
 
         Scaffold(
@@ -128,8 +157,11 @@ internal fun MainTabsDestination(
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                if (tabsRouteActive && !isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC) {
+                if (tabsRouteActive && !isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC && !useSideRail) {
                     MainClassicNavigationBar(
+                        modifier = Modifier.graphicsLayer {
+                            translationY = size.height * navHideProgress
+                        },
                         highlightedTab = highlightedTab,
                         showLiveTv = showLiveTvInNavigation,
                         onTabSelected = onTabSelected,
@@ -143,6 +175,7 @@ internal fun MainTabsDestination(
                 CompositionLocalProvider(
                     LocalNuvioBottomNavigationOverlayPadding provides when {
                         tabsRouteActive && useNativeBottomTabs -> 49.dp
+                        useSideRail -> 0.dp
                         // A top pill floats over the content like the tablet CLASSIC bar, so
                         // nothing needs to be kept clear at the bottom.
                         tabsRouteActive && navBarStyleSetting != NavBarStyle.CLASSIC && !floatingBarOnTop -> 72.dp
@@ -166,14 +199,16 @@ internal fun MainTabsDestination(
                                 },
                             )
                             .then(if (tabsRouteActive && navBarStyleSetting == NavBarStyle.ADAPTIVE) Modifier.nestedScroll(navBarScrollState.nestedScrollConnection) else Modifier)
-                            .padding(innerPadding),
+                            .then(if (luxoNav.hideOnScroll) Modifier.nestedScroll(navHide.connection) else Modifier)
+                            .padding(innerPadding)
+                            .padding(start = if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp),
                     )
                 }
 
                 // CLASSIC keeps the previous per-form-factor chrome: a top rail on
                 // tablet/landscape and the solid bottom bar on phones. Every other
                 // style now uses the floating pill at the bottom on all sizes.
-                if (isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC) {
+                if (isTabletLayout && !useNativeBottomTabs && navBarStyleSetting == NavBarStyle.CLASSIC && !useSideRail) {
                     TabletFloatingTopBar(
                         selectedTab = highlightedTab,
                         showLiveTv = showLiveTvInNavigation,
@@ -190,7 +225,12 @@ internal fun MainTabsDestination(
                         else -> {}
                     }
                     MainFloatingNavigationBar(
-                        modifier = Modifier.align(if (floatingBarOnTop) Alignment.TopCenter else Alignment.BottomCenter),
+                        modifier = Modifier
+                            .align(if (floatingBarOnTop) Alignment.TopCenter else Alignment.BottomCenter)
+                            .graphicsLayer {
+                                translationY = (if (floatingBarOnTop) -1f else 1f) * 160.dp.toPx() * navHideProgress
+                                alpha = 1f - navHideProgress
+                            },
                         scrollState = navBarScrollState,
                         backdrop = navBarBackdrop,
                         contentPadding = if (floatingBarOnTop) {
@@ -208,7 +248,28 @@ internal fun MainTabsDestination(
                         defaultIconColorOverride = navBarDefaultIconColorOverride,
                     )
                 }
+
+                if (useSideRail) {
+                    com.nuvio.app.features.luxo.LuxoSideRail(
+                        items = floatingNavigationItems,
+                        expanded = luxoNav.railExpanded,
+                        onExpandedChange = { open ->
+                            com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(railExpanded = open) }
+                        },
+                        hidden = navHidden,
+                        modifier = Modifier.align(Alignment.CenterStart),
+                    )
+                }
             }
+        }
+        if (tonightOpen) {
+            com.nuvio.app.features.luxo.LuxoTonightSheet(
+                onDismiss = { tonightOpen = false },
+                onOpen = { picked ->
+                    tonightOpen = false
+                    tabActions.onPosterClick?.invoke(picked)
+                },
+            )
         }
     }
 }
@@ -256,89 +317,119 @@ internal fun mainFloatingNavigationItems(
     onAddProfileRequested: () -> Unit,
     backdrop: Backdrop?,
     defaultIconColorOverride: Color? = null,
-): List<FloatingNavigationItem> = buildList {
-    add(
-        FloatingNavigationItem(
-            selected = highlightedTab == AppScreenTab.Home,
-            onClick = { onTabSelected(AppScreenTab.Home) },
-            icon = Icons.Filled.Home,
-            label = stringResource(Res.string.compose_nav_home),
-        ),
-    )
+    onTabLongPressed: ((AppScreenTab) -> Unit)? = null,
+): List<FloatingNavigationItem> {
     val luxoNav = luxoNavSettingsState()
-    if (luxoNav.showMovies) {
+    val todayCount = com.nuvio.app.features.luxo.rememberLuxoTodayEpisodeCount(luxoNav.badges)
+    val longPress: (AppScreenTab) -> (() -> Unit)? = { tab ->
+        if (luxoNav.quickActions && onTabLongPressed != null) ({ onTabLongPressed(tab) }) else null
+    }
+    val homeLabel = stringResource(Res.string.compose_nav_home)
+    val searchLabel = stringResource(Res.string.compose_nav_search)
+    val libraryLabel = stringResource(Res.string.compose_nav_library)
+    val liveLabel = stringResource(Res.string.compose_nav_live_tv)
+    val profileLabel = stringResource(Res.string.compose_nav_profile)
+    val moviesLabel = com.nuvio.app.features.luxo.lx("أفلام", "Movies")
+    val seriesLabel = com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
+    val listsLabel = com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+    val ids = com.nuvio.app.features.luxo.LuxoNavTabIds
+    val tabs = buildList {
         add(
             FloatingNavigationItem(
-                selected = highlightedTab == AppScreenTab.Movies,
-                onClick = { onTabSelected(AppScreenTab.Movies) },
-                icon = Icons.Filled.Movie,
-                label = com.nuvio.app.features.luxo.lx("أفلام", "Movies"),
+                selected = highlightedTab == AppScreenTab.Home,
+                onClick = { onTabSelected(AppScreenTab.Home) },
+                icon = Icons.Filled.Home,
+                label = homeLabel,
+                id = ids.HOME,
+                onLongClick = longPress(AppScreenTab.Home),
             ),
         )
-    }
-    if (luxoNav.showSeries) {
+        if (luxoNav.showMovies) {
+            add(
+                FloatingNavigationItem(
+                    selected = highlightedTab == AppScreenTab.Movies,
+                    onClick = { onTabSelected(AppScreenTab.Movies) },
+                    icon = Icons.Filled.Movie,
+                    label = moviesLabel,
+                    id = ids.MOVIES,
+                    onLongClick = longPress(AppScreenTab.Movies),
+                ),
+            )
+        }
+        if (luxoNav.showSeries) {
+            add(
+                FloatingNavigationItem(
+                    selected = highlightedTab == AppScreenTab.Series,
+                    onClick = { onTabSelected(AppScreenTab.Series) },
+                    icon = Icons.Filled.VideoLibrary,
+                    label = seriesLabel,
+                    id = ids.SERIES,
+                    onLongClick = longPress(AppScreenTab.Series),
+                ),
+            )
+        }
+        if (luxoNav.showLists) {
+            add(
+                FloatingNavigationItem(
+                    selected = highlightedTab == AppScreenTab.Lists,
+                    onClick = { onTabSelected(AppScreenTab.Lists) },
+                    icon = Icons.Filled.Bookmarks,
+                    label = listsLabel,
+                    id = ids.LISTS,
+                    onLongClick = longPress(AppScreenTab.Lists),
+                ),
+            )
+        }
         add(
             FloatingNavigationItem(
-                selected = highlightedTab == AppScreenTab.Series,
-                onClick = { onTabSelected(AppScreenTab.Series) },
-                icon = Icons.Filled.VideoLibrary,
-                label = com.nuvio.app.features.luxo.lx("مسلسلات", "Series"),
+                selected = highlightedTab == AppScreenTab.Search,
+                onClick = { onTabSelected(AppScreenTab.Search) },
+                drawable = Res.drawable.sidebar_search,
+                label = searchLabel,
+                id = ids.SEARCH,
+                onLongClick = longPress(AppScreenTab.Search),
             ),
         )
-    }
-    if (luxoNav.showLists) {
         add(
             FloatingNavigationItem(
-                selected = highlightedTab == AppScreenTab.Lists,
-                onClick = { onTabSelected(AppScreenTab.Lists) },
-                icon = Icons.Filled.Bookmarks,
-                label = com.nuvio.app.features.luxo.lx("قوائمي", "Lists"),
+                selected = highlightedTab == AppScreenTab.Library,
+                onClick = { onTabSelected(AppScreenTab.Library) },
+                drawable = Res.drawable.sidebar_library,
+                label = libraryLabel,
+                id = ids.LIBRARY,
+                onLongClick = longPress(AppScreenTab.Library),
+                badge = todayCount,
             ),
         )
-    }
-    add(
-        FloatingNavigationItem(
-            selected = highlightedTab == AppScreenTab.Search,
-            onClick = { onTabSelected(AppScreenTab.Search) },
-            drawable = Res.drawable.sidebar_search,
-            label = stringResource(Res.string.compose_nav_search),
-        ),
-    )
-    add(
-        FloatingNavigationItem(
-            selected = highlightedTab == AppScreenTab.Library,
-            onClick = { onTabSelected(AppScreenTab.Library) },
-            drawable = Res.drawable.sidebar_library,
-            label = stringResource(Res.string.compose_nav_library),
-        ),
-    )
-    if (showLiveTv) {
-        add(
-            FloatingNavigationItem(
-                selected = highlightedTab == AppScreenTab.LiveTv,
-                onClick = { onTabSelected(AppScreenTab.LiveTv) },
-                icon = Icons.Filled.Tv,
-                label = stringResource(Res.string.compose_nav_live_tv),
-            ),
-        )
-    }
-    add(
-        FloatingNavigationItem(
-            selected = highlightedTab == AppScreenTab.Settings,
-            onClick = { onTabSelected(AppScreenTab.Settings) },
-            label = stringResource(Res.string.compose_nav_profile),
-            content = { onClick, iconColorOverride ->
-                ProfileSwitcherTab(
-                    selected = highlightedTab == AppScreenTab.Settings,
-                    onClick = onClick,
-                    onProfileSelected = onProfileSelected,
-                    onAddProfileRequested = onAddProfileRequested,
-                    backdrop = backdrop,
-                    popupBelowAnchor = false,
-                    defaultIconColorOverride = iconColorOverride ?: defaultIconColorOverride,
-                )
-            },
-        ),
+        if (showLiveTv) {
+            add(
+                FloatingNavigationItem(
+                    selected = highlightedTab == AppScreenTab.LiveTv,
+                    onClick = { onTabSelected(AppScreenTab.LiveTv) },
+                    icon = Icons.Filled.Tv,
+                    label = liveLabel,
+                    id = ids.LIVE_TV,
+                    onLongClick = longPress(AppScreenTab.LiveTv),
+                ),
+            )
+        }
+    }.sortedBy { luxoNav.rank(it.id) }
+    return tabs + FloatingNavigationItem(
+        selected = highlightedTab == AppScreenTab.Settings,
+        onClick = { onTabSelected(AppScreenTab.Settings) },
+        label = profileLabel,
+        id = "profile",
+        content = { onClick, iconColorOverride ->
+            ProfileSwitcherTab(
+                selected = highlightedTab == AppScreenTab.Settings,
+                onClick = onClick,
+                onProfileSelected = onProfileSelected,
+                onAddProfileRequested = onAddProfileRequested,
+                backdrop = backdrop,
+                popupBelowAnchor = false,
+                defaultIconColorOverride = iconColorOverride ?: defaultIconColorOverride,
+            )
+        },
     )
 }
 
@@ -351,58 +442,26 @@ internal fun MainClassicNavigationBar(
     onAddProfileRequested: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val luxoNav = luxoNavSettingsState()
+    val ids = com.nuvio.app.features.luxo.LuxoNavTabIds
+    val homeLabel = stringResource(Res.string.compose_nav_home)
+    val searchLabel = stringResource(Res.string.compose_nav_search)
+    val libraryLabel = stringResource(Res.string.compose_nav_library)
+    val liveLabel = stringResource(Res.string.compose_nav_live_tv)
+    val moviesLabel = com.nuvio.app.features.luxo.lx("أفلام", "Movies")
+    val seriesLabel = com.nuvio.app.features.luxo.lx("مسلسلات", "Series")
+    val listsLabel = com.nuvio.app.features.luxo.lx("قوائمي", "Lists")
+    val entries = buildList<Pair<String, @Composable com.nuvio.app.core.ui.NuvioNavigationBarScope.() -> Unit>> {
+        add(luxoNavEntry(ids.HOME) { NavItem(highlightedTab == AppScreenTab.Home, { onTabSelected(AppScreenTab.Home) }, Icons.Filled.Home, homeLabel) })
+        if (luxoNav.showMovies) add(luxoNavEntry(ids.MOVIES) { NavItem(highlightedTab == AppScreenTab.Movies, { onTabSelected(AppScreenTab.Movies) }, Icons.Filled.Movie, moviesLabel) })
+        if (luxoNav.showSeries) add(luxoNavEntry(ids.SERIES) { NavItem(highlightedTab == AppScreenTab.Series, { onTabSelected(AppScreenTab.Series) }, Icons.Filled.VideoLibrary, seriesLabel) })
+        if (luxoNav.showLists) add(luxoNavEntry(ids.LISTS) { NavItem(highlightedTab == AppScreenTab.Lists, { onTabSelected(AppScreenTab.Lists) }, Icons.Filled.Bookmarks, listsLabel) })
+        add(luxoNavEntry(ids.SEARCH) { NavItem(highlightedTab == AppScreenTab.Search, { onTabSelected(AppScreenTab.Search) }, Res.drawable.sidebar_search, searchLabel) })
+        add(luxoNavEntry(ids.LIBRARY) { NavItem(highlightedTab == AppScreenTab.Library, { onTabSelected(AppScreenTab.Library) }, Res.drawable.sidebar_library, libraryLabel) })
+        if (showLiveTv) add(luxoNavEntry(ids.LIVE_TV) { NavItem(highlightedTab == AppScreenTab.LiveTv, { onTabSelected(AppScreenTab.LiveTv) }, Icons.Filled.Tv, liveLabel) })
+    }.sortedBy { luxoNav.rank(it.first) }
     NuvioClassicNavigationBar(modifier) {
-        NavItem(
-            selected = highlightedTab == AppScreenTab.Home,
-            onClick = { onTabSelected(AppScreenTab.Home) },
-            icon = Icons.Filled.Home,
-            contentDescription = stringResource(Res.string.compose_nav_home),
-        )
-        val luxoNav = luxoNavSettingsState()
-        if (luxoNav.showMovies) {
-            NavItem(
-                selected = highlightedTab == AppScreenTab.Movies,
-                onClick = { onTabSelected(AppScreenTab.Movies) },
-                icon = Icons.Filled.Movie,
-                contentDescription = com.nuvio.app.features.luxo.lx("أفلام", "Movies"),
-            )
-        }
-        if (luxoNav.showSeries) {
-            NavItem(
-                selected = highlightedTab == AppScreenTab.Series,
-                onClick = { onTabSelected(AppScreenTab.Series) },
-                icon = Icons.Filled.VideoLibrary,
-                contentDescription = com.nuvio.app.features.luxo.lx("مسلسلات", "Series"),
-            )
-        }
-        if (luxoNav.showLists) {
-            NavItem(
-                selected = highlightedTab == AppScreenTab.Lists,
-                onClick = { onTabSelected(AppScreenTab.Lists) },
-                icon = Icons.Filled.Bookmarks,
-                contentDescription = com.nuvio.app.features.luxo.lx("قوائمي", "Lists"),
-            )
-        }
-        NavItem(
-            selected = highlightedTab == AppScreenTab.Search,
-            onClick = { onTabSelected(AppScreenTab.Search) },
-            icon = Res.drawable.sidebar_search,
-            contentDescription = stringResource(Res.string.compose_nav_search),
-        )
-        NavItem(
-            selected = highlightedTab == AppScreenTab.Library,
-            onClick = { onTabSelected(AppScreenTab.Library) },
-            icon = Res.drawable.sidebar_library,
-            contentDescription = stringResource(Res.string.compose_nav_library),
-        )
-        if (showLiveTv) {
-            NavItem(
-                selected = highlightedTab == AppScreenTab.LiveTv,
-                onClick = { onTabSelected(AppScreenTab.LiveTv) },
-                icon = Icons.Filled.Tv,
-                contentDescription = stringResource(Res.string.compose_nav_live_tv),
-            )
-        }
+        entries.forEach { (_, item) -> item() }
         NavItem(
             selected = highlightedTab == AppScreenTab.Settings,
             onClick = { onTabSelected(AppScreenTab.Settings) },
@@ -426,6 +485,8 @@ internal fun BoxScope.SettingsRouteNavigationBar(
     onProfileSelected: (NuvioProfile) -> Unit,
     onAddProfileRequested: () -> Unit,
     onBottomOverlayChanged: (Dp) -> Unit,
+    isWideLandscape: Boolean = false,
+    onStartOverlayChanged: (Dp) -> Unit = {},
 ) {
     val style by remember { ThemeSettingsRepository.navBarStyle }.collectAsStateWithLifecycle()
     val glowEnabled by ThemeSettingsRepository.navBarGlowEnabled.collectAsStateWithLifecycle()
@@ -442,8 +503,35 @@ internal fun BoxScope.SettingsRouteNavigationBar(
     }
     val density = LocalDensity.current
     val highlightedTab = AppScreenTab.Settings
+    val luxoNav = luxoNavSettingsState()
+    val useSideRail = when (luxoNav.placementValue) {
+        com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
+        com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> isWideLandscape
+        com.nuvio.app.features.luxo.LuxoNavPlacement.BAR -> false
+    }
+    SideEffect { onStartOverlayChanged(if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp) }
 
     when {
+        useSideRail -> {
+            SideEffect { onBottomOverlayChanged(0.dp) }
+            com.nuvio.app.features.luxo.LuxoSideRail(
+                items = mainFloatingNavigationItems(
+                    highlightedTab = highlightedTab,
+                    showLiveTv = showLiveTv,
+                    onTabSelected = onTabSelected,
+                    onProfileSelected = onProfileSelected,
+                    onAddProfileRequested = onAddProfileRequested,
+                    backdrop = backdrop,
+                    defaultIconColorOverride = defaultIconColorOverride,
+                ),
+                expanded = luxoNav.railExpanded,
+                onExpandedChange = { open ->
+                    com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(railExpanded = open) }
+                },
+                hidden = false,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
+        }
         style == NavBarStyle.CLASSIC && isTabletLayout -> {
             SideEffect { onBottomOverlayChanged(0.dp) }
             TabletFloatingTopBar(
@@ -517,3 +605,8 @@ private fun luxoNavSettingsState(): com.nuvio.app.features.luxo.LuxoNavSettings 
     }.collectAsStateWithLifecycle()
     return state
 }
+
+private fun luxoNavEntry(
+    id: String,
+    body: @Composable com.nuvio.app.core.ui.NuvioNavigationBarScope.() -> Unit,
+): Pair<String, @Composable com.nuvio.app.core.ui.NuvioNavigationBarScope.() -> Unit> = id to body

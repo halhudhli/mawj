@@ -10,6 +10,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -1543,6 +1544,7 @@ internal fun MainAppContent(
             val settingsRouteBarVisible = currentRoute is SettingsDestinationRoute && !nativeTabBarOwnsChrome
             val settingsRouteBarBackdrop = rememberNuvioBackdrop()
             var settingsRouteBarOverlay by remember { mutableStateOf(0.dp) }
+            var settingsRouteStartInset by remember { mutableStateOf(0.dp) }
             val settingsRouteBottomOverlay = when {
                 currentRoute !is SettingsDestinationRoute -> 0.dp
                 nativeTabBarOwnsChrome -> 49.dp
@@ -1576,7 +1578,8 @@ internal fun MainAppContent(
                     backStack = navBackStack,
                     modifier = Modifier
                         .fillMaxSize()
-                        .then(if (settingsRouteBarVisible) Modifier.nuvioBackdropSource(settingsRouteBarBackdrop) else Modifier),
+                        .then(if (settingsRouteBarVisible) Modifier.nuvioBackdropSource(settingsRouteBarBackdrop) else Modifier)
+                        .padding(start = if (settingsRouteBarVisible) settingsRouteStartInset else 0.dp),
                     onBack = { navController.popBackStack() },
                     entryDecorators = listOf(
                         rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
@@ -2008,6 +2011,8 @@ internal fun MainAppContent(
                         onProfileSelected = onNavigationProfileSelected,
                         onAddProfileRequested = onSwitchProfile,
                         onBottomOverlayChanged = { settingsRouteBarOverlay = it },
+                        isWideLandscape = maxWidth > maxHeight && maxWidth >= 700.dp,
+                        onStartOverlayChanged = { settingsRouteStartInset = it },
                     )
                 }
             }

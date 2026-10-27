@@ -82,6 +82,12 @@ internal class FloatingNavigationItem(
     val icon: ImageVector? = null,
     val drawable: DrawableResource? = null,
     val content: (@Composable (onClick: () -> Unit, defaultIconColorOverride: Color?) -> Unit)? = null,
+    /** Luxo: stable id used for ordering. */
+    val id: String = "",
+    /** Luxo: action for a long press (shortcut). */
+    val onLongClick: (() -> Unit)? = null,
+    /** Luxo: small count shown on the icon; 0 hides it. */
+    val badge: Int = 0,
 )
 
 /**
@@ -137,7 +143,8 @@ internal fun FloatingNavigationBar(
         )
     }
     val labelFraction by animateFloatAsState(
-        targetValue = scrollState?.labelVisibility ?: 1f,
+        targetValue = (scrollState?.labelVisibility ?: 1f) *
+            (if (com.nuvio.app.features.luxo.rememberLuxoNavSettings().showLabels) 1f else 0f),
         animationSpec = tween(NuvioTokens.Motion.sheetEnterMillis, easing = NuvioTokens.Motion.standard),
         label = "jelly_labels",
     )
@@ -639,6 +646,7 @@ internal suspend fun PointerInputScope.detectJellyTabGestures(
 ) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val downAt = down.uptimeMillis
         motion.begin(down.position.x / density, down.position.y / density)
         var claimed = false
         var finished = false
@@ -666,7 +674,13 @@ internal suspend fun PointerInputScope.detectJellyTabGestures(
                     val items = currentItems()
                     val logicalIndex = logicalNavIndex(visualIndex, items.size, isRtl())
                     finished = true
-                    items.getOrNull(logicalIndex)?.onClick?.invoke()
+                    val target = items.getOrNull(logicalIndex)
+                    val longPress = !claimed && change.uptimeMillis - downAt >= 450L
+                    if (longPress && target?.onLongClick != null) {
+                        target.onLongClick.invoke()
+                    } else {
+                        target?.onClick?.invoke()
+                    }
                     change.consume()
                     break
                 }

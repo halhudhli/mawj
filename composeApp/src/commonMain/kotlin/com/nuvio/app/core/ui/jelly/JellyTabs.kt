@@ -86,6 +86,7 @@ internal fun JellyTabRow(
                                 item.icon != null -> Icon(item.icon, null, iconModifier, tint = iconTint)
                                 item.drawable != null -> Icon(painterResource(item.drawable), null, iconModifier, tint = iconTint)
                             }
+                            com.nuvio.app.features.luxo.LuxoNavBadge(item.badge, Modifier.align(Alignment.TopEnd))
                         }
                         InlineJellyLabel(item.label, labelFraction, color, active)
                     }
@@ -97,6 +98,7 @@ internal fun JellyTabRow(
                             item.icon != null -> Icon(item.icon, null, iconModifier, tint = iconTint)
                             item.drawable != null -> Icon(painterResource(item.drawable), null, iconModifier, tint = iconTint)
                         }
+                        com.nuvio.app.features.luxo.LuxoNavBadge(item.badge, Modifier.align(Alignment.TopEnd))
                     }
                     Box(Modifier.height(labelHeight * labelFraction).fillMaxWidth().clipToBounds().alpha(labelFraction)) {
                         Text(

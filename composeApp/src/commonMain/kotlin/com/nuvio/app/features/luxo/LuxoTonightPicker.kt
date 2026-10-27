@@ -109,7 +109,7 @@ internal fun LuxoTonightCard(
 }
 
 @Composable
-private fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Unit) {
+internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Unit) {
     var mood by remember { mutableStateOf(TonightMood.LIGHT) }
     var time by remember { mutableStateOf(TonightTime.ANY) }
     var busy by remember { mutableStateOf(false) }
