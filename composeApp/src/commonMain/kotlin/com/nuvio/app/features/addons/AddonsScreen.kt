@@ -1,6 +1,8 @@
 package com.nuvio.app.features.addons
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -281,11 +283,21 @@ private fun OverviewStat(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        if (com.nuvio.app.core.ui.luxoDesignOn()) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.displaySmall.copy(
+                    brush = androidx.compose.ui.graphics.Brush.linearGradient(com.nuvio.app.core.ui.luxoAccentColors()),
+                ),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+            )
+        } else {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
@@ -301,7 +313,15 @@ private fun VerticalSeparator() {
             .padding(horizontal = 10.dp)
             .width(1.dp)
             .height(64.dp)
-            .background(MaterialTheme.colorScheme.outline),
+            .background(
+                if (com.nuvio.app.core.ui.luxoDesignOn()) {
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(androidx.compose.ui.graphics.Color.Transparent, com.nuvio.app.core.ui.luxoAccentColors().first().copy(alpha = 0.5f), androidx.compose.ui.graphics.Color.Transparent),
+                    )
+                } else {
+                    androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline)
+                },
+            ),
     )
 }
 
@@ -448,16 +468,20 @@ private fun InstalledAddonCard(
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Switch(
-                checked = addon.enabled,
-                onCheckedChange = onEnabledChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-            )
+            if (com.nuvio.app.core.ui.luxoDesignOn()) {
+                com.nuvio.app.core.ui.LuxoSwitch(checked = addon.enabled, onCheckedChange = onEnabledChange)
+            } else {
+                Switch(
+                    checked = addon.enabled,
+                    onCheckedChange = onEnabledChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -587,9 +611,21 @@ private fun AddonIconBadge(
     icon: ImageVector,
     tint: Color,
 ) {
+    val luxoLook = com.nuvio.app.core.ui.luxoDesignOn()
+    val accents = com.nuvio.app.core.ui.luxoAccentColors()
     Box(
         modifier = Modifier
             .size(64.dp)
+            .then(
+                if (luxoLook) {
+                    Modifier
+                        .shadow(12.dp, RoundedCornerShape(22.dp), ambientColor = accents.first(), spotColor = accents.first())
+                        .border(1.5.dp, androidx.compose.ui.graphics.Brush.linearGradient(accents), RoundedCornerShape(22.dp))
+                        .padding(3.dp)
+                } else {
+                    Modifier
+                },
+            )
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,

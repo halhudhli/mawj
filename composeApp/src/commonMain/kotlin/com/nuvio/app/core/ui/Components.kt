@@ -10,6 +10,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +54,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -94,7 +98,8 @@ fun NuvioScreen(
         state = listState,
         modifier = modifier
             .fillMaxSize()
-            .background(screenBackground),
+            .background(screenBackground)
+            .luxoAurora(luxoDesignOn() && screenBackground != Color.Transparent),
         contentPadding = PaddingValues(
             start = horizontalPadding,
             top = topPadding ?: tokens.spacing.screenTop + statusBarTop + nuvioPlatformExtraTopPadding,
@@ -124,6 +129,16 @@ fun NuvioSurfaceCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
+    if (luxoDesignOn()) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .luxoGlass(RoundedCornerShape(26.dp))
+                .padding(tokens.spacing.cardPadding),
+            content = content,
+        )
+        return
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = tokens.colors.surface,
@@ -193,16 +208,29 @@ fun NuvioScreenHeader(
                         )
                     }
                 }
+                val luxoLook = luxoDesignOn()
                 AnimatedContent(
                     targetState = title,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = "screen_header_title",
                 ) { currentTitle ->
-                    Text(
-                        text = currentTitle,
-                        style = MaterialTheme.typography.displayLarge,
-                        color = tokens.colors.textPrimary,
-                    )
+                    if (luxoLook) {
+                        Column {
+                            Text(
+                                text = currentTitle,
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    brush = Brush.linearGradient(listOf(tokens.colors.textPrimary, tokens.colors.textPrimary) + luxoAccentColors()),
+                                ),
+                            )
+                            LuxoAccentBar(Modifier.padding(top = 6.dp))
+                        }
+                    } else {
+                        Text(
+                            text = currentTitle,
+                            style = MaterialTheme.typography.displayLarge,
+                            color = tokens.colors.textPrimary,
+                        )
+                    }
                 }
             }
             Row(
@@ -219,6 +247,25 @@ fun NuvioSectionLabel(
     text: String,
     modifier: Modifier = Modifier,
 ) {
+    if (luxoDesignOn()) {
+        val accents = luxoAccentColors()
+        Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(accents)),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.nuvio.colors.textPrimary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        return
+    }
     Text(
         text = text,
         modifier = modifier,
@@ -257,11 +304,21 @@ fun NuvioIconActionButton(
     onClick: () -> Unit = {},
 ) {
     val tokens = MaterialTheme.nuvio
+    val luxoLook = luxoDesignOn()
     IconButton(
         modifier = modifier
-            .background(
-                color = tokens.colors.background.copy(alpha = 0.001f),
-                shape = tokens.shapes.avatar,
+            .then(
+                if (luxoLook) {
+                    Modifier
+                        .clip(CircleShape)
+                        .background(Brush.verticalGradient(listOf(tint.copy(alpha = 0.16f), tint.copy(alpha = 0.05f))))
+                        .border(1.dp, tint.copy(alpha = 0.28f), CircleShape)
+                } else {
+                    Modifier.background(
+                        color = tokens.colors.background.copy(alpha = 0.001f),
+                        shape = tokens.shapes.avatar,
+                    )
+                },
             ),
         onClick = onClick,
     ) {
@@ -317,15 +374,24 @@ fun NuvioPrimaryButton(
     } else {
         palette.accentBrush(alpha = tokens.opacity.disabled)
     }
+    val luxoLook = luxoDesignOn()
+    val buttonShape = if (luxoLook) RoundedCornerShape(50) else tokens.shapes.button
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(NuvioTokens.Space.s48 + NuvioTokens.Space.s4)
-            .clip(tokens.shapes.button)
+            .then(
+                if (luxoLook && enabled) {
+                    Modifier.shadow(14.dp, buttonShape, ambientColor = luxoAccentColors().first(), spotColor = luxoAccentColors().first())
+                } else {
+                    Modifier
+                },
+            )
+            .clip(buttonShape)
             .background(containerBrush),
         enabled = enabled,
-        shape = tokens.shapes.button,
+        shape = buttonShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
             contentColor = tokens.colors.onAccent,
@@ -357,12 +423,14 @@ fun NuvioInputField(
     containerColor: Color = MaterialTheme.nuvio.colors.surfaceCard,
 ) {
     val tokens = MaterialTheme.nuvio
+    val luxoLook = luxoDesignOn()
+    val accent = luxoAccentColors().first()
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(NuvioTokens.Radius.lg),
+        shape = if (luxoLook) RoundedCornerShape(50) else RoundedCornerShape(NuvioTokens.Radius.lg),
         placeholder = {
             Text(
                 text = placeholder,
@@ -373,9 +441,9 @@ fun NuvioInputField(
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = tokens.colors.textPrimary),
         trailingIcon = trailingContent,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = tokens.colors.borderFocus,
-            unfocusedBorderColor = tokens.colors.borderDefault,
-            focusedContainerColor = containerColor,
+            focusedBorderColor = if (luxoLook) accent else tokens.colors.borderFocus,
+            unfocusedBorderColor = if (luxoLook) accent.copy(alpha = 0.22f) else tokens.colors.borderDefault,
+            focusedContainerColor = if (luxoLook) lerpColor(containerColor, accent, 0.06f) else containerColor,
             unfocusedContainerColor = containerColor,
             cursorColor = tokens.colors.accent,
         ),
@@ -388,18 +456,29 @@ fun NuvioInfoBadge(
     modifier: Modifier = Modifier,
 ) {
     val tokens = MaterialTheme.nuvio
+    val luxoLook = luxoDesignOn()
+    val accent = luxoAccentColors().first()
     Box(
         modifier = modifier
-            .background(
-                color = tokens.colors.surfaceCard,
-                shape = tokens.shapes.chip,
+            .then(
+                if (luxoLook) {
+                    Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(accent.copy(alpha = 0.12f))
+                        .border(1.dp, accent.copy(alpha = 0.32f), RoundedCornerShape(50))
+                } else {
+                    Modifier.background(
+                        color = tokens.colors.surfaceCard,
+                        shape = tokens.shapes.chip,
+                    )
+                },
             )
             .padding(horizontal = NuvioTokens.Space.s10, vertical = NuvioTokens.Space.s6),
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
-            color = tokens.colors.textMuted,
+            color = if (luxoLook) tokens.colors.textPrimary else tokens.colors.textMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

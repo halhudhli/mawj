@@ -13,6 +13,8 @@ import kotlinx.serialization.json.Json
 /** On/off switches for Luxo's extra features. Everything can be turned off. */
 @Serializable
 data class LuxoFeatures(
+    val luxoDesign: Boolean = true,
+    val luxoDock: Boolean = true,
     val profileHub: Boolean = true,
     val passTilt: Boolean = true,
     val seasonalThemes: Boolean = true,

@@ -228,7 +228,22 @@ internal fun MainTabsDestination(
                         NavBarStyle.COMPACT -> navBarScrollState.collapse()
                         else -> {}
                     }
-                    MainFloatingNavigationBar(
+                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock) {
+                        com.nuvio.app.features.luxo.LuxoDockBar(
+                            items = floatingNavigationItems,
+                            hideProgress = navHideProgress,
+                            onTop = floatingBarOnTop,
+                            contentPadding = if (floatingBarOnTop) {
+                                PaddingValues(
+                                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp,
+                                    bottom = 8.dp,
+                                )
+                            } else {
+                                floatingNavigationBarPadding()
+                            },
+                            modifier = Modifier.align(if (floatingBarOnTop) Alignment.TopCenter else Alignment.BottomCenter),
+                        )
+                    } else MainFloatingNavigationBar(
                         modifier = Modifier
                             .align(if (floatingBarOnTop) Alignment.TopCenter else Alignment.BottomCenter)
                             .graphicsLayer {
@@ -578,6 +593,32 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                     onAddProfileRequested = onAddProfileRequested,
                 )
             }
+        }
+        com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock -> {
+            val onTop = position == NavBarPosition.TOP
+            SideEffect { onBottomOverlayChanged(if (onTop) 0.dp else 72.dp) }
+            com.nuvio.app.features.luxo.LuxoDockBar(
+                items = mainFloatingNavigationItems(
+                    highlightedTab = highlightedTab,
+                    showLiveTv = showLiveTv,
+                    onTabSelected = onTabSelected,
+                    onProfileSelected = onProfileSelected,
+                    onAddProfileRequested = onAddProfileRequested,
+                    backdrop = backdrop,
+                    defaultIconColorOverride = defaultIconColorOverride,
+                ),
+                hideProgress = 0f,
+                onTop = onTop,
+                contentPadding = if (onTop) {
+                    PaddingValues(
+                        top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp,
+                        bottom = 8.dp,
+                    )
+                } else {
+                    floatingNavigationBarPadding()
+                },
+                modifier = Modifier.align(if (onTop) Alignment.TopCenter else Alignment.BottomCenter),
+            )
         }
         else -> {
             val onTop = position == NavBarPosition.TOP

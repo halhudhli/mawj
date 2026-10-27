@@ -19,6 +19,16 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     val features = rememberLuxoFeatures()
     val switches = listOf(
         LuxoFeatureSwitch(
+            lx("تصميم Luxo الكامل ✨", "Full Luxo design ✨"),
+            lx("كروت زجاجية وعناوين متدرجة ومفاتيح متوهجة في كل الصفحات. إيقافه يرجع شكل نوفيو", "Glass cards, gradient titles and glowing switches everywhere. Off returns the original look"),
+            { it.luxoDesign }, { f, v -> f.copy(luxoDesign = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("شريط Luxo Dock 🚀", "Luxo Dock bar 🚀"),
+            lx("الشريط العائم الجديد: القسم المفتوح يتمدد بتدرج متوهج وحلقة ضوء عند التنقل", "The new floating bar: the open tab grows into a glowing pill with a ring of light"),
+            { it.luxoDock }, { f, v -> f.copy(luxoDock = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("صفحة الملف الشخصي بتصميم Luxo 🎟️", "Luxo profile page 🎟️"),
             lx("بطاقة Luxo Pass والقاعات بدل قائمة الإعدادات العادية", "The Luxo Pass and halls instead of the plain settings list"),
             { it.profileHub }, { f, v -> f.copy(profileHub = v) },

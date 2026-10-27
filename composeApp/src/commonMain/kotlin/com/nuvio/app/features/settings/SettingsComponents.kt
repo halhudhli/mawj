@@ -1,5 +1,13 @@
 package com.nuvio.app.features.settings
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import com.nuvio.app.core.ui.luxoGlass
+import com.nuvio.app.core.ui.luxoEnter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -79,6 +87,16 @@ private fun SettingsCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
+    if (com.nuvio.app.core.ui.luxoDesignOn()) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .luxoEnter()
+                .luxoGlass(RoundedCornerShape(if (isTablet) 28.dp else 24.dp)),
+            content = content,
+        )
+        return
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = tokens.colors.surface,
@@ -109,6 +127,21 @@ internal fun SettingsGroup(
 @Composable
 internal fun SettingsGroupDivider(isTablet: Boolean) {
     val tokens = MaterialTheme.nuvio
+    if (com.nuvio.app.core.ui.luxoDesignOn()) {
+        val accents = com.nuvio.app.core.ui.luxoAccentColors()
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (isTablet) 20.dp else 16.dp)
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, accents.first().copy(alpha = 0.22f), Color.White.copy(alpha = 0.06f), Color.Transparent),
+                    ),
+                ),
+        )
+        return
+    }
     HorizontalDivider(
         modifier = Modifier.padding(start = if (isTablet) NuvioTokens.Space.s80 - NuvioTokens.Space.s2 else NuvioTokens.Space.s64 + NuvioTokens.Space.s2),
         thickness = tokens.borders.hairline,
@@ -148,12 +181,27 @@ internal fun TabletPageHeader(
                     iconSize = tokens.icons.md,
                 )
             }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = tokens.colors.textPrimary,
-                fontWeight = FontWeight.SemiBold,
-            )
+            if (com.nuvio.app.core.ui.luxoDesignOn()) {
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            brush = Brush.linearGradient(
+                                listOf(tokens.colors.textPrimary, tokens.colors.textPrimary) + com.nuvio.app.core.ui.luxoAccentColors(),
+                            ),
+                        ),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    com.nuvio.app.core.ui.LuxoAccentBar(Modifier.padding(top = 6.dp))
+                }
+            } else {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = tokens.colors.textPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
     }
 }
@@ -300,10 +348,23 @@ internal fun SettingsNavigationRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null || iconPainter != null) {
+                val luxoLook = com.nuvio.app.core.ui.luxoDesignOn()
+                val accents = com.nuvio.app.core.ui.luxoAccentColors()
                 Surface(
-                    modifier = Modifier.size(iconSize),
-                    color = tokens.colors.accent.copy(alpha = tokens.opacity.pressed),
-                    shape = tokens.shapes.compactCard,
+                    modifier = Modifier
+                        .size(iconSize)
+                        .then(
+                            if (luxoLook) {
+                                Modifier
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(accents.map { it.copy(alpha = 0.28f) }))
+                                    .border(1.dp, Brush.linearGradient(accents.map { it.copy(alpha = 0.6f) }), CircleShape)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                    color = if (luxoLook) Color.Transparent else tokens.colors.accent.copy(alpha = tokens.opacity.pressed),
+                    shape = if (luxoLook) CircleShape else tokens.shapes.compactCard,
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
@@ -347,7 +408,16 @@ internal fun SettingsNavigationRow(
                 }
             }
         }
-        trailingContent?.invoke(this)
+        if (trailingContent != null) {
+            trailingContent.invoke(this)
+        } else if (com.nuvio.app.core.ui.luxoDesignOn()) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = tokens.colors.textMuted,
+                modifier = Modifier.size(20.dp),
+            )
+        }
     }
 }
 
@@ -394,18 +464,27 @@ internal fun SettingsSwitchRow(
                 )
             }
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enabled,
-            modifier = Modifier.padding(start = 4.dp),
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = tokens.colors.onAccent,
-                checkedTrackColor = tokens.colors.accent,
-                uncheckedThumbColor = tokens.colors.textMuted,
-                uncheckedTrackColor = tokens.colors.borderDefault,
-            ),
-        )
+        if (com.nuvio.app.core.ui.luxoDesignOn()) {
+            com.nuvio.app.core.ui.LuxoSwitch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        } else {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                modifier = Modifier.padding(start = 4.dp),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = tokens.colors.onAccent,
+                    checkedTrackColor = tokens.colors.accent,
+                    uncheckedThumbColor = tokens.colors.textMuted,
+                    uncheckedTrackColor = tokens.colors.borderDefault,
+                ),
+            )
+        }
     }
 }
 
