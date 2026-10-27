@@ -158,6 +158,15 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |}
                 """.trimMargin()
             )
+            resolve("LuxoGeminiConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.updater
+                |
+                |internal object LuxoGeminiConfig {
+                |    const val KEY = "${prop("LUXO_GEMINI_KEY", "")}"
+                |}
+                """.trimMargin()
+            )
         }
 
         outDir.resolve("com/nuvio/app/features/player/skip").apply {

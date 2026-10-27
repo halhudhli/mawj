@@ -1,5 +1,7 @@
 package com.nuvio.app.features.details
 
+import com.nuvio.app.features.updater.LuxoGeminiConfig
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -262,6 +264,7 @@ internal object LuxoCompanionApi {
             "بنقاط مرتبة، ليتذكر القصة قبل أن يكمل. ممنوع ذكر أي حدث يقع بعد هذه الحلقة."
 
     fun loadKey(): String? = AppFileCache.read(KEY_PATH)?.trim()?.takeIf { it.isNotEmpty() }
+        ?: LuxoGeminiConfig.KEY.trim().takeIf { it.isNotEmpty() }
     fun saveKey(value: String) = AppFileCache.write(KEY_PATH, value)
 
     fun context(meta: MetaDetails): String = buildString {

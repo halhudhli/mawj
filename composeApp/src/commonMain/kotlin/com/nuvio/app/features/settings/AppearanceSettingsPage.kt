@@ -655,6 +655,26 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
         onCheckedChange = { com.nuvio.app.features.player.LuxoSubtitleTranslator.setEnabled(it) },
     )
     SettingsGroupDivider(isTablet = isTablet)
+    val metaScreen by remember {
+        com.nuvio.app.features.details.MetaScreenSettingsRepository.ensureLoaded()
+        com.nuvio.app.features.details.MetaScreenSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    SettingsSwitchRow(
+        title = lx("ألوان من البوستر 🎨", "Colors from the poster 🎨"),
+        description = lx(
+            "صفحة الفيلم أو المسلسل تاخذ لونها من البوستر نفسه",
+            "The title page takes its colors from the artwork",
+        ),
+        checked = metaScreen.backgroundMode == com.nuvio.app.features.details.MetaScreenBackgroundMode.DominantColor,
+        isTablet = isTablet,
+        onCheckedChange = {
+            com.nuvio.app.features.details.MetaScreenSettingsRepository.setBackgroundMode(
+                if (it) com.nuvio.app.features.details.MetaScreenBackgroundMode.DominantColor
+                else com.nuvio.app.features.details.MetaScreenBackgroundMode.Cinematic,
+            )
+        },
+    )
+    SettingsGroupDivider(isTablet = isTablet)
     val appLock by com.nuvio.app.features.luxo.LuxoAppLock.enabled.collectAsStateWithLifecycle()
     SettingsSwitchRow(
         title = lx("قفل التطبيق بالبصمة 🔒", "Lock the app 🔒"),

@@ -69,6 +69,7 @@ jobs:
           INTRODB_API_URL: ${{ secrets.INTRODB_API_URL }}
           # مفتاح قراءة فقط عشان التطبيق يشوف التحديثات (المستودع خاص)
           LUXO_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN }}
+          LUXO_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY }}
         run: |
           set -o pipefail
           ./gradlew :androidApp:assembleFullDebug \

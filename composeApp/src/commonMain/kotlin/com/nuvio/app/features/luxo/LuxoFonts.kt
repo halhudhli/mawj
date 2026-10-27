@@ -22,6 +22,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.luxo_almarai_bold
+import nuvio.composeapp.generated.resources.luxo_bakerycake
+import nuvio.composeapp.generated.resources.luxo_thmanyah
 import nuvio.composeapp.generated.resources.luxo_barlow_bold
 import nuvio.composeapp.generated.resources.luxo_barlow_regular
 import nuvio.composeapp.generated.resources.luxo_almarai_regular
@@ -49,6 +51,8 @@ enum class LuxoBundledFont(
     /** Name of the regular file inside composeResources/font, copied into the shared font folder. */
     val resourceFile: String,
 ) {
+    THMANYAH("thmanyah", "Thmanyah Serif · ثمانية", true, Res.font.luxo_thmanyah, Res.font.luxo_thmanyah, "luxo_thmanyah.otf"),
+    BAKERY_CAKE("bakerycake", "Bakery Cake", false, Res.font.luxo_bakerycake, Res.font.luxo_bakerycake, "luxo_bakerycake.ttf"),
     BARLOW("barlow", "Barlow", false, Res.font.luxo_barlow_regular, Res.font.luxo_barlow_bold, "luxo_barlow_regular.ttf"),
     TAJAWAL("tajawal", "Tajawal · تجوّل", true, Res.font.luxo_tajawal_regular, Res.font.luxo_tajawal_bold, "luxo_tajawal_regular.ttf"),
     ALMARAI("almarai", "Almarai · المراعي", true, Res.font.luxo_almarai_regular, Res.font.luxo_almarai_bold, "luxo_almarai_regular.ttf"),
