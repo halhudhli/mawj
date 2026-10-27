@@ -427,6 +427,11 @@ internal fun MainAppContent(
         HomeCatalogSettingsRepository.syncCatalogs(enabledAddons)
         HomeRepository.refresh(enabledAddons)
         ServerMatcher.warm()
+        // Luxo: keep catalogs fresh (new releases, trending) while the app stays open.
+        while (true) {
+            kotlinx.coroutines.delay(30 * 60 * 1000L)
+            HomeRepository.refresh(AddonRepository.uiState.value.addons.enabledAddons(), force = true)
+        }
     }
 
     fun activateTab(tab: AppScreenTab) {

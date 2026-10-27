@@ -110,7 +110,7 @@ object SearchRepository {
             addons = activeAddons,
             query = normalizedQuery,
         )
-        if (requests.isEmpty() && serverSearches.isEmpty()) {
+        if (requests.isEmpty() && serverSearches.isEmpty() && !com.nuvio.app.features.luxo.LuxoTmdbSearch.shouldSearch(normalizedQuery)) {
             activeJob?.cancel()
             lastRequestKey = null
             _uiState.value = SearchUiState(
@@ -137,7 +137,17 @@ object SearchRepository {
                 append(ref.connection.selectedLibraries(ref.kind).joinToString(",") { it.id })
             }
         }
+        // Luxo: Arabic queries also search TMDB (addon search only knows English titles).
+        val tmdbLoaders: List<suspend () -> HomeCatalogSection> =
+            if (com.nuvio.app.features.luxo.LuxoTmdbSearch.shouldSearch(normalizedQuery)) {
+                listOf("movie", "series").map { type ->
+                    suspend { com.nuvio.app.features.luxo.LuxoTmdbSearch.searchSection(normalizedQuery, type) }
+                }
+            } else {
+                emptyList()
+            }
         val loaders: List<suspend () -> HomeCatalogSection> =
+            tmdbLoaders +
             requests.map { request -> suspend { request.toSection(forceRefresh = forceRefresh) } } +
                 serverSearches.map { ref ->
                     suspend {
