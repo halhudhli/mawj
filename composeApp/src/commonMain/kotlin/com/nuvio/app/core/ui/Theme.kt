@@ -64,6 +64,12 @@ private val JetBrainsSans: FontFamily
     @Composable
     get() = com.nuvio.app.features.luxo.luxoSelectedAppFontFamily() ?: DefaultAppFontFamily
 
+// Luxo: Android doesn't apply letter spacing to joined (Arabic) text but still measures it, so
+// negative spacing makes Arabic titles wider than their box and the last letter wraps alone.
+@Composable
+private fun luxoLetterSpacing(value: androidx.compose.ui.unit.TextUnit): androidx.compose.ui.unit.TextUnit =
+    if (androidx.compose.ui.text.intl.Locale.current.language == "ar") androidx.compose.ui.unit.TextUnit.Unspecified else value
+
 private val DefaultAppFontFamily: FontFamily
     @Composable
     get() = FontFamily(
@@ -80,14 +86,14 @@ private val NuvioTypography: Typography
             fontSize = NuvioTokens.Type.pageDisplay,
             lineHeight = NuvioTokens.LineHeight.pageDisplay,
             fontWeight = FontWeight.Bold,
-            letterSpacing = NuvioTokens.LetterSpacing.pageDisplay,
+            letterSpacing = luxoLetterSpacing(NuvioTokens.LetterSpacing.pageDisplay),
         ),
         headlineLarge = TextStyle(
             fontFamily = JetBrainsSans,
             fontSize = NuvioTokens.Type.headline,
             lineHeight = NuvioTokens.LineHeight.headline,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = NuvioTokens.LetterSpacing.headline,
+            letterSpacing = luxoLetterSpacing(NuvioTokens.LetterSpacing.headline),
         ),
         titleLarge = TextStyle(
             fontFamily = JetBrainsSans,
@@ -124,7 +130,7 @@ private val NuvioTypography: Typography
             fontSize = NuvioTokens.Type.labelSm,
             lineHeight = NuvioTokens.LineHeight.labelXs,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = NuvioTokens.LetterSpacing.label,
+            letterSpacing = luxoLetterSpacing(NuvioTokens.LetterSpacing.label),
         ),
         // Luxo: the remaining Material styles use the app font too (they used the platform default,
         // so some screens ignored the chosen font).
