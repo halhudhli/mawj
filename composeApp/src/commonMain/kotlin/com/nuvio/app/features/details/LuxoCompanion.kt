@@ -50,9 +50,51 @@ import kotlinx.serialization.json.put
  * Summaries without spoilers, cast bios in Arabic, and free questions about the title.
  * The Gemini API key (from Google AI Studio) is entered once inside the sheet and stored on the device.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
+    LuxoCompanionPanel(
+        subjectKey = meta.id,
+        subjectTitle = meta.name,
+        context = LuxoCompanionApi.context(meta),
+        quickActions = listOf(
+            "ملخص بدون حرق" to LuxoCompanionApi.SUMMARY,
+            "عن الممثلين" to LuxoCompanionApi.CAST,
+            "ليش أشاهده؟" to LuxoCompanionApi.WHY,
+            "أعمال تشبهه" to LuxoCompanionApi.SIMILAR,
+        ),
+        questionLabel = "اسأل عن العمل (بدون حرق)",
+        modifier = modifier,
+    )
+}
+
+/** «رفيق Luxo» on an actor's page: ask about the person, their career and best work. */
+@Composable
+internal fun LuxoPersonCompanion(person: PersonDetail, modifier: Modifier = Modifier) {
+    LuxoCompanionPanel(
+        subjectKey = "person:${person.tmdbId}",
+        subjectTitle = person.name,
+        context = LuxoCompanionApi.personContext(person),
+        quickActions = listOf(
+            "نبذة عنه" to LuxoCompanionApi.PERSON_BIO,
+            "أشهر أعماله" to LuxoCompanionApi.PERSON_BEST,
+            "من وين أبدأ؟" to LuxoCompanionApi.PERSON_START,
+            "معلومات طريفة" to LuxoCompanionApi.PERSON_TRIVIA,
+        ),
+        questionLabel = "اسأل عن ${person.name}",
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LuxoCompanionPanel(
+    subjectKey: String,
+    subjectTitle: String,
+    context: String,
+    quickActions: List<Pair<String, String>>,
+    questionLabel: String,
+    modifier: Modifier = Modifier,
+) {
     var open by remember { mutableStateOf(false) }
     ExtendedFloatingActionButton(
         onClick = { open = true },
@@ -69,7 +111,7 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
     var key by remember { mutableStateOf(LuxoCompanionApi.loadKey()) }
     var keyDraft by remember { mutableStateOf("") }
     var question by remember { mutableStateOf("") }
-    var answer by remember(meta.id) { mutableStateOf<String?>(null) }
+    var answer by remember(subjectKey) { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
 
     fun ask(prompt: String) {
@@ -77,7 +119,7 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
         busy = true
         answer = null
         scope.launch {
-            answer = LuxoCompanionApi.ask(k, LuxoCompanionApi.context(meta) + "\n\n" + prompt)
+            answer = LuxoCompanionApi.ask(k, context + "\n\n" + prompt)
             busy = false
         }
     }
@@ -92,7 +134,7 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("رفيق Luxo ✨", style = MaterialTheme.typography.titleLarge)
-            Text(meta.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(subjectTitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             if (key == null) {
                 Text(
@@ -118,19 +160,18 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
                 return@Column
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = { ask(LuxoCompanionApi.SUMMARY) }, label = { Text("ملخص بدون حرق") })
-                AssistChip(onClick = { ask(LuxoCompanionApi.CAST) }, label = { Text("عن الممثلين") })
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = { ask(LuxoCompanionApi.WHY) }, label = { Text("ليش أشاهده؟") })
-                AssistChip(onClick = { ask(LuxoCompanionApi.SIMILAR) }, label = { Text("أعمال تشبهه") })
+            quickActions.chunked(2).forEach { pair ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    pair.forEach { (label, prompt) ->
+                        AssistChip(onClick = { ask(prompt) }, label = { Text(label) })
+                    }
+                }
             }
 
             OutlinedTextField(
                 value = question,
                 onValueChange = { question = it },
-                label = { Text("اسأل عن العمل (بدون حرق)") },
+                label = { Text(questionLabel) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -171,6 +212,25 @@ internal object LuxoCompanionApi {
     const val CAST = "عرّف بأبرز الممثلين وصنّاع العمل: نبذة قصيرة عن كل واحد وأشهر أعماله، بدون حرق."
     const val WHY = "لماذا قد يستمتع المشاهد بهذا العمل؟ اذكر نقاط قوته وأجواءه ولمن يناسب، بدون حرق."
     const val SIMILAR = "اقترح 5 أعمال مشابهة مع سطر واحد لكل عمل يوضح وجه الشبه."
+
+    const val PERSON_BIO = "اكتب نبذة مختصرة وممتعة عن هذا الشخص: بدايته ومسيرته وأبرز محطاته، في 6 إلى 8 أسطر."
+    const val PERSON_BEST = "ما أشهر وأفضل أعماله؟ اذكر 5 إلى 8 أعمال مع سنة كل عمل وسطر عن دوره فيه."
+    const val PERSON_START = "لو أبغى أبدأ أتابع أعماله، بأي عمل أبدأ؟ رتّب لي 3 إلى 5 أعمال مع السبب باختصار."
+    const val PERSON_TRIVIA = "اذكر 5 معلومات طريفة أو غير معروفة عنه، مؤكدة وغير مختلقة."
+
+    fun personContext(person: PersonDetail): String = buildString {
+        append("أنت «رفيق Luxo»، مساعد عربي ودود داخل تطبيق مشاهدة. اكتب بالعربية الفصحى السهلة، باختصار ووضوح، ولا تختلق معلومات؛ إذا لم تكن متأكداً فقل ذلك.\n")
+        append("الشخص: ").append(person.name)
+        person.knownFor?.let { append("\nمعروف بـ: ").append(it) }
+        person.birthday?.let { append("\nتاريخ الميلاد: ").append(it) }
+        person.deathday?.let { append("\nتاريخ الوفاة: ").append(it) }
+        person.placeOfBirth?.let { append("\nمكان الميلاد: ").append(it) }
+        val credits = (person.movieCredits + person.tvCredits).take(20).joinToString("، ") { credit ->
+            credit.releaseInfo?.takeIf { it.isNotBlank() }?.let { "${credit.name} ($it)" } ?: credit.name
+        }
+        if (credits.isNotBlank()) append("\nمن أعماله: ").append(credits)
+        person.biography?.let { append("\nالسيرة من TMDB: ").append(it.take(1500)) }
+    }
 
     fun loadKey(): String? = AppFileCache.read(KEY_PATH)?.trim()?.takeIf { it.isNotEmpty() }
     fun saveKey(value: String) = AppFileCache.write(KEY_PATH, value)

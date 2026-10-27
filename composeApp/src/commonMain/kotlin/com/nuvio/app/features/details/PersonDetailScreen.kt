@@ -157,6 +157,11 @@ fun PersonDetailScreen(
             )
             }
 
+        // LUXO: «رفيق Luxo» on actor pages too.
+        (uiState as? PersonDetailUiState.Success)?.let { state ->
+            LuxoPersonCompanion(person = state.personDetail, modifier = Modifier.align(Alignment.BottomEnd))
+        }
+
         if (!LocalUseNativeNavigation.current) {
             IconButton(
                 onClick = onBack,
