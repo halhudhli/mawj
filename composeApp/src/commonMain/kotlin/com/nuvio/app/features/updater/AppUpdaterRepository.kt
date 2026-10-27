@@ -60,7 +60,22 @@ internal object AppUpdaterRepository {
             body = "",
         )
         currentCoroutineContext().ensureActive()
-        if (response.status == 404) throw NoChannelReleaseException()
+        // The Luxo repo is private: without a working read token GitHub answers 404 (or 401/403),
+        // which used to look like "no release" and showed "latest version". Say what's really wrong.
+        if (response.status in setOf(401, 403, 404)) {
+            val tokenSet = LuxoUpdateConfig.TOKEN.isNotBlank()
+            if (response.status == 403 && tokenSet && response.body.contains("rate limit", ignoreCase = true)) {
+                error("GitHub طلب الانتظار شوي (حد الطلبات). جرّب بعد دقائق.")
+            }
+            error(
+                if (!tokenSet) {
+                    "ما قدر Luxo يشوف الإصدارات: المستودع خاص وهالنسخة انبنت بدون رمز التحديث (LUXO_UPDATE_TOKEN). " +
+                        "نزّل آخر إصدار من صفحة الإصدارات مرة وحدة، وبعدها التحديث يشتغل من داخل التطبيق."
+                } else {
+                    "رمز التحديث موجود بس GitHub رفضه (${response.status}). تأكد إن الرمز ما انتهى وإن له صلاحية Contents: Read على Luxo."
+                },
+            )
+        }
         if (response.status !in 200..299) {
             error(getString(Res.string.updates_github_api_error, response.status))
         }
