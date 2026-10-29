@@ -81,6 +81,19 @@ jobs:
             -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace 2>&1 | tee build.log
+          # نسخة التابلت (arm64) نحفظها، وبعدين نبني نسخة الشاشات 32-bit (armeabi-v7a)
+          mkdir -p luxo-out
+          cp "$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)" luxo-out/arm64-v8a.apk
+          ./gradlew :androidApp:assembleFullDebug \
+            -Pnuvio.android.distribution=full \
+            -Pnuvio.ios.distribution=appstore \
+            -Pluxo.abi=armeabi-v7a \
+            -Pluxo.fastDebug=true \
+            -Pnuvio.app.versionName=1.0.${{ github.run_number }} \
+            -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --stacktrace 2>&1 | tee -a build.log
+          cp "$(ls -t androidApp/build/outputs/apk/full/debug/*.apk | head -1)" luxo-out/armeabi-v7a.apk
 
       # يحوّل أخطاء Kotlin إلى تنبيهات تظهر في صفحة البناء وتُقرأ عبر الـ API
       - name: Report compile errors
@@ -99,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LUXO-Stream-APK
-          path: androidApp/build/outputs/apk/full/debug/*.apk
+          path: luxo-out/*.apk
           if-no-files-found: error
           retention-days: 14
 
@@ -116,15 +129,15 @@ jobs:
           HAS_MDBLIST: ${{ secrets.MDBLIST_API_KEY != '' }}
         run: |
           VERSION="1.0.${{ github.run_number }}"
-          APK=$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)
-          cp "$APK" "Luxo-${VERSION}-arm64-v8a.apk"
+          cp luxo-out/arm64-v8a.apk "Luxo-${VERSION}-arm64-v8a.apk"
+          cp luxo-out/armeabi-v7a.apk "Luxo-${VERSION}-armeabi-v7a-TV.apk"
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
           echo "" >> notes.txt
           echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt-id=${HAS_TRAKT_ID} trakt-secret=${HAS_TRAKT_SECRET} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" --clobber
+            gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" "Luxo-${VERSION}-armeabi-v7a-TV.apk" --clobber
           else
-            gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" \
+            gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" "Luxo-${VERSION}-armeabi-v7a-TV.apk" \
               --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
           fi
           # نخلي آخر 5 إصدارات بس
