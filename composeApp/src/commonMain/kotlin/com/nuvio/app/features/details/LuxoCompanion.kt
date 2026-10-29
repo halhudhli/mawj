@@ -1,5 +1,12 @@
 package com.nuvio.app.features.details
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.lazy.items
 import com.nuvio.app.features.updater.LuxoGeminiConfig
 
 import androidx.compose.foundation.background
@@ -131,100 +138,135 @@ internal fun LuxoCompanionSheet(
     questionLabel: String,
     onDismiss: () -> Unit,
 ) {
-
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var key by remember { mutableStateOf(LuxoCompanionApi.loadKey()) }
     var keyDraft by remember { mutableStateOf("") }
     var question by remember { mutableStateOf("") }
-    var answer by remember(subjectKey) { mutableStateOf<String?>(null) }
+    // The conversation: (fromUser, text). Kept per title while the app runs.
+    val messages = remember(subjectKey) { LuxoCompanionApi.conversation(subjectKey) }
     var busy by remember { mutableStateOf(false) }
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-    fun ask(prompt: String) {
+    fun send(label: String, prompt: String, freeForm: Boolean) {
         val k = key ?: return
+        if (busy) return
+        messages.add(true to label)
         busy = true
-        answer = null
         scope.launch {
-            answer = LuxoCompanionApi.ask(k, context + "\n\n" + prompt, search = true)
+            listState.animateScrollToItem(messages.size)
+            // Recent turns give follow-up questions their context.
+            val history = messages.dropLast(1).takeLast(6).joinToString("\n") { (user, text) ->
+                (if (user) "المشاهد: " else "رفيق Luxo: ") + text.take(600)
+            }
+            val fullPrompt = buildString {
+                append(context)
+                if (history.isNotBlank()) append("\n\nالمحادثة السابقة:\n").append(history)
+                append("\n\n").append(prompt)
+            }
+            // Web search only for free questions (it's slower); quick actions answer from the model directly.
+            val reply = LuxoCompanionApi.ask(k, fullPrompt, search = freeForm)
+            messages.add(false to reply)
             busy = false
+            listState.animateScrollToItem(messages.size)
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = com.nuvio.app.features.luxo.LuxoAssistantSheetColor,
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.3f)) },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp)
-                .verticalScroll(rememberScrollState()),
+                .fillMaxHeight(0.92f)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 16.dp)
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("رفيق Luxo ✨", style = MaterialTheme.typography.titleLarge)
-            Text(subjectTitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            com.nuvio.app.features.luxo.LuxoAssistantHeader(
+                title = "رفيق Luxo",
+                subtitle = if (busy) "يفكّر…" else subjectTitle,
+                thinking = busy,
+            )
 
             if (key == null) {
                 Text(
                     "يحتاج مفتاح Gemini مرة وحدة: افتح aistudio.google.com ← Get API key ← انسخ المفتاح والصقه هنا. المفتاح ينحفظ على هذا الجهاز فقط.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f),
                 )
-                OutlinedTextField(
+                com.nuvio.app.features.luxo.LuxoAskBar(
                     value = keyDraft,
                     onValueChange = { keyDraft = it },
-                    label = { Text("مفتاح Gemini") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Button(
-                    onClick = {
+                    placeholder = "الصق مفتاح Gemini",
+                    enabled = true,
+                    onSend = {
                         val k = keyDraft.trim()
                         if (k.isNotEmpty()) {
                             LuxoCompanionApi.saveKey(k)
                             key = k
                         }
                     },
-                ) { Text("حفظ") }
+                )
                 return@Column
             }
 
-            quickActions.chunked(2).forEach { pair ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    pair.forEach { (label, prompt) ->
-                        AssistChip(onClick = { ask(prompt) }, label = { Text(label) })
+            androidx.compose.foundation.lazy.LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (messages.isEmpty()) {
+                    item {
+                        Text(
+                            "أهلاً! اختر سؤال جاهز أو اكتب سؤالك تحت 👇",
+                            color = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(vertical = 8.dp),
+                        )
+                    }
+                }
+                items(messages.size) { index ->
+                    val (fromUser, text) = messages[index]
+                    com.nuvio.app.features.luxo.LuxoChatBubble(text, fromUser)
+                }
+                if (busy) {
+                    item {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            com.nuvio.app.features.luxo.LuxoTypingDots()
+                        }
                     }
                 }
             }
 
-            OutlinedTextField(
+            com.nuvio.app.features.luxo.LuxoSuggestionChips(
+                quickActions.map { (label, prompt) -> label to { send(label, prompt, freeForm = false) } },
+                enabled = !busy,
+            )
+            com.nuvio.app.features.luxo.LuxoAskBar(
                 value = question,
                 onValueChange = { question = it },
-                label = { Text(questionLabel) },
-                modifier = Modifier.fillMaxWidth(),
+                placeholder = questionLabel,
+                enabled = !busy,
+                onSend = {
+                    val q = question.trim()
+                    question = ""
+                    send(q, "سؤال المشاهد: $q", freeForm = true)
+                },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    enabled = question.isNotBlank() && !busy,
-                    onClick = { ask("سؤال المشاهد: ${question.trim()}") },
-                ) { Text("اسأل") }
-                TextButton(onClick = {
-                    LuxoCompanionApi.saveKey("")
-                    key = null
-                }) { Text("تغيير المفتاح") }
-            }
-
-            if (busy) {
-                Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) { CircularProgressIndicator() }
-            }
-            answer?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 40.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-                        .padding(14.dp),
-                )
-            }
+            Text(
+                "تغيير المفتاح",
+                color = Color.White.copy(alpha = 0.4f),
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable {
+                        LuxoCompanionApi.saveKey("")
+                        key = null
+                    },
+            )
         }
     }
 }
@@ -282,7 +324,16 @@ internal object LuxoCompanionApi {
     private const val PINNED_MODEL = "gemini-3.5-flash-lite"
     private val fallbackModels = listOf(PINNED_MODEL, "gemini-flash-lite-latest", "gemini-flash-latest", "gemini-2.5-flash-lite")
 
-    private suspend fun models(key: String): List<String> {
+    private val conversations = mutableMapOf<String, androidx.compose.runtime.snapshots.SnapshotStateList<Pair<Boolean, String>>>()
+
+    /** The conversation for a title, kept while the app runs so reopening continues it. */
+    fun conversation(subjectKey: String): androidx.compose.runtime.snapshots.SnapshotStateList<Pair<Boolean, String>> =
+        conversations.getOrPut(subjectKey) { androidx.compose.runtime.mutableStateListOf() }
+
+    // Speed: go straight to the pinned model; the network model list is only a fallback.
+    private suspend fun models(key: String): List<String> = fallbackModels.ifEmpty { listedModels(key) }
+
+    private suspend fun listedModels(key: String): List<String> {
         modelChain?.let { return it }
         val listed = runCatching {
             val response = kotlinx.coroutines.withTimeoutOrNull(15_000L) {

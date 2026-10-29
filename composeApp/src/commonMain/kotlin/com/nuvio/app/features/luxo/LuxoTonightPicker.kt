@@ -2,6 +2,9 @@
 
 package com.nuvio.app.features.luxo
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -109,82 +112,126 @@ internal fun LuxoTonightCard(
 }
 
 @Composable
+private fun TonightChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        label,
+        color = Color.White,
+        fontSize = 14.sp,
+        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(
+                if (selected) Brush.linearGradient(LuxoAssistantColors.take(2))
+                else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.06f))),
+            )
+            .border(1.dp, if (selected) Color.Transparent else Color.White.copy(alpha = 0.14f), RoundedCornerShape(50))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+    )
+}
+
+@Composable
 internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Unit) {
     var mood by remember { mutableStateOf(TonightMood.LIGHT) }
     var time by remember { mutableStateOf(TonightTime.ANY) }
     var busy by remember { mutableStateOf(false) }
     var picks by remember { mutableStateOf<List<TonightPick>?>(null) }
+    var wish by remember { mutableStateOf("") }
+    var lastWish by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    fun run(freeText: String?) {
+        if (busy) return
+        busy = true
+        picks = null
+        lastWish = freeText
+        scope.launch {
+            picks = pickTonight(mood, time, freeText)
+            busy = false
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = LuxoAssistantSheetColor,
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.3f)) },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 28.dp)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 20.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("وش أشوف الليلة؟ ✨", style = MaterialTheme.typography.titleLarge)
-            Text("المزاج", style = MaterialTheme.typography.labelLarge)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TonightMood.entries.forEach { option ->
-                    FilterChip(selected = mood == option, onClick = { mood = option }, label = { Text(option.label) })
-                }
+            LuxoAssistantHeader(
+                title = "وش أشوف الليلة؟",
+                subtitle = if (busy) "يدوّر لك على شي يناسبك…" else "اختر مزاجك أو اكتب اللي في بالك",
+                thinking = busy,
+            )
+            Text("المزاج", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TonightMood.entries.forEach { option -> TonightChip(option.label, mood == option) { mood = option } }
             }
-            Text("وش تبي؟", style = MaterialTheme.typography.labelLarge)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TonightTime.entries.forEach { option ->
-                    FilterChip(selected = time == option, onClick = { time = option }, label = { Text(option.label) })
-                }
+            Text("وش تبي؟", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TonightTime.entries.forEach { option -> TonightChip(option.label, time == option) { time = option } }
             }
-            Button(
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(50))
+                    .background(Brush.linearGradient(LuxoAssistantColors))
+                    .clickable(enabled = !busy) { run(null) }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text("اقترح لي ✨", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp) }
+
+            LuxoAskBar(
+                value = wish,
+                onValueChange = { wish = it },
+                placeholder = "أو اكتب: «أبغى فيلم خفيف عن السفر»",
                 enabled = !busy,
-                onClick = {
-                    busy = true
-                    picks = null
-                    scope.launch {
-                        picks = pickTonight(mood, time)
-                        busy = false
-                    }
+                onSend = {
+                    val w = wish.trim()
+                    wish = ""
+                    run(w)
                 },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("اقترح لي") }
+            )
+            lastWish?.let { LuxoChatBubble(it, fromUser = true) }
 
             if (busy) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { LuxoTypingDots() }
             }
             picks?.let { list ->
                 if (list.isEmpty()) {
-                    Text(
-                        "ما لقيت شي مناسب في الكتالوج الحالي. جرّب مزاج ثاني.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    LuxoChatBubble("ما لقيت شي يناسب هالطلب في كتالوجك الحالي. جرّب مزاج ثاني أو اكتب طلبك بشكل مختلف.", fromUser = false)
                 }
                 list.forEach { pick ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f))))
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
                             .clickable { onOpen(pick.item) }
                             .padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         AsyncImage(
-                            model = pick.item.poster ?: pick.item.rawPosterUrl,
+                            model = luxoHighResImage(pick.item.poster ?: pick.item.rawPosterUrl),
                             contentDescription = pick.item.name,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.width(64.dp).size(width = 64.dp, height = 96.dp).clip(RoundedCornerShape(10.dp)),
+                            modifier = Modifier.size(width = 70.dp, height = 105.dp).clip(RoundedCornerShape(12.dp)),
                         )
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(pick.item.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(pick.item.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             val meta = listOfNotNull(pick.item.releaseInfo, pick.item.imdbRating?.let { "★ $it" }).joinToString(" · ")
-                            if (meta.isNotBlank()) {
-                                Text(meta, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            pick.reason?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                            if (meta.isNotBlank()) Text(meta, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                            pick.reason?.let { Text(it, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp) }
                         }
                     }
                 }
@@ -195,10 +242,12 @@ internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Un
 
 private val pickJson = Json { ignoreUnknownKeys = true; isLenient = true }
 
-private suspend fun pickTonight(mood: TonightMood, time: TonightTime): List<TonightPick> {
-    val smart = listOf(LuxoContentType.MOVIE, LuxoContentType.SERIES)
+private suspend fun pickTonight(mood: TonightMood, time: TonightTime, freeText: String? = null): List<TonightPick> {
+    // Speed: the home rows are already loaded; only fetch smart collections when they're thin.
+    val home = HomeRepository.uiState.value.sections
+    val smart = if (home.sumOf { it.items.size } >= 60) emptyList() else listOf(LuxoContentType.MOVIE, LuxoContentType.SERIES)
         .flatMap { type -> runCatching { LuxoSmartCollections.load(type) }.getOrDefault(emptyList()) }
-    val candidates = (HomeRepository.uiState.value.sections + smart)
+    val candidates = (home + smart)
         .flatMap { it.items }
         .distinctBy { "${it.type}:${it.id}" }
         .filter { time.type == null || it.type == time.type }
@@ -211,7 +260,7 @@ private suspend fun pickTonight(mood: TonightMood, time: TonightTime): List<Toni
             "${item.id}|${item.name}|${item.type}|${item.releaseInfo.orEmpty()}|${item.genres.joinToString("/")}|${item.imdbRating.orEmpty()}"
         }
         val prompt = """
-            أنت «رفيق Luxo». المشاهد يريد الليلة: ${mood.promptLabel}${time.type?.let { if (it == "movie") "، فيلم" else "، مسلسل" } ?: ""}.
+            أنت «رفيق Luxo». ${if (!freeText.isNullOrBlank()) "طلب المشاهد بكلماته: «$freeText»" else "المشاهد يريد الليلة: ${mood.promptLabel}${time.type?.let { if (it == "movie") "، فيلم" else "، مسلسل" } ?: ""}"}.
             اختر 5 أعمال فقط من القائمة التالية (المعرّف|الاسم|النوع|السنة|التصنيفات|التقييم) تناسب طلبه.
             أجب بصيغة JSON فقط بدون أي نص آخر: [{"id":"...","reason":"سبب قصير بالعربية بدون حرق"}]
             القائمة:
