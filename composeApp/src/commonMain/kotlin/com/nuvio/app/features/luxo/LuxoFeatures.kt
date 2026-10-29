@@ -39,6 +39,10 @@ data class LuxoFeatures(
     val ambientGlow: Boolean = false,
     val streamRanking: Boolean = true,
     val hideCamReleases: Boolean = true,
+    /** TV only: lighter Home (smaller pictures, fewer animations, no autoplay trailer). */
+    val tvLite: Boolean = true,
+    /** TV only: focus frames and smooth focus scrolling for the remote. */
+    val tvRemote: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

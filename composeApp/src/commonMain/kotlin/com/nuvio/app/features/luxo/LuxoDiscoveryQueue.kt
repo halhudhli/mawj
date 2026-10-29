@@ -212,7 +212,7 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
                 .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
                 .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
         ) {
-            queue?.firstOrNull()?.let { top ->
+            if (!rememberLuxoLite()) queue?.firstOrNull()?.let { top ->
                 AsyncImage(
                     model = luxoHighResImage(top.banner ?: top.poster, maxBackdrop1080 = true),
                     contentDescription = null,

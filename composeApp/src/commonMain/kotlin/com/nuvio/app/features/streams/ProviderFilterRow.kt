@@ -291,7 +291,7 @@ private fun FilterChip(
             )
             .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClick = onClick,
                 onLongClick = onLongClick,
             )

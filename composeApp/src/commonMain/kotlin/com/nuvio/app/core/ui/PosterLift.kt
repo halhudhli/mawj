@@ -96,7 +96,7 @@ internal fun Modifier.posterCardClickable(
         .combinedClickable(
             interactionSource = interactionSource,
             // Luxo: posters with their own pressed effect skip the grey ripple flash.
-            indication = if (onPosterClickAnchor == null && interactionSource == null) LocalIndication.current else null,
+            indication = if (onPosterClickAnchor == null && interactionSource == null) LocalIndication.current else com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
             onClick = {
                 if (onClick != null) {
                     source.bounds?.let { bounds ->

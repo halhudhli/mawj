@@ -47,6 +47,10 @@ private fun rememberHomeSkeletonBrush(): Brush {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
         MaterialTheme.colorScheme.surface,
     )
+    if (com.nuvio.app.features.luxo.rememberLuxoLite()) {
+        // Luxo TV light mode: a still placeholder instead of a sweep that redraws every frame.
+        return androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.surface)
+    }
     val transition = rememberInfiniteTransition()
     val translateAnim by transition.animateFloat(
         initialValue = 0f,

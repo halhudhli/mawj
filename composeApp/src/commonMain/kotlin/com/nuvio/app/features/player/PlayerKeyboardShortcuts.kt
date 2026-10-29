@@ -5,6 +5,8 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -22,6 +24,8 @@ enum class PlayerKeyboardShortcut(val wireCode: String) {
     SeekBackward("seek_backward"),
     SeekForward("seek_forward"),
     Exit("exit"),
+    // Luxo (TV remote): up/down/OK on the bare video show the controls so the remote can reach them.
+    ShowControls("show_controls"),
     ;
 
     companion object {
@@ -45,20 +49,31 @@ internal fun Modifier.playerKeyboardShortcuts(
     focusRequester: FocusRequester,
     enabledState: State<Boolean>,
     onShortcutState: State<(PlayerKeyboardShortcut) -> Unit>,
-): Modifier =
-    focusRequester(focusRequester)
+    // Luxo: true only while the video surface itself holds focus. When the remote has moved focus
+    // onto a control button, the arrows must move between buttons instead of seeking.
+    selfFocused: MutableState<Boolean>,
+    // Luxo: moves focus from the video into the control buttons (after they appear).
+    onEnterControls: State<() -> Unit>,
+): Modifier {
+    return onFocusChanged { selfFocused.value = it.isFocused }
+        .focusRequester(focusRequester)
         .focusable()
         .onPreviewKeyEvent { event ->
             if (event.type != KeyEventType.KeyDown || !enabledState.value) return@onPreviewKeyEvent false
-            val shortcut = event.key.toPlayerKeyboardShortcut() ?: return@onPreviewKeyEvent false
+            val onSurface = selfFocused.value
+            val shortcut = when (event.key) {
+                Key.Spacebar, Key.MediaPlayPause, Key.MediaPlay, Key.MediaPause -> PlayerKeyboardShortcut.TogglePlayback
+                Key.MediaFastForward -> PlayerKeyboardShortcut.SeekForward
+                Key.MediaRewind -> PlayerKeyboardShortcut.SeekBackward
+                Key.Escape -> PlayerKeyboardShortcut.Exit
+                Key.DirectionLeft -> if (onSurface) PlayerKeyboardShortcut.SeekBackward else null
+                Key.DirectionRight -> if (onSurface) PlayerKeyboardShortcut.SeekForward else null
+                Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> if (onSurface) PlayerKeyboardShortcut.TogglePlayback else null
+                Key.DirectionUp, Key.DirectionDown -> if (onSurface) PlayerKeyboardShortcut.ShowControls else null
+                else -> null
+            } ?: return@onPreviewKeyEvent false
             onShortcutState.value(shortcut)
+            if (shortcut == PlayerKeyboardShortcut.ShowControls) onEnterControls.value()
             true
         }
-
-private fun Key.toPlayerKeyboardShortcut(): PlayerKeyboardShortcut? = when (this) {
-    Key.Spacebar -> PlayerKeyboardShortcut.TogglePlayback
-    Key.DirectionLeft -> PlayerKeyboardShortcut.SeekBackward
-    Key.DirectionRight -> PlayerKeyboardShortcut.SeekForward
-    Key.Escape -> PlayerKeyboardShortcut.Exit
-    else -> null
 }

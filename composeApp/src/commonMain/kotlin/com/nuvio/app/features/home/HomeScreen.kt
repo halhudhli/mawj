@@ -1044,7 +1044,8 @@ fun HomeScreen(
                                 // turns false whenever a screen (like Details) is pushed on top of it, which
                                 // is also exactly when hero trailer playback must stop, not just pause.
                                 trailerPlaybackEnabled = homeSettingsUiState.heroTrailerPlaybackEnabled &&
-                                    animateCollectionGifs,
+                                    animateCollectionGifs &&
+                                    !com.nuvio.app.features.luxo.luxoLiteMode(),
                                 trailerStartDelaySeconds = homeSettingsUiState.heroTrailerStartDelaySeconds,
                                 trailerStartUnmuted = homeSettingsUiState.heroTrailerStartUnmuted,
                                 onItemClick = onPosterClick,
@@ -1224,7 +1225,7 @@ fun HomeScreen(
                                             collection = collection,
                                             modifier = Modifier.padding(bottom = 12.dp),
                                             sectionPadding = homeSectionPadding,
-                                            animateGifs = animateCollectionGifs,
+                                            animateGifs = animateCollectionGifs && !com.nuvio.app.features.luxo.luxoLiteMode(),
                                             onFolderClick = onFolderClick,
                                         )
                                     }

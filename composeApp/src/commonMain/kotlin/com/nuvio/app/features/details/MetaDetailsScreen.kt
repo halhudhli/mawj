@@ -2713,7 +2713,7 @@ private fun TabbedSectionGroup(
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
+                                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                             ) { selectedIndex = index },
                     )
                 }

@@ -468,7 +468,7 @@ private fun ProfileAvatarCard(
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClickLabel = stringResource(
                     if (isEditMode) {
                         Res.string.profile_edit_accessibility
@@ -636,7 +636,7 @@ private fun AddProfileCard(
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClick = onClick,
             )
             .padding(8.dp),

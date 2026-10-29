@@ -89,6 +89,7 @@ jobs:
             -Pnuvio.ios.distribution=appstore \
             -Pluxo.abi=armeabi-v7a \
             -Pluxo.fastDebug=true \
+            -Pluxo.minify=true \
             -Pnuvio.app.versionName=1.0.${{ github.run_number }} \
             -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
             -Pkotlin.compiler.execution.strategy=in-process \

@@ -18,18 +18,9 @@ import androidx.compose.ui.unit.dp
 expect fun luxoIsTv(): Boolean
 
 /**
- * A clear focus ring for the TV remote: the focused item grows a little and gets a white outline.
- * Does nothing visible on touch screens until something is focused with a keyboard/remote.
+ * Kept for older call sites. The focus frame is now drawn for every clickable by
+ * [LuxoTvIndication] (see LuxoTvLite.kt), in the draw phase only, so this adds nothing on its own
+ * and a card never gets two frames.
  */
-@Composable
-fun Modifier.luxoTvFocus(corner: Dp = 18.dp): Modifier {
-    var focused by remember { mutableStateOf(false) }
-    return this
-        .onFocusChanged { focused = it.isFocused || it.hasFocus }
-        .graphicsLayer {
-            val s = if (focused) 1.06f else 1f
-            scaleX = s
-            scaleY = s
-        }
-        .border(if (focused) 3.dp else 0.dp, if (focused) Color.White else Color.Transparent, RoundedCornerShape(corner))
-}
+@Suppress("UNUSED_PARAMETER")
+fun Modifier.luxoTvFocus(corner: Dp = 18.dp): Modifier = this

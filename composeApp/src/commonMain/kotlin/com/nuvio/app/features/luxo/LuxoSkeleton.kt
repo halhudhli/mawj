@@ -32,6 +32,7 @@ import com.nuvio.app.features.watchprogress.CurrentDateProvider
 /** A soft light that sweeps across placeholder shapes while content loads. */
 @Composable
 fun Modifier.luxoShimmer(): Modifier {
+    if (rememberLuxoLite()) return this.background(Color.White.copy(alpha = 0.07f))
     val transition = rememberInfiniteTransition(label = "luxo_shimmer")
     val x by transition.animateFloat(
         initialValue = -1f,

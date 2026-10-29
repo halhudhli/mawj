@@ -1,5 +1,9 @@
 package com.nuvio.app
 
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.foundation.focusGroup
 import androidx.compose.runtime.collectAsState
 import com.nuvio.app.core.ui.NativeTabBridge
 import androidx.compose.foundation.layout.Box
@@ -273,6 +277,14 @@ internal fun MainTabsDestination(
                 }
 
                 if (useSideRail) {
+                    // Luxo TV (like Nuvio TV): the remote's Back goes to the side menu first, and only
+                    // a second Back (while the menu is focused) does the usual back/exit.
+                    val tvRemoteOn = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
+                    val railFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+                    var railHasFocus by remember { androidx.compose.runtime.mutableStateOf(false) }
+                    PlatformBackHandler(enabled = tvRemoteOn && !railHasFocus) {
+                        runCatching { railFocus.requestFocus() }
+                    }
                     com.nuvio.app.features.luxo.LuxoSideRail(
                         items = floatingNavigationItems,
                         expanded = luxoNav.railExpanded,
@@ -280,7 +292,12 @@ internal fun MainTabsDestination(
                             com.nuvio.app.features.luxo.LuxoNavSettingsRepository.update { it.copy(railExpanded = open) }
                         },
                         hidden = navHidden,
-                        modifier = Modifier.align(Alignment.CenterStart),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .onFocusChanged { railHasFocus = it.hasFocus }
+                            .focusRequester(railFocus)
+                            .focusRestorer()
+                            .focusGroup(),
                     )
                 }
             }

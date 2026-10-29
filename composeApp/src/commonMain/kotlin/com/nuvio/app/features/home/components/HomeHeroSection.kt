@@ -632,7 +632,7 @@ internal fun HomeHeroSection(
                                 .background(Color.Black.copy(alpha = 0.35f))
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
+                                    indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                                 ) {
                                     HeroTrailerAudioState.toggleMuted(HeroTrailerSurface.Home)
                                 }

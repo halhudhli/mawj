@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
@@ -218,8 +219,24 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         derivedStateOf { !isAnyOverlayVisible && !playerControlsLocked && !isMiniPresentation }
     }
     val onKeyboardShortcut = rememberUpdatedState(::handleKeyboardShortcut)
-    LaunchedEffect(keyboardShortcutsEnabled.value) {
-        if (keyboardShortcutsEnabled.value) {
+    // Luxo (TV remote): when the controls hide, focus goes back to the video so the arrows seek again.
+    var luxoSurfaceFocusedOnce by remember { mutableStateOf(false) }
+    val luxoSurfaceFocused = remember { mutableStateOf(false) }
+    val luxoFocusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val luxoFocusScope = androidx.compose.runtime.rememberCoroutineScope()
+    @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+    val luxoEnterControls = rememberUpdatedState {
+        luxoFocusScope.launch {
+            // Wait two frames so the controls exist, then step into them.
+            androidx.compose.runtime.withFrameNanos { }
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { luxoFocusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Enter) }
+        }
+        Unit
+    }
+    LaunchedEffect(keyboardShortcutsEnabled.value, controlsVisible) {
+        if (keyboardShortcutsEnabled.value && (!controlsVisible || !luxoSurfaceFocusedOnce)) {
+            luxoSurfaceFocusedOnce = true
             runCatching { keyboardFocusRequester.requestFocus() }
         }
     }
@@ -234,6 +251,8 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 focusRequester = keyboardFocusRequester,
                 enabledState = keyboardShortcutsEnabled,
                 onShortcutState = onKeyboardShortcut,
+                selfFocused = luxoSurfaceFocused,
+                onEnterControls = luxoEnterControls,
             )
             .playerSurfaceTapGestures(
                 layoutSize = layoutSize,

@@ -104,6 +104,6 @@ internal fun AppEnvironment(content: @Composable () -> Unit) {
     val customThemeColors by ThemeSettingsRepository.customThemeColors.collectAsStateWithLifecycle()
 
     NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled, customThemeColors = customThemeColors) {
-        content()
+        com.nuvio.app.features.luxo.LuxoTvProviders(content)
     }
 }

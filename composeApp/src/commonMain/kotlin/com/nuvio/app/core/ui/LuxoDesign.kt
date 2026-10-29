@@ -168,7 +168,7 @@ fun LuxoSwitch(
                 if (onCheckedChange != null && enabled) {
                     Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
+                        indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                     ) { onCheckedChange(!checked) }
                 } else {
                     Modifier

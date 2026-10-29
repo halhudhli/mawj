@@ -153,6 +153,17 @@ android {
                 isDebuggable = false
                 isJniDebuggable = false
             }
+            // LUXO: the TV APK is also shrunk and optimised by R8 (like Nuvio TV's release build),
+            // which makes Compose noticeably smoother on 32-bit TVs. Same key, so it still
+            // installs over the previous version.
+            if (providers.gradleProperty("luxo.minify").map(String::toBoolean).getOrElse(false)) {
+                isMinifyEnabled = true
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "../composeApp/proguard-rules.pro",
+                    "luxo-tv-rules.pro",
+                )
+            }
         }
         getByName("release") {
             val minifyRelease = providers.gradleProperty("releaseMinifyEnabled")

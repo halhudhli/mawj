@@ -194,7 +194,7 @@ private fun LuxoDockItem(item: FloatingNavigationItem, showLabel: Boolean, accen
                 .background(Brush.horizontalGradient(accents.map { it.copy(alpha = pillAlpha) }))
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
+                    indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                     onClick = item.onClick,
                     onLongClick = item.onLongClick,
                 )

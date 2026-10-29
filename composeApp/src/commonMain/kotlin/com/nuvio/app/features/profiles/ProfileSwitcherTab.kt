@@ -248,7 +248,7 @@ fun ProfileSwitcherTab(
             .onGloballyPositioned { triggerCoordinates = it }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClick = onClick,
             )
             .pointerInput(profiles, activeProfile?.profileIndex) {
@@ -622,7 +622,7 @@ private fun PopupAddProfileBubble(
             .clip(tokens.shapes.compactCard)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClick = onClick,
             )
             .padding(NuvioTokens.Space.s4),
@@ -716,7 +716,7 @@ private fun PopupProfileBubble(
             .clip(tokens.shapes.compactCard)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                 onClick = onClick,
             )
             .padding(NuvioTokens.Space.s4),

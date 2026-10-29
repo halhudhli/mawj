@@ -18,7 +18,19 @@ private class LuxoFeatureSwitch(
 @Composable
 internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     val features = rememberLuxoFeatures()
-    val switches = listOf(
+    val tvSwitches = if (!com.nuvio.app.features.luxo.luxoIsTv()) emptyList() else listOf(
+        LuxoFeatureSwitch(
+            lx("وضع الشاشة الخفيف 📺", "TV light mode 📺"),
+            lx("للشاشات الضعيفة: صور بحجم الشاشة، بدون إعلان يشتغل تلقائي في الرئيسية وبدون حركات خلفية. يشتغل بالكامل بعد إعادة فتح التطبيق", "For slower TVs: screen-sized pictures, no autoplay trailer on Home, no background animations. Fully applies after reopening the app"),
+            { it.tvLite }, { f, v -> f.copy(tvLite = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("التنقل بالريموت 🎮", "Remote navigation 🎮"),
+            lx("إطار واضح حول العنصر المحدد، والقوائم تمشي بنعومة مع الأسهم", "A clear frame around the selected item, and lists glide with the arrows"),
+            { it.tvRemote }, { f, v -> f.copy(tvRemote = v) },
+        ),
+    )
+    val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(
             lx("تصميم Luxo الكامل ✨", "Full Luxo design ✨"),
             lx("كروت زجاجية وعناوين متدرجة ومفاتيح متوهجة في كل الصفحات. إيقافه يرجع شكل نوفيو", "Glass cards, gradient titles and glowing switches everywhere. Off returns the original look"),

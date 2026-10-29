@@ -146,7 +146,7 @@ internal fun JellyTabTargets(
                         selected = item.selected,
                         role = Role.Tab,
                         interactionSource = null,
-                        indication = null,
+                        indication = com.nuvio.app.features.luxo.luxoTvIndicationOrNull(),
                         onClick = onClick,
                     )
                     .clearAndSetSemantics {

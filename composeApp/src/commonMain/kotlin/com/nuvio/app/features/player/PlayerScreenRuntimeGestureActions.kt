@@ -241,6 +241,7 @@ internal fun PlayerScreenRuntime.handleKeyboardShortcut(shortcut: PlayerKeyboard
             flushWatchProgress()
             args.onBack()
         }
+        PlayerKeyboardShortcut.ShowControls -> controlsVisible = true
     }
 }
 
