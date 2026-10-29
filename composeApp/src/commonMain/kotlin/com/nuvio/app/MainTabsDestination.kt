@@ -112,7 +112,8 @@ internal fun MainTabsDestination(
         }
         val luxoNav = luxoNavSettingsState()
         // Luxo: a side rail on the reading-start edge (RTL puts it on the right).
-        val useSideRail = tabsRouteActive && !useNativeBottomTabs && when (luxoNav.placementValue) {
+        // On TV the remote moves best along a side rail, so TV always uses it.
+        val useSideRail = tabsRouteActive && !useNativeBottomTabs && com.nuvio.app.features.luxo.luxoIsTv() || tabsRouteActive && !useNativeBottomTabs && when (luxoNav.placementValue) {
             com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
             com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> maxWidth > maxHeight && maxWidth >= 700.dp
             com.nuvio.app.features.luxo.LuxoNavPlacement.BAR -> false
@@ -544,7 +545,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
     val highlightedTab = AppScreenTab.Settings
     val luxoNav = luxoNavSettingsState()
     val dockOnHere = com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock
-    val useSideRail = when (luxoNav.placementValue) {
+    val useSideRail = com.nuvio.app.features.luxo.luxoIsTv() || when (luxoNav.placementValue) {
         com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
         com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> isWideLandscape
         com.nuvio.app.features.luxo.LuxoNavPlacement.BAR -> false

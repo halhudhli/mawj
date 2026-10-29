@@ -201,6 +201,7 @@ internal fun LuxoSideRail(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .luxoTvFocus(16.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (selected) accent.copy(alpha = 0.18f) else Color.Transparent)
                         .combinedClickable(onClick = item.onClick, onLongClick = item.onLongClick)

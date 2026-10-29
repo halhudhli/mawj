@@ -84,6 +84,7 @@ import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.features.library.LibraryRepository
 import com.nuvio.app.features.luxo.LuxoUserData
 import com.nuvio.app.features.luxo.lx
+import com.nuvio.app.features.luxo.luxoTvFocus
 import com.nuvio.app.features.luxo.rememberLuxoFeatures
 import com.nuvio.app.features.luxo.rememberLuxoTilt
 import com.nuvio.app.features.profiles.ProfileRepository
@@ -278,6 +279,7 @@ private fun RowScope.LuxoHallTile(hall: LuxoHall, number: Int, modifier: Modifie
     Column(
         modifier = modifier
             .heightIn(min = 128.dp)
+            .luxoTvFocus(24.dp)
             .clip(shape)
             .background(
                 Brush.linearGradient(
@@ -590,3 +592,4 @@ private fun LuxoBarcode(seed: Int, modifier: Modifier) {
         }
     }
 }
+
