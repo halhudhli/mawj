@@ -67,6 +67,7 @@ fun App(
             appGateController = appGateController,
         )
         com.nuvio.app.features.luxo.LuxoAppLockOverlay()
+        com.nuvio.app.features.luxo.LuxoCrashReportDialog()
       }
     }
 }

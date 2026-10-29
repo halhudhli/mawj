@@ -19,6 +19,20 @@ internal actual object LuxoPrefsStorage {
         if (filesDir == null) filesDir = context.applicationContext.filesDir
         if (preferences == null) {
             preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+            installCrashRecorder()
+        }
+    }
+
+    /** Saves the stack trace of a crash so the next launch can show it (and it can be sent to us). */
+    private fun installCrashRecorder() {
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            runCatching {
+                val trace = android.util.Log.getStackTraceString(error).take(6000)
+                val device = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} · Android ${android.os.Build.VERSION.RELEASE} · ${android.os.Build.SUPPORTED_ABIS.joinToString()}"
+                preferences?.edit()?.putString("last_crash", "$device\n\n$trace")?.commit()
+            }
+            previous?.uncaughtException(thread, error)
         }
     }
 

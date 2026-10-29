@@ -197,14 +197,18 @@ private fun CountdownRing(days: Long, modifier: Modifier, stroke: Float = 5f) {
 }
 
 @Composable
-private fun rememberUpcoming(): List<LibraryUpcomingEpisode> {
+private fun rememberUpcoming(classify: Boolean = true): List<LibraryUpcomingEpisode> {
     val episodes by remember { libraryUpcomingEpisodesFlow(days = 90) }.collectAsStateWithLifecycle(initialValue = emptyList())
     // Classify new series in the background, once.
-    LaunchedEffect(episodes.map { it.item.seriesKey() }.distinct()) {
+    LaunchedEffect(episodes.map { it.item.seriesKey() }.distinct(), classify) {
+        if (!classify) return@LaunchedEffect
         episodes.map { it.item }.distinctBy { it.seriesKey() }
             .filter { LuxoCountdownStore.sectionOf(it.seriesKey()) == null }
             .take(30)
-            .forEach { item -> LuxoCountdownStore.rememberDetected(item.seriesKey(), detectSection(item)) }
+            .forEach { item ->
+                LuxoCountdownStore.rememberDetected(item.seriesKey(), detectSection(item))
+                kotlinx.coroutines.delay(150L)
+            }
     }
     return episodes
 }
@@ -244,7 +248,7 @@ internal object LuxoHomeStripPicks {
 
 @Composable
 private fun rememberStripEntries(): List<StripEntry> {
-    val episodes = rememberUpcoming()
+    val episodes = rememberUpcoming(classify = false)
     val world by LuxoWorldCountdown.items.collectAsStateWithLifecycle()
     val today = remember { luxoTodayEpochDay() }
     return remember(episodes, world) {
@@ -280,9 +284,12 @@ private fun rememberStripEntries(): List<StripEntry> {
 @Composable
 internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifier = Modifier) {
     if (!rememberLuxoFeatures().countdown) return
-    LaunchedEffect(Unit) { LuxoWorldCountdown.refresh() }
-    val entries = rememberStripEntries()
     val picks = LuxoHomeStripPicks.picks
+    // The world schedule is heavy: only load it on Home when a world show was picked.
+    LaunchedEffect(picks.any { !it.startsWith("lib:") }) {
+        if (picks.any { !it.startsWith("lib:") }) LuxoWorldCountdown.refresh()
+    }
+    val entries = rememberStripEntries()
     var pageOpen by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
     val today = remember { luxoTodayEpochDay() }

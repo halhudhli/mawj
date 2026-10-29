@@ -116,7 +116,10 @@ internal object LuxoWorldCountdown {
 
     private fun now() = Clock.System.now().toEpochMilliseconds()
 
-    suspend fun refresh(force: Boolean = false) {
+    // Heavy downloads and JSON parsing stay off the main thread (TVs freeze otherwise).
+    suspend fun refresh(force: Boolean = false) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { refreshOffMain(force) }
+
+    private suspend fun refreshOffMain(force: Boolean) {
         if (loading) return
         if (!force && _items.value != null && now() - loadedAt < 3 * 3_600_000L) return
         loading = true
@@ -197,7 +200,7 @@ internal object LuxoWorldCountdown {
     // --- TVmaze: free, exact airstamp, country and language on every show.
     private suspend fun fromTvmaze(): List<LuxoAiring> = coroutineScope {
         val gate = Semaphore(3) // TVmaze allows ~20 calls / 10 s
-        val urls = (0..7).flatMap { day ->
+        val urls = (0..4).flatMap { day ->
             val date = isoDate(day)
             listOf("US", "GB", "KR", "JP", "CA", "AU").map { "https://api.tvmaze.com/schedule?country=$it&date=$date" } +
                 "https://api.tvmaze.com/schedule/web?date=$date"
@@ -274,7 +277,6 @@ internal object LuxoWorldCountdown {
     // --- Simkl: public calendar files (no key). No country, so anime is JP and TV is filled in by the merge.
     private suspend fun fromSimkl(): List<LuxoAiring> = listOf(
         "https://data.simkl.in/calendar/anime.json" to true,
-        "https://data.simkl.in/calendar/tv.json" to false,
     ).flatMap { (url, anime) ->
         (get(url) as? JsonArray).orEmpty().mapNotNull { element ->
             val obj = element.obj() ?: return@mapNotNull null
