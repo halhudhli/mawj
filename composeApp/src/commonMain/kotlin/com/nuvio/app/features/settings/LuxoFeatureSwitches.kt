@@ -32,6 +32,26 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     )
     val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(
+            lx("ألوان الصورة في المشغل 🎨", "Picture colours in the player 🎨"),
+            lx("تعديلات جاهزة (ذكي، زاهي، طبيعي، سينما، إنقاذ HDR…) وتعديل يدوي للإضاءة والتباين والتشبع، للشاشات اللي ما تدعم HDR", "Ready looks (smart, vivid, natural, cinema, HDR rescue…) plus manual brightness, contrast and saturation for screens without HDR"),
+            { it.videoColors }, { f, v -> f.copy(videoColors = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الوسائط في صفحة العمل 🎞️", "Media on the details page 🎞️"),
+            lx("كل الخلفيات والملصقات والشعارات من TMDB، كل أنواع الفيديو، والموسيقى التصويرية مع تشغيل مقاطع منها", "Every TMDB backdrop, poster and logo, every video kind, and the soundtrack with previews"),
+            { it.mediaHub }, { f, v -> f.copy(mediaHub = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("صفحة الممثل بتصميم Luxo 🎭", "Luxo actor page 🎭"),
+            lx("صورة كاملة كبيرة، اشتهر بـ، أفضل المتعاونين، والأعمال بترتيب وفلتر تقييم والأفلام والمسلسلات منفصلة", "Big full photo, known for, top collaborators, and the filmography with sorting, a rating filter and movies / series apart"),
+            { it.personPage }, { f, v -> f.copy(personPage = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ترجمة للعربي 🌐", "Arabic translation 🌐"),
+            lx("يترجم القصص والسير اللي مو بالعربي، ويكتب أسماء الممثلين بالحروف العربية (مرة وحدة وتنحفظ)", "Translates stories and biographies that aren't in Arabic and writes people's names in Arabic letters (once, then cached)"),
+            { it.arabicTranslate }, { f, v -> f.copy(arabicTranslate = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("تصميم Luxo الكامل ✨", "Full Luxo design ✨"),
             lx("كروت زجاجية وعناوين متدرجة ومفاتيح متوهجة في كل الصفحات. إيقافه يرجع شكل نوفيو", "Glass cards, gradient titles and glowing switches everywhere. Off returns the original look"),
             { it.luxoDesign }, { f, v -> f.copy(luxoDesign = v) },

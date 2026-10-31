@@ -43,6 +43,14 @@ data class LuxoFeatures(
     val tvLite: Boolean = true,
     /** TV only: focus frames and smooth focus scrolling for the remote. */
     val tvRemote: Boolean = true,
+    /** Picture colours in the player (ready looks + manual tuning). */
+    val videoColors: Boolean = true,
+    /** Details page: TMDB gallery, extra videos and soundtrack. */
+    val mediaHub: Boolean = true,
+    /** The redesigned actor page. */
+    val personPage: Boolean = true,
+    /** Translate non-Arabic overviews/biographies and write people's names in Arabic. */
+    val arabicTranslate: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

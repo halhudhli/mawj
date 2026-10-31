@@ -215,8 +215,11 @@ fun MetaDetailsScreen(
         shuffleWasInactive = !active
     }
     val uiState by MetaDetailsRepository.uiState.collectAsStateWithLifecycle()
-    val displayedMeta = uiState.meta?.takeIf { it.type == type && it.id == id }
-        ?: MetaDetailsRepository.peek(type, id)
+    // LUXO: stories and people's names in Arabic when TMDB has none (translated once, cached).
+    val displayedMeta = com.nuvio.app.features.luxo.rememberLuxoArabicMeta(
+        uiState.meta?.takeIf { it.type == type && it.id == id }
+            ?: MetaDetailsRepository.peek(type, id),
+    )
     val metaScreenSettingsUiState by remember {
         MetaScreenSettingsRepository.ensureLoaded()
         MetaScreenSettingsRepository.uiState
@@ -2547,6 +2550,10 @@ private fun ConfiguredMetaSections(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
                 )
+                if (!hasTrailersSection) {
+                    androidx.compose.foundation.layout.Spacer(Modifier.height(20.dp))
+                    LuxoMediaHub(meta = meta, horizontalScrollPadding = horizontalScrollPadding, onTrailerClick = onTrailerClick)
+                }
             }
             MetaScreenSectionKey.COMMENTS -> {
                 if (shouldShowComments && (isCommentsLoading || comments.isNotEmpty() || !commentsError.isNullOrBlank())) {
@@ -2572,6 +2579,11 @@ private fun ConfiguredMetaSections(
                         showHeader = showHeader,
                         horizontalScrollPadding = horizontalScrollPadding,
                     )
+                }
+                // LUXO: «الوسائط» — gallery, every video kind and the soundtrack, under the trailers.
+                if (hasTrailersSection) {
+                    androidx.compose.foundation.layout.Spacer(Modifier.height(20.dp))
+                    LuxoMediaHub(meta = meta, horizontalScrollPadding = horizontalScrollPadding, onTrailerClick = onTrailerClick)
                 }
             }
             MetaScreenSectionKey.EPISODES -> {

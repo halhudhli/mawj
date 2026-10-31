@@ -43,6 +43,7 @@ internal object LuxoPlayerBridge {
     var onScreenshotClick by mutableStateOf<(() -> Unit)?>(null)
     var onAbLoopClick by mutableStateOf<(() -> Unit)?>(null)
     var abLoopLabel by mutableStateOf("تكرار مقطع")
+    var onColorsClick by mutableStateOf<(() -> Unit)?>(null)
     var toast by mutableStateOf<String?>(null)
 }
 
@@ -65,6 +66,7 @@ internal fun LuxoPlayerExtrasHost(
     val currentDuration by rememberUpdatedState(durationMs)
 
     var sleepSheetOpen by remember { mutableStateOf(false) }
+    var colorsOpen by remember { mutableStateOf(false) }
     var companionOpen by remember { mutableStateOf(false) }
     // Absolute deadline in "playback-clock" ms counted down while playing; 0 = off.
     var sleepRemainingMs by remember { mutableLongStateOf(0L) }
@@ -84,6 +86,13 @@ internal fun LuxoPlayerExtrasHost(
         loopStart < 0 -> "تكرار مقطع · حدد البداية"
         loopEnd < 0 -> "تكرار مقطع · حدد النهاية"
         else -> "إيقاف تكرار المقطع"
+    }
+    DisposableEffect(features.videoColors) {
+        LuxoPlayerBridge.onColorsClick = if (features.videoColors) ({ colorsOpen = true }) else null
+        onDispose { LuxoPlayerBridge.onColorsClick = null }
+    }
+    if (features.videoColors) {
+        LuxoVideoColorPanel(visible = colorsOpen, onDismiss = { colorsOpen = false })
     }
     DisposableEffect(features.playerScreenshot, features.playerAbLoop) {
         LuxoPlayerBridge.onScreenshotClick = if (features.playerScreenshot) {

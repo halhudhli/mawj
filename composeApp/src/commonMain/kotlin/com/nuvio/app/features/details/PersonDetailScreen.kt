@@ -145,7 +145,9 @@ fun PersonDetailScreen(
                     // Retry will be triggered by the LaunchedEffect above if we reset
                 },
             )
-            is PersonDetailUiState.Success -> PersonDetailContent(
+            is PersonDetailUiState.Success -> if (com.nuvio.app.features.luxo.rememberLuxoFeatures().personPage) {
+                LuxoPersonPage(initial = state.personDetail, onOpenMeta = onOpenMeta)
+            } else PersonDetailContent(
                 person = state.personDetail,
                 watchedKeys = watchedUiState.watchedKeys,
                 fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,

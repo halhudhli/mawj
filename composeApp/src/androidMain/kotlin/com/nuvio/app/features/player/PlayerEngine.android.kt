@@ -546,8 +546,11 @@ private fun ExoPlayerSurface(
             hasActiveSubtitle = false,
             useCustomSubtitles = false,
         )
+        // LUXO: picture colours (only when a look is chosen; the player itself is unchanged).
+        LuxoExoColorMatrix.installIfNeeded(player, playerSettings.tunnelingEnabled)
         player
     }
+    LuxoExoColorEffect(exoPlayer, playerSettings.tunnelingEnabled)
 
     val nowPlayingController = remember(context, exoPlayer) {
         AndroidPlayerNowPlayingController(
@@ -1635,6 +1638,13 @@ private fun LibmpvPlayerSurface(
         playerViewRef?.applyResizeMode(resizeMode)
     }
 
+    // LUXO: picture colours through libmpv's own brightness/contrast/saturation/gamma.
+    LuxoMpvColorEffect(
+        key = playerViewRef,
+        apply = { values -> playerViewRef?.luxoApplyColors(values) },
+        isHdr = { playerViewRef?.luxoIsHdr() == true },
+    )
+
     LaunchedEffect(playerViewRef, sourceUrl, sourceAudioUrl, sanitizedSourceHeaders, externalSubtitles) {
         val view = playerViewRef ?: return@LaunchedEffect
         onControllerReady(view.controller(context, nowPlayingController))
@@ -1824,6 +1834,21 @@ private class NuvioLibmpvView(
 
     fun setPaused(paused: Boolean) {
         executeMpv { setPausedNow(paused) }
+    }
+
+    fun luxoApplyColors(values: LuxoColorValues) {
+        executeMpv {
+            mpv.setPropertyString("brightness", (values.brightness * 0.6f).toInt().toString())
+            mpv.setPropertyString("contrast", values.contrast.toString())
+            mpv.setPropertyString("saturation", values.saturation.toString())
+            mpv.setPropertyString("gamma", values.gamma.toString())
+        }
+    }
+
+    suspend fun luxoIsHdr(): Boolean = withContext(mpvDispatcher) {
+        if (released.get()) return@withContext false
+        val gamma = runCatching { mpv.getPropertyString("video-params/gamma") }.getOrNull().orEmpty()
+        gamma == "pq" || gamma == "hlg"
     }
 
     fun seekToMs(positionMs: Long) {
