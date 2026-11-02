@@ -117,5 +117,6 @@ object LuxoFollowedPeople {
     fun toggle(id: Int) {
         if (id in ids) ids.remove(id) else ids.add(id)
         LuxoPrefsStorage.save(KEY, ids.joinToString(","))
+        LuxoReminders.rememberApiKey()
     }
 }

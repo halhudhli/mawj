@@ -31,6 +31,12 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.NightsStay
+import androidx.compose.material.icons.rounded.RecordVoiceOver
+import androidx.compose.material.icons.rounded.Bookmarks
+import androidx.compose.material.icons.rounded.BookmarkAdd
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
@@ -228,6 +234,24 @@ internal fun PlayerControlActions(
         },
         LuxoPlayerBridge.onColorsClick?.let {
             PlayerControlAction("ألوان الصورة", it, icon = Icons.Rounded.Palette)
+        },
+        LuxoPlayerBridge.onTranslateSubtitlesClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.translateLabel, it, icon = Icons.Rounded.Translate)
+        },
+        LuxoPlayerBridge.onBookmarkClick?.let {
+            PlayerControlAction("علامة هنا", it, icon = Icons.Rounded.BookmarkAdd)
+        },
+        LuxoPlayerBridge.onBookmarksListClick?.let {
+            PlayerControlAction("العلامات", it, icon = Icons.Rounded.Bookmarks)
+        },
+        LuxoPlayerBridge.onDialogueClick?.let {
+            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.dialogue) "توضيح الحوار · مفعّل" else "توضيح الحوار", it, icon = Icons.Rounded.RecordVoiceOver)
+        },
+        LuxoPlayerBridge.onNightAudioClick?.let {
+            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.night) "صوت ليلي · مفعّل" else "صوت ليلي", it, icon = Icons.Rounded.NightsStay)
+        },
+        LuxoPlayerBridge.onShareSceneClick?.let {
+            PlayerControlAction("شارك المشهد", it, icon = Icons.Rounded.Share)
         },
         LuxoPlayerBridge.onScreenshotClick?.let {
             PlayerControlAction("لقطة شاشة", it, icon = Icons.Rounded.PhotoCamera)

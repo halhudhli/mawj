@@ -78,6 +78,7 @@ data class LuxoMediaBundle(
     /** TMDB collection the movie belongs to (for the «السلاسل» banner). */
     val collectionId: Int? = null,
     val collectionName: String? = null,
+    val releaseDate: String? = null,
 )
 
 data class LuxoCredit(
@@ -194,6 +195,7 @@ object LuxoTmdb {
                 mediaType = mediaType,
                 collectionId = (detailJ?.get("belongs_to_collection") as? JsonObject)?.int("id"),
                 collectionName = (detailJ?.get("belongs_to_collection") as? JsonObject)?.str("name"),
+                releaseDate = detailJ?.str(if (mediaType == "movie") "release_date" else "first_air_date"),
             )
             mediaCache[cacheKey] = bundle
             bundle

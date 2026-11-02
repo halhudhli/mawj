@@ -61,6 +61,22 @@ data class LuxoFeatures(
     val saveImages: Boolean = true,
     /** Player: «بكرة الفيلم» seek preview, fine scrubbing and 10-second ticks. */
     val filmReel: Boolean = true,
+    /** Player: translate a subtitle to Arabic with Gemini. */
+    val subtitleTranslate: Boolean = true,
+    /** Player: saved moments with notes. */
+    val bookmarks: Boolean = true,
+    /** Player: dialogue boost and night audio. */
+    val audioFx: Boolean = true,
+    /** Player: share the frame with the subtitle line. */
+    val shareScene: Boolean = true,
+    /** «نبهني لما ينزل» and followed-actor notifications. */
+    val releaseReminders: Boolean = true,
+    /** Search by describing a title. */
+    val describeSearch: Boolean = true,
+    /** Compare two titles side by side. */
+    val compareTitles: Boolean = true,
+    /** Anime openings / endings video in the media section. */
+    val animeThemes: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

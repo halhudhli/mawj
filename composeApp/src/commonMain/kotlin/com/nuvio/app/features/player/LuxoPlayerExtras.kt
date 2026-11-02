@@ -44,6 +44,13 @@ internal object LuxoPlayerBridge {
     var onAbLoopClick by mutableStateOf<(() -> Unit)?>(null)
     var abLoopLabel by mutableStateOf("تكرار مقطع")
     var onColorsClick by mutableStateOf<(() -> Unit)?>(null)
+    var onTranslateSubtitlesClick by mutableStateOf<(() -> Unit)?>(null)
+    var translateLabel by mutableStateOf("ترجمة الترجمة للعربي")
+    var onBookmarkClick by mutableStateOf<(() -> Unit)?>(null)
+    var onBookmarksListClick by mutableStateOf<(() -> Unit)?>(null)
+    var onDialogueClick by mutableStateOf<(() -> Unit)?>(null)
+    var onNightAudioClick by mutableStateOf<(() -> Unit)?>(null)
+    var onShareSceneClick by mutableStateOf<(() -> Unit)?>(null)
     var toast by mutableStateOf<String?>(null)
 }
 
@@ -86,6 +93,87 @@ internal fun LuxoPlayerExtrasHost(
         loopStart < 0 -> "تكرار مقطع · حدد البداية"
         loopEnd < 0 -> "تكرار مقطع · حدد النهاية"
         else -> "إيقاف تكرار المقطع"
+    }
+    // «🔖 علامات», «🗣️ توضيح الحوار», «🌙 صوت ليلي», «🎬 شارك المشهد».
+    var bookmarkDraft by remember { mutableStateOf<Long?>(null) }
+    var bookmarksOpen by remember { mutableStateOf(false) }
+    var sceneShot by remember { mutableStateOf<Pair<androidx.compose.ui.graphics.ImageBitmap, String>?>(null) }
+    DisposableEffect(features.bookmarks, features.audioFx, features.shareScene) {
+        LuxoPlayerBridge.onBookmarkClick = if (features.bookmarks) ({ bookmarkDraft = currentPosition }) else null
+        LuxoPlayerBridge.onBookmarksListClick = if (features.bookmarks) ({ bookmarksOpen = true }) else null
+        LuxoPlayerBridge.onDialogueClick = if (features.audioFx) ({ com.nuvio.app.features.luxo.LuxoAudioFx.toggleDialogue() }) else null
+        LuxoPlayerBridge.onNightAudioClick = if (features.audioFx) ({ com.nuvio.app.features.luxo.LuxoAudioFx.toggleNight() }) else null
+        LuxoPlayerBridge.onShareSceneClick = if (features.shareScene) ({
+            scope.launch {
+                val frame = luxoCaptureVideoFrame(1280, 720)
+                if (frame == null) {
+                    LuxoPlayerBridge.toast = "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
+                    delay(2_500L)
+                    LuxoPlayerBridge.toast = null
+                } else {
+                    sceneShot = frame to com.nuvio.app.features.luxo.LuxoNowSubtitle.text
+                }
+            }
+        }) else null
+        onDispose {
+            LuxoPlayerBridge.onBookmarkClick = null
+            LuxoPlayerBridge.onBookmarksListClick = null
+            LuxoPlayerBridge.onDialogueClick = null
+            LuxoPlayerBridge.onNightAudioClick = null
+            LuxoPlayerBridge.onShareSceneClick = null
+        }
+    }
+    bookmarkDraft?.let { at ->
+        var note by remember(at) { mutableStateOf("") }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { bookmarkDraft = null },
+            title = { Text("🔖 علامة عند ${com.nuvio.app.features.luxo.luxoFormatMs(at)}") },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    placeholder = { Text("ملاحظة (اختياري)") },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    com.nuvio.app.features.luxo.LuxoBookmarks.add(
+                        com.nuvio.app.features.luxo.LuxoBookmark(title, seasonNumber, episodeNumber, at, note.trim(), kotlin.time.Clock.System.now().toEpochMilliseconds()),
+                    )
+                    bookmarkDraft = null
+                }) { Text("حفظ") }
+            },
+            dismissButton = { TextButton(onClick = { bookmarkDraft = null }) { Text("إلغاء") } },
+        )
+    }
+    if (bookmarksOpen) {
+        val marks = com.nuvio.app.features.luxo.LuxoBookmarks.forEpisode(title, seasonNumber, episodeNumber)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { bookmarksOpen = false },
+            title = { Text("🔖 العلامات في هذه الحلقة") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (marks.isEmpty()) Text("لا توجد علامات بعد. يمكن إضافتها من «علامة هنا».")
+                    marks.forEach { m ->
+                        TextButton(onClick = {
+                            currentController?.seekTo(m.positionMs)
+                            bookmarksOpen = false
+                        }) { Text("${com.nuvio.app.features.luxo.luxoFormatMs(m.positionMs)}  ${m.note}") }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { bookmarksOpen = false }) { Text("إغلاق") } },
+        )
+    }
+    sceneShot?.let { (frame, line) ->
+        com.nuvio.app.features.luxo.LuxoSceneShareDialog(
+            frame = frame,
+            subtitle = line,
+            title = title,
+            label = listOfNotNull(seasonNumber?.let { s -> episodeNumber?.let { "S$s E$it" } }, com.nuvio.app.features.luxo.luxoFormatMs(currentPosition)).joinToString(" · "),
+            onDismiss = { sceneShot = null },
+        )
     }
     DisposableEffect(features.videoColors) {
         LuxoPlayerBridge.onColorsClick = if (features.videoColors) ({ colorsOpen = true }) else null

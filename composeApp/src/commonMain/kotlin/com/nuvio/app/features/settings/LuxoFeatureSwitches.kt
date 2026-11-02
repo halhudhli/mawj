@@ -42,6 +42,46 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.companiesRedesign }, { f, v -> f.copy(companiesRedesign = v) },
         ),
         LuxoFeatureSwitch(
+            lx("ترجمة الترجمة للعربي 🌐", "Translate subtitles to Arabic 🌐"),
+            lx("زر في قائمة المشغل يترجم ترجمة إنجليزية (أو غيرها) للعربي بـ Gemini بنفس التوقيت، وتنحفظ للمرة الجاية", "A player menu item that translates an English (or other) subtitle to Arabic with Gemini, same timing"),
+            { it.subtitleTranslate }, { f, v -> f.copy(subtitleTranslate = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("علامات داخل الحلقة 🔖", "Bookmarks in episodes 🔖"),
+            lx("حفظ لحظة مع ملاحظة من قائمة المشغل، والرجوع لها بضغطة، وتظهر في صفحة العمل", "Save a moment with a note from the player menu and jump back to it"),
+            { it.bookmarks }, { f, v -> f.copy(bookmarks = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("توضيح الحوار + صوت ليلي 🗣️🌙", "Dialogue boost + night audio 🗣️🌙"),
+            lx("في قائمة المشغل: رفع صوت الكلام، وتهدئة الأصوات العالية ورفع الهادئة", "In the player menu: clearer speech, and loud parts tamed while quiet ones come up"),
+            { it.audioFx }, { f, v -> f.copy(audioFx = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("شارك المشهد مع الترجمة 🎬", "Share the scene with its subtitle 🎬"),
+            lx("بطاقة فيها لقطة المشهد وسطر الترجمة واسم العمل، جاهزة للمشاركة", "A card with the frame, the subtitle line and the title, ready to share"),
+            { it.shareScene }, { f, v -> f.copy(shareScene = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("نبهني لما ينزل ⏰", "Release reminders ⏰"),
+            lx("للأفلام اللي لسا ما نزلت رقمياً، وأعمال الممثلين المتابَعين: إشعار عند النزول", "For movies not out digitally yet, and new work from followed actors: a notification when it's out"),
+            { it.releaseReminders }, { f, v -> f.copy(releaseReminders = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("البحث بالوصف والصوت 🔎🎙️", "Search by description and voice 🔎🎙️"),
+            lx("كتابة أو قول وصف العمل (مثل «رجل عالق في المريخ») ويطلع العمل", "Type or say what it's about and the title comes up"),
+            { it.describeSearch }, { f, v -> f.copy(describeSearch = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("قارن بين عملين ⚖️", "Compare two titles ⚖️"),
+            lx("جنب بعض: التقييمات والمدة والمواسم والممثلين المشتركين ورأي رفيق Luxo", "Side by side: ratings, runtime, seasons, shared cast and Luxo Companion's take"),
+            { it.compareTitles }, { f, v -> f.copy(compareTitles = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("أغاني البداية والنهاية للأنمي 🎌", "Anime openings & endings 🎌"),
+            lx("في الموسيقى: الأوبننق والإندنق الرسمية بالصوت والفيديو من AnimeThemes", "In Music: official openings and endings with audio and video"),
+            { it.animeThemes }, { f, v -> f.copy(animeThemes = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("بكرة الفيلم 🎞️", "Film reel 🎞️"),
             lx("عند سحب شريط الوقت: ٥ لقطات مثل بكرة فيلم مع الوقت والفرق واسم الفصل، والرفع فوق الشريط يبطّئ السحب للدقة، واهتزاز خفيف كل ١٠ ثواني. الإيقاف يرجّع تصميم نوفيو", "While scrubbing: five frames like a film strip with time, difference and chapter; lifting the finger slows the scrub; a light tick every 10 s. Off returns Nuvio's preview"),
             { it.filmReel }, { f, v -> f.copy(filmReel = v) },

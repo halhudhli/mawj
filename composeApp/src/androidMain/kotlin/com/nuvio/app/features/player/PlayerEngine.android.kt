@@ -1638,6 +1638,10 @@ private fun LibmpvPlayerSurface(
         playerViewRef?.applyResizeMode(resizeMode)
     }
 
+    // LUXO: dialogue / night audio for libmpv.
+    LaunchedEffect(playerViewRef, com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night) {
+        playerViewRef?.luxoApplyAudioFx(com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night)
+    }
     // LUXO: picture colours through libmpv's own brightness/contrast/saturation/gamma.
     LuxoMpvColorEffect(
         key = playerViewRef,
@@ -1834,6 +1838,17 @@ private class NuvioLibmpvView(
 
     fun setPaused(paused: Boolean) {
         executeMpv { setPausedNow(paused) }
+    }
+
+    fun luxoApplyAudioFx(dialogue: Boolean, night: Boolean) {
+        executeMpv {
+            val filters = buildList {
+                // A speech-band lift works on any channel layout (a pan filter would fail on stereo files).
+                if (dialogue) add("lavfi=[equalizer=f=1800:t=q:w=1.2:g=6]")
+                if (night) add("lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=200:makeup=2]")
+            }
+            mpv.setPropertyString("af", filters.joinToString(","))
+        }
     }
 
     fun luxoApplyColors(values: LuxoColorValues) {
@@ -3259,6 +3274,7 @@ private class PlayerOutputAudioProcessor(
         }
 
     private var downmix = false
+    private var luxoEnvelope = 0f
     private var limiterGain = 1f
     private var releaseCoefficient = 0f
     private val frame = FloatArray(MAX_CHANNELS)
@@ -3283,19 +3299,36 @@ private class PlayerOutputAudioProcessor(
         val frames = input.remaining() / (2 * inputChannels)
         val output = replaceOutputBuffer(frames * outputChannels * 2).order(ByteOrder.nativeOrder())
         val gain = playerBoostLinearGain(level)
+        // LUXO: «توضيح الحوار» (centre / mid lifted) and «صوت ليلي» (loud peaks tamed, quiet parts lifted).
+        val dialogueFx = com.nuvio.app.features.luxo.LuxoAudioFx.dialogueOn
+        val nightFx = com.nuvio.app.features.luxo.LuxoAudioFx.nightOn
 
-        if (!downmix && gain == 1f && limiterGain >= 1f) {
+        if (!downmix && gain == 1f && limiterGain >= 1f && !dialogueFx && !nightFx) {
             val bytes = frames * inputChannels * 2
             val slice = input.duplicate()
             slice.limit(slice.position() + bytes)
             output.put(slice)
         } else {
             repeat(frames) {
-                if (downmix) {
-                    readFrame(input, inputChannels)
-                    downmixToStereo(inputChannels)
-                } else {
-                    readFrame(input, inputChannels)
+                readFrame(input, inputChannels)
+                if (dialogueFx && inputChannels >= 6) frame[2] *= 1.7f
+                if (downmix) downmixToStereo(inputChannels)
+                if (dialogueFx && outputChannels == 2) {
+                    val mid = (frame[0] + frame[1]) * 0.5f
+                    val side = (frame[0] - frame[1]) * 0.5f
+                    frame[0] = mid * 1.3f + side * 0.75f
+                    frame[1] = mid * 1.3f - side * 0.75f
+                }
+                if (nightFx) {
+                    var framePeak = 0f
+                    for (channel in 0 until outputChannels) framePeak = maxOf(framePeak, abs(frame[channel]))
+                    luxoEnvelope = if (framePeak > luxoEnvelope) framePeak else luxoEnvelope * 0.9995f
+                    val env = luxoEnvelope.coerceAtLeast(1e-4f)
+                    // 4:1 above -14 dBFS, with make-up gain so quiet speech comes up.
+                    val threshold = 0.2f
+                    val compressed = if (env > threshold) (threshold + (env - threshold) / 4f) / env else 1f
+                    val nightGain = compressed * 1.6f
+                    for (channel in 0 until outputChannels) frame[channel] *= nightGain
                 }
                 var peak = 0f
                 for (channel in 0 until outputChannels) {
@@ -3529,6 +3562,8 @@ private class CueNormalizingTextOutput(
 ) : TextOutput {
     override fun onCues(cueGroup: CueGroup) {
         val processed = cueGroup.cues.mapNotNull(::processCue)
+        // LUXO: the line on screen, for «شارك المشهد مع الترجمة».
+        com.nuvio.app.features.luxo.LuxoNowSubtitle.text = processed.mapNotNull { it.text?.toString() }.joinToString("\n")
         delegate.onCues(CueGroup(processed, cueGroup.presentationTimeUs))
     }
 

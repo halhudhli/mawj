@@ -1,6 +1,7 @@
 package com.nuvio.app
 
 import com.nuvio.app.features.luxo.luxoTwoFingerSwipeIf
+import com.nuvio.app.features.luxo.LuxoStyledBar
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -245,7 +246,7 @@ internal fun MainTabsDestination(
                     }
                     val luxoBarStyle = com.nuvio.app.features.luxo.LuxoBarStyle.of(luxoNav.barStyle)
                     if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL) {
-                        com.nuvio.app.features.luxo.LuxoStyledBar(
+                        LuxoStyledBar(
                             style = luxoBarStyle,
                             items = floatingNavigationItems,
                             onTop = floatingBarOnTop,
@@ -644,7 +645,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
         } -> {
             val onTop = position == NavBarPosition.TOP
             SideEffect { onBottomOverlayChanged(if (onTop) 0.dp else 72.dp) }
-            com.nuvio.app.features.luxo.LuxoStyledBar(
+            LuxoStyledBar(
                 style = com.nuvio.app.features.luxo.LuxoBarStyle.of(com.nuvio.app.features.luxo.rememberLuxoNavSettings().barStyle),
                 items = mainFloatingNavigationItems(
                     highlightedTab = highlightedTab,

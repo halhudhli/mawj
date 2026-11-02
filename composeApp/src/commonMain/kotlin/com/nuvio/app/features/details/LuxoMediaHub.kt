@@ -116,6 +116,8 @@ internal fun LuxoMediaHub(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (showHeader) DetailSectionTitle(title = "الوسائط")
         LuxoFranchiseBanner(data)
+        LuxoReleaseReminderChip(meta, data)
+        LuxoBookmarksBlock(meta)
         LazyRow(
             modifier = Modifier.nuvioHorizontalScrollBleed(horizontalScrollPadding).fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = horizontalScrollPadding),
@@ -261,6 +263,8 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
     var result by remember(meta.id) { mutableStateOf(com.nuvio.app.features.luxo.LuxoSoundtrack()) }
     var playing by remember { mutableStateOf<String?>(null) }
     var playAll by remember { mutableStateOf(false) }
+    var videoUrl by remember { mutableStateOf<String?>(null) }
+    videoUrl?.let { v -> com.nuvio.app.features.luxo.LuxoVideoDialog(v) { videoUrl = null } }
     LaunchedEffect(meta.id) {
         result = runCatching {
             com.nuvio.app.features.luxo.LuxoSoundtrackFinder.find(
@@ -269,7 +273,7 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
                 language = data.originalLanguage,
                 year = data.year,
                 isSeries = meta.type != "movie",
-                isAnime = data.isAnime || meta.type == "anime",
+                isAnime = (data.isAnime || meta.type == "anime") && com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().animeThemes,
                 composers = data.composers,
             )
         }.getOrDefault(com.nuvio.app.features.luxo.LuxoSoundtrack())
@@ -353,7 +357,12 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
                         tracks = result.themes,
                         playing = playing,
                         onToggle = ::toggle,
-                        onVideo = { url -> runCatching { uri.openUri(url) } },
+                        onVideo = { url ->
+                            LuxoAudioPreview.stop()
+                            playing = null
+                            playAll = false
+                            videoUrl = url
+                        },
                     )
                 }
                 result.albums.forEach { album ->
@@ -585,5 +594,74 @@ private fun LuxoFranchiseBanner(data: LuxoMediaBundle) {
         Spacer(Modifier.width(10.dp))
         Text(text, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
         Text("عرض السلسلة ←", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+
+/** «⏰ نبهني لما ينزل»: for movies not out yet, or only in cinemas (released in the last 4 months). */
+@Composable
+private fun LuxoReleaseReminderChip(meta: MetaDetails, data: LuxoMediaBundle) {
+    if (!rememberLuxoFeatures().releaseReminders || data.mediaType != "movie") return
+    val id = data.tmdbId ?: return
+    val date = data.releaseDate ?: return
+    val today = remember { com.nuvio.app.features.watchprogress.CurrentDateProvider.todayIsoDate() }
+    val recentLimit = remember(today) {
+        val y = today.take(4).toIntOrNull() ?: return@remember today
+        val m = today.drop(5).take(2).toIntOrNull() ?: 1
+        val back = m - 4
+        val yy = if (back <= 0) y - 1 else y
+        val mm = if (back <= 0) back + 12 else back
+        "$yy-${mm.toString().padStart(2, '0')}-01"
+    }
+    if (date < recentLimit) return
+    val set = com.nuvio.app.features.luxo.LuxoReminders.movies.containsKey(id)
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (set) Brush.horizontalGradient(listOf(Accent1, Accent2)) else Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.08f))))
+            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(50))
+            .clickable { com.nuvio.app.features.luxo.LuxoReminders.toggleMovie(id, meta.name, data.backdrops.firstOrNull()?.url("w780")) }
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            if (set) "⏰ سيتم التنبيه عند نزوله رقمياً" else if (date > today) "⏰ نبهني لما ينزل" else "⏰ نبهني لما ينزل رقمياً",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+/** Saved moments of this title (from the player), with their notes. */
+@Composable
+private fun LuxoBookmarksBlock(meta: MetaDetails) {
+    if (!rememberLuxoFeatures().bookmarks) return
+    val marks = com.nuvio.app.features.luxo.LuxoBookmarks.all.filter { it.title == meta.name }
+    if (marks.isEmpty()) return
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("🔖 العلامات المحفوظة · ${marks.size}", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        marks.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 }, { it.positionMs })).forEach { m ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    listOfNotNull(m.season?.let { s -> m.episode?.let { "S$s E$it" } }, com.nuvio.app.features.luxo.luxoFormatMs(m.positionMs)).joinToString(" · "),
+                    color = Accent2,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(120.dp),
+                )
+                Text(m.note.ifBlank { "—" }, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("✕", color = Color.White.copy(alpha = 0.5f), modifier = Modifier.clickable { com.nuvio.app.features.luxo.LuxoBookmarks.remove(m) }.padding(6.dp))
+            }
+        }
+        Text("الرجوع لأي علامة يتم من قائمة المشغل ← «العلامات»", color = Color.White.copy(alpha = 0.45f), fontSize = 11.sp)
     }
 }

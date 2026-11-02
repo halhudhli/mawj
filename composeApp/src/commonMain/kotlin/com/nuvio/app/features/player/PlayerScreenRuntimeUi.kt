@@ -399,6 +399,49 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         RenderPlayerModals()
         RenderParty(runtime = runtime)
         // LUXO: sleep timer + «رفيق Luxo» inside the player.
+        // LUXO «ترجمة الترجمة للعربي»: translate the chosen (or English) addon subtitle with Gemini.
+        val luxoFeatures = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+        val luxoTranslateScope = androidx.compose.runtime.rememberCoroutineScope()
+        DisposableEffect(luxoFeatures.subtitleTranslate, addonSubtitles) {
+            LuxoPlayerBridge.onTranslateSubtitlesClick = if (luxoFeatures.subtitleTranslate) {
+                {
+                    fun isArabic(s: AddonSubtitle) = s.language.lowercase().let { it.startsWith("ar") || "arab" in it }
+                    val source = addonSubtitles.firstOrNull { it.isSelected && !isArabic(it) }
+                        ?: addonSubtitles.firstOrNull { it.language.lowercase().let { l -> l.startsWith("en") || "english" in l } }
+                        ?: addonSubtitles.firstOrNull { !isArabic(it) }
+                    if (source == null) {
+                        fetchAddonSubtitlesForActiveItem()
+                        LuxoPlayerBridge.toast = "يتم جلب الترجمات… يُعاد الضغط بعد لحظات"
+                    } else {
+                        luxoTranslateScope.launch {
+                            LuxoPlayerBridge.translateLabel = "يتم الترجمة… 0%"
+                            val srt = com.nuvio.app.features.luxo.LuxoSubtitleTranslator.translate(source.url) { p ->
+                                LuxoPlayerBridge.translateLabel = "يتم الترجمة… ${(p * 100).toInt()}%"
+                            }
+                            val uri = srt?.let { com.nuvio.app.features.luxo.luxoWriteTempFile("luxo-ar-${source.url.hashCode()}.srt", it) }
+                            if (uri != null) {
+                                clearAutoSubtitleState()
+                                isUserExplicitSubtitleSelection = true
+                                selectedAddonSubtitleId = "luxo-ar"
+                                selectedSubtitleIndex = -1
+                                useCustomSubtitles = true
+                                preferredSubtitleSelectionApplied = true
+                                playerController?.setSubtitleUri(uri)
+                                LuxoPlayerBridge.toast = "الترجمة العربية جاهزة ✅"
+                            } else {
+                                LuxoPlayerBridge.toast = "تعذّرت الترجمة الآن"
+                            }
+                            LuxoPlayerBridge.translateLabel = "ترجمة الترجمة للعربي"
+                            kotlinx.coroutines.delay(2_500L)
+                            LuxoPlayerBridge.toast = null
+                        }
+                    }
+                }
+            } else {
+                null
+            }
+            onDispose { LuxoPlayerBridge.onTranslateSubtitlesClick = null }
+        }
         LuxoPlayerExtrasHost(
             controller = playerController,
             title = title,

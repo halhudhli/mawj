@@ -70,6 +70,7 @@ private enum class FranchiseFilter(val label: String) { ALL("الكل"), NOT_STA
 /** Everything Luxo opens over the app (series catalog, Trakt doctor, splash studio). */
 @Composable
 fun LuxoOverlayHost() {
+    LaunchedEffect(Unit) { runCatching { luxoScheduleReminderChecks() } }
     LuxoOverlays.franchise?.let { key -> LuxoFranchiseDialog(startKey = key) }
     if (LuxoOverlays.traktDoctor) LuxoTraktDoctorDialog(onDismiss = { LuxoOverlays.traktDoctor = false })
 }
