@@ -222,7 +222,7 @@ internal fun LazyListScope.luxoProfileHubContent(
                     val on = com.nuvio.app.features.luxo.LuxoPrivateMode.active
                     add(LuxoHall(
                         lx(if (on) "الوضع الخاص: يعمل" else "الوضع الخاص", if (on) "Private mode: on" else "Private mode"),
-                        lx(if (on) "لا يُسجَّل شيء الآن · اضغط للإيقاف" else "مشاهدة بدون تسجيل التقدم ولا Trakt", if (on) "Nothing is recorded · tap to stop" else "Watch without recording progress or Trakt"),
+                        lx(if (on) "لا يُسجَّل شيء الآن · الضغط يوقفه" else "مشاهدة بدون تسجيل التقدم ولا Trakt", if (on) "Nothing is recorded · tap to stop" else "Watch without recording progress or Trakt"),
                         Icons.Rounded.VisibilityOff,
                         if (on) Color(0xFF7BE0A3) else Color(0xFF9AA3AD),
                         { com.nuvio.app.features.luxo.LuxoPrivateMode.toggle() },

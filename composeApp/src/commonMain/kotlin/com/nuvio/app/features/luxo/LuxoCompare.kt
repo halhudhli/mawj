@@ -148,7 +148,7 @@ fun LuxoCompareChip(title: String, tmdbId: String?, mediaType: String?) {
             .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(50))
             .clickable { open = true }
             .padding(horizontal = 16.dp, vertical = 9.dp),
-    ) { Text("⚖️ قارن مع عمل آخر", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+    ) { Text("⚖️ مقارنة مع عمل آخر", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
     if (open) LuxoCompareDialog(title, tmdbId, if (mediaType == "movie") "movie" else "tv") { open = false }
 }
 

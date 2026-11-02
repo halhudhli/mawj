@@ -32,7 +32,7 @@ actual fun rememberLuxoVoiceInput(onText: (String) -> Unit): (() -> Unit)? {
                 Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                     .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                     .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ar-SA")
-                    .putExtra(RecognizerIntent.EXTRA_PROMPT, "قل اسم العمل أو صِفه"),
+                    .putExtra(RecognizerIntent.EXTRA_PROMPT, "يُقال اسم العمل أو وصفه"),
             )
         }
     }

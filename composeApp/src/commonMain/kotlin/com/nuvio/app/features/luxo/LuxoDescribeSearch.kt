@@ -202,7 +202,7 @@ fun LuxoDescribeSearchDialog(onOpen: (MetaPreview) -> Unit, onDismiss: () -> Uni
                     .background(Brush.horizontalGradient(listOf(DAccent1, DAccent2)))
                     .clickable { run() }
                     .padding(horizontal = 22.dp, vertical = 10.dp),
-            ) { Text(if (loading) "جارٍ البحث…" else "ابحث", color = Color.White, fontWeight = FontWeight.Bold) }
+            ) { Text(if (loading) "جارٍ البحث…" else "بحث", color = Color.White, fontWeight = FontWeight.Bold) }
             when {
                 loading -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = DAccent1) }
                 error != null -> Text(error!!, color = Color(0xFFFFB4A9), fontSize = 13.sp)
