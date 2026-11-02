@@ -59,6 +59,15 @@ data class LuxoNavSettings(
     val badges: Boolean = true,
     val quickActions: Boolean = true,
     val order: List<String> = LuxoNavTabIds.DEFAULT_ORDER,
+    /** Bar look: see [LuxoBarStyle]. */
+    val barStyle: String = "dock",
+    /** start / center / end / full. */
+    val barPosition: String = "center",
+    /** always / selected / none. */
+    val barLabels: String = "selected",
+    /** 0 small, 1 normal, 2 large. */
+    val barSize: Int = 1,
+    val barOpacity: Float = 0.94f,
 ) {
     val placementValue: LuxoNavPlacement get() = LuxoNavPlacement.of(placement)
 

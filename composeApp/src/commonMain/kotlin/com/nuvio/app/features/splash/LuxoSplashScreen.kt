@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -129,6 +130,10 @@ private fun SplashAnimatedBackground(settings: SplashSettings) {
             SplashBackgroundStyle.PARTICLES -> drawParticles(particles, t, accent)
             SplashBackgroundStyle.GRADIENT -> drawAurora(t, accent, settings.backgroundColor)
             SplashBackgroundStyle.SOLID -> Unit
+            SplashBackgroundStyle.AURORA_RIBBONS -> drawRibbons(t, accent)
+            SplashBackgroundStyle.FILM -> drawFilmStrip(t, accent)
+            SplashBackgroundStyle.CURTAIN -> drawCurtain(t, accent)
+            SplashBackgroundStyle.NEON -> drawNeonRings(t, accent)
         }
         if (settings.glow) {
             val radius = size.minDimension * 0.42f
@@ -170,11 +175,39 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
         }
     }
 
+    // Luxo: colours that flow inside the letters (like Samt's waves).
+    var flow by remember { mutableFloatStateOf(0f) }
+    if (settings.flowingLetters) {
+        LaunchedEffect(Unit) {
+            val start = withFrameNanos { it }
+            while (true) withFrameNanos { now -> flow = (now - start) / 1_000_000_000f * settings.speed }
+        }
+    }
+    val flowColors = listOf(rgbColor(settings.accentColor), Color(0xFF8C7BFF), Color(0xFFFF7EB6), rgbColor(settings.accentColor))
     val animatedModifier = Modifier.graphicsLayer {
         this.alpha = alpha.value
         scaleX = scale.value
         scaleY = scale.value
-    }
+        if (settings.flowingLetters) compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+    }.then(
+        if (settings.flowingLetters) {
+            Modifier.drawWithContent {
+                drawContent()
+                val shift = size.width * (flow * 0.35f % 2f)
+                drawRect(
+                    brush = Brush.linearGradient(
+                        flowColors,
+                        start = Offset(-size.width + shift, 0f),
+                        end = Offset(shift, size.height),
+                        tileMode = androidx.compose.ui.graphics.TileMode.Mirror,
+                    ),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop,
+                )
+            }
+        } else {
+            Modifier
+        },
+    )
     val fontResource = settings.logoFont.fontResource()
     if (fontResource == null) {
         Image(
@@ -334,4 +367,86 @@ private fun blend(a: Int, b: Int, amount: Float): Int {
         return (ca + (cb - ca) * amount).roundToInt().coerceIn(0, 255)
     }
     return (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+}
+
+
+// ---------------------------------------------------------------- Luxo extra styles
+
+private fun DrawScope.drawRibbons(t: Float, accent: Int) {
+    val colors = listOf(rgbColor(accent, 0.35f), Color(0x558C7BFF), Color(0x55FF7EB6))
+    colors.forEachIndexed { i, c ->
+        val path = androidx.compose.ui.graphics.Path()
+        val base = size.height * (0.35f + i * 0.12f)
+        path.moveTo(0f, base)
+        val steps = 48
+        for (k in 0..steps) {
+            val x = size.width * k / steps
+            val y = base + sin(k / 6f + t * (0.6f + i * 0.2f)) * size.height * 0.06f
+            path.lineTo(x, y)
+        }
+        for (k in steps downTo 0) {
+            val x = size.width * k / steps
+            val y = base + size.height * 0.12f + sin(k / 5f + t * (0.5f + i * 0.25f) + 1f) * size.height * 0.05f
+            path.lineTo(x, y)
+        }
+        path.close()
+        drawPath(path, Brush.verticalGradient(listOf(Color.Transparent, c, Color.Transparent), startY = base - size.height * 0.08f, endY = base + size.height * 0.2f))
+    }
+}
+
+private fun DrawScope.drawFilmStrip(t: Float, accent: Int) {
+    val h = size.height * 0.26f
+    val top = (size.height - h) / 2f
+    drawRect(Color(0xFF0A0A0A), topLeft = Offset(0f, top), size = androidx.compose.ui.geometry.Size(size.width, h))
+    val hole = h * 0.09f
+    val gap = hole * 2.2f
+    val shift = (t * 120f) % gap
+    var x = -gap + shift
+    while (x < size.width + gap) {
+        listOf(top + hole * 0.6f, top + h - hole * 1.6f).forEach { y ->
+            drawRoundRect(rgbColor(accent, 0.55f), topLeft = Offset(x, y), size = androidx.compose.ui.geometry.Size(hole * 1.2f, hole), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f))
+        }
+        x += gap
+    }
+    // Frame separators sliding by.
+    val frame = h * 1.3f
+    var fx = -frame + (t * 120f) % frame
+    while (fx < size.width + frame) {
+        drawLine(rgbColor(accent, 0.25f), Offset(fx, top + hole * 2.4f), Offset(fx, top + h - hole * 2.4f), strokeWidth = 3f)
+        fx += frame
+    }
+}
+
+private fun DrawScope.drawCurtain(t: Float, accent: Int) {
+    // Opens over ~1.6 s, then gently sways.
+    val open = (t / 1.6f).coerceIn(0f, 1f)
+    val eased = 1f - (1f - open) * (1f - open)
+    val half = size.width / 2f
+    val w = half * (1f - eased * 0.82f)
+    val sway = sin(t * 1.3f) * 6f * eased
+    val curtain = listOf(Color(0xFF5A0F1F), Color(0xFF8E1B33), Color(0xFF5A0F1F))
+    for (side in 0..1) {
+        val left = if (side == 0) 0f else size.width - w
+        drawRect(Brush.horizontalGradient(curtain, startX = left, endX = left + w), topLeft = Offset(left + if (side == 0) sway else -sway, 0f), size = androidx.compose.ui.geometry.Size(w, size.height))
+        var fold = left
+        while (fold < left + w) {
+            drawLine(Color.Black.copy(alpha = 0.18f), Offset(fold, 0f), Offset(fold, size.height), strokeWidth = 2f)
+            fold += 28f
+        }
+    }
+    drawRect(rgbColor(accent, 0.18f), topLeft = Offset(0f, 0f), size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.06f))
+}
+
+private fun DrawScope.drawNeonRings(t: Float, accent: Int) {
+    val c = center
+    for (i in 0 until 4) {
+        val phase = (t * 0.45f + i * 0.25f) % 1f
+        val radius = size.minDimension * (0.12f + phase * 0.55f)
+        drawCircle(
+            color = (if (i % 2 == 0) Color(0xFFFF7EB6) else rgbColor(accent)).copy(alpha = (1f - phase) * 0.55f),
+            radius = radius,
+            center = c,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f * (1f - phase) + 1.5f),
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package com.nuvio.app
 
+import com.nuvio.app.features.luxo.luxoTwoFingerSwipeIf
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -213,7 +214,13 @@ internal fun MainTabsDestination(
                             .then(if (tabsRouteActive && navBarStyleSetting == NavBarStyle.ADAPTIVE) Modifier.nestedScroll(navBarScrollState.nestedScrollConnection) else Modifier)
                             .then(if (luxoNav.hideOnScroll) Modifier.nestedScroll(navHide.connection) else Modifier)
                             .padding(innerPadding)
-                            .padding(start = if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp),
+                            .padding(start = if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp)
+                            .then(
+                                Modifier.luxoTwoFingerSwipeIf(
+                                    luxoNav.barStyle == com.nuvio.app.features.luxo.LuxoBarStyle.GESTURE.id && !useSideRail,
+                                    floatingNavigationItems,
+                                ),
+                            ),
                     )
                 }
 
@@ -236,7 +243,23 @@ internal fun MainTabsDestination(
                         NavBarStyle.COMPACT -> navBarScrollState.collapse()
                         else -> {}
                     }
-                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock) {
+                    val luxoBarStyle = com.nuvio.app.features.luxo.LuxoBarStyle.of(luxoNav.barStyle)
+                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL) {
+                        com.nuvio.app.features.luxo.LuxoStyledBar(
+                            style = luxoBarStyle,
+                            items = floatingNavigationItems,
+                            onTop = floatingBarOnTop,
+                            hideProgress = navHideProgress,
+                            contentPadding = if (floatingBarOnTop) {
+                                PaddingValues(
+                                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp,
+                                    bottom = 8.dp,
+                                )
+                            } else {
+                                floatingNavigationBarPadding()
+                            },
+                        )
+                    } else if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock && luxoBarStyle == com.nuvio.app.features.luxo.LuxoBarStyle.DOCK) {
                         com.nuvio.app.features.luxo.LuxoDockBar(
                             items = floatingNavigationItems,
                             hideProgress = navHideProgress,
@@ -615,6 +638,31 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                     onAddProfileRequested = onAddProfileRequested,
                 )
             }
+        }
+        dockOnHere && com.nuvio.app.features.luxo.LuxoBarStyle.of(com.nuvio.app.features.luxo.rememberLuxoNavSettings().barStyle).let {
+            it != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && it != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL
+        } -> {
+            val onTop = position == NavBarPosition.TOP
+            SideEffect { onBottomOverlayChanged(if (onTop) 0.dp else 72.dp) }
+            com.nuvio.app.features.luxo.LuxoStyledBar(
+                style = com.nuvio.app.features.luxo.LuxoBarStyle.of(com.nuvio.app.features.luxo.rememberLuxoNavSettings().barStyle),
+                items = mainFloatingNavigationItems(
+                    highlightedTab = highlightedTab,
+                    showLiveTv = showLiveTv,
+                    onTabSelected = onTabSelected,
+                    onProfileSelected = onProfileSelected,
+                    onAddProfileRequested = onAddProfileRequested,
+                    backdrop = backdrop,
+                    defaultIconColorOverride = defaultIconColorOverride,
+                ),
+                onTop = onTop,
+                hideProgress = 0f,
+                contentPadding = if (onTop) {
+                    PaddingValues(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 10.dp, bottom = 8.dp)
+                } else {
+                    floatingNavigationBarPadding()
+                },
+            )
         }
         dockOnHere -> {
             val onTop = position == NavBarPosition.TOP

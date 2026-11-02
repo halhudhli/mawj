@@ -19,6 +19,7 @@ object LuxoCountdownRange {
     /** What is actually loaded on this device. */
     fun effective(): Int = if (luxoLiteMode()) days.coerceAtMost(60) else days
 
+    @androidx.compose.runtime.Composable
     fun label(d: Int): String = when (d) {
         7 -> lx("أسبوع", "1 week")
         14 -> lx("أسبوعين", "2 weeks")

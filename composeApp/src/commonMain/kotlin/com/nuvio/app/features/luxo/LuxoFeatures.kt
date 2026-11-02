@@ -59,6 +59,8 @@ data class LuxoFeatures(
     val companiesRedesign: Boolean = true,
     /** Save gallery images to the device. */
     val saveImages: Boolean = true,
+    /** Player: «بكرة الفيلم» seek preview, fine scrubbing and 10-second ticks. */
+    val filmReel: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

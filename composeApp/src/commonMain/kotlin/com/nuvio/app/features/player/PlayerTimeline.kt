@@ -1,5 +1,6 @@
 package com.nuvio.app.features.player
 
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -164,18 +165,58 @@ internal fun PlayerTimeline(
         label = "playerTimelineThickness",
     )
 
+    // Luxo «بكرة الفيلم»: lifting the finger above the bar slows the scrub (fine mode) and a light
+    // tick marks every 10 seconds.
+    val filmReel = com.nuvio.app.features.luxo.rememberLuxoFeatures().filmReel
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var fingerLift by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    var fineAnchor by remember { mutableStateOf<Pair<Float, Long>?>(null) }
+    var lastTick by remember { androidx.compose.runtime.mutableLongStateOf(-1L) }
+    val liftThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Box {
+        Box(
+            Modifier.then(
+                if (filmReel) {
+                    Modifier.pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val ev = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                                val c = ev.changes.firstOrNull() ?: continue
+                                fingerLift = if (c.pressed) (-c.position.y).coerceAtLeast(0f) else 0f
+                            }
+                        }
+                    }
+                } else {
+                    Modifier
+                },
+            ),
+        ) {
             Slider(
                 value = displayedPositionMs.coerceIn(0L, durationMs).toFloat(),
                 onValueChange = { value ->
-                    val position = value.toLong().coerceIn(0L, durationMs)
+                    var position = value.toLong().coerceIn(0L, durationMs)
+                    if (filmReel) {
+                        if (fingerLift > liftThresholdPx) {
+                            // Fine mode: a quarter of the movement.
+                            val anchor = fineAnchor ?: (value to (scrubPosition ?: displayedPositionMs)).also { fineAnchor = it }
+                            position = (anchor.second + ((value - anchor.first) * 0.25f).toLong()).coerceIn(0L, durationMs)
+                        } else {
+                            fineAnchor = null
+                        }
+                        val tick = position / 10_000L
+                        if (lastTick >= 0 && tick != lastTick) {
+                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        }
+                        lastTick = tick
+                    }
                     scrubPosition = position
                     onScrubChange(position)
                 },
                 onValueChangeFinished = {
                     onScrubFinished((scrubPosition ?: displayedPositionMs).coerceIn(0L, durationMs))
                     scrubPosition = null
+                    fineAnchor = null
+                    lastTick = -1L
                 },
                 valueRange = 0f..rangeEnd,
                 enabled = enabled && durationMs > 0L,
@@ -232,6 +273,7 @@ internal fun PlayerTimeline(
                 positionMs = displayedPositionMs.coerceIn(0L, durationMs),
                 durationMs = durationMs,
                 modifier = Modifier.matchParentSize(),
+                chapters = snapshot.chapters,
             )
         }
     }

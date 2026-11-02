@@ -210,6 +210,20 @@ internal class SeekPreviewController(
         }
     }
 
+    /** Luxo film reel: a cached frame close to [positionMs] (within [toleranceMs]), without decoding. */
+    fun cachedNear(positionMs: Long, toleranceMs: Long): ImageBitmap? {
+        var best: Long? = null
+        var bestDistance = Long.MAX_VALUE
+        for (key in cache.keys) {
+            val d = abs(key - positionMs)
+            if (d < bestDistance) {
+                bestDistance = d
+                best = key
+            }
+        }
+        return best?.takeIf { bestDistance <= toleranceMs }?.let { cache[it] }
+    }
+
     private fun nearestCached(bucket: Long): SeekPreviewFrame? {
         var bestKey: Long? = null
         var bestDistance = Long.MAX_VALUE

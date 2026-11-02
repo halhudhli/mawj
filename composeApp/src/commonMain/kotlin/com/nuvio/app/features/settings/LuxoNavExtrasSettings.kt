@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.nuvio.app.features.settings
 
 import androidx.compose.foundation.clickable
@@ -60,6 +62,75 @@ internal fun LuxoNavExtrasControls(isTablet: Boolean) {
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    SettingsGroupDivider(isTablet = isTablet)
+    LuxoBlock(isTablet) {
+        LuxoLabel(lx("شكل الشريط", "Bar style"))
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            com.nuvio.app.features.luxo.LuxoBarStyle.entries.forEach { st ->
+                FilterChip(
+                    selected = nav.barStyle == st.id,
+                    onClick = { LuxoNavSettingsRepository.update { it.copy(barStyle = st.id) } },
+                    label = { Text(st.ar) },
+                )
+            }
+        }
+        Text(
+            text = when (com.nuvio.app.features.luxo.LuxoBarStyle.of(nav.barStyle)) {
+                com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL -> "شريط نوفيو الأصلي بدون تعديلات Luxo."
+                com.nuvio.app.features.luxo.LuxoBarStyle.DOCK -> "الكبسولة الزجاجية والقسم المفتوح ينصبغ."
+                com.nuvio.app.features.luxo.LuxoBarStyle.ISLAND -> "كبسولة صغيرة بالأيقونات، القسم المفتوح يتمدد باسمه، وتنكمش مع النزول."
+                com.nuvio.app.features.luxo.LuxoBarStyle.CINEMA -> "شريط بعرض الشاشة: شعار Luxo، أقسام نصية، وخط متوهج ينزلق تحت القسم المفتوح."
+                com.nuvio.app.features.luxo.LuxoBarStyle.SPLIT -> "الأقسام في كبسولة، والبحث والبروفايل في دوائر عائمة لحالها."
+                com.nuvio.app.features.luxo.LuxoBarStyle.NEON -> "كلمات كبيرة بدون خلفية، والقسم المفتوح يتوهج بتدرج."
+                com.nuvio.app.features.luxo.LuxoBarStyle.DISCS -> "دوائر منفصلة، والمفتوحة تكبر وتتلون."
+                com.nuvio.app.features.luxo.LuxoBarStyle.GREETING -> "تحية حسب الوقت والساعة بجانب الأقسام."
+                com.nuvio.app.features.luxo.LuxoBarStyle.FAN -> "كرة Luxo عائمة في الزاوية، والضغط عليها يفتح الأقسام على شكل قوس."
+                com.nuvio.app.features.luxo.LuxoBarStyle.CURTAIN -> "الشريط مخفي، والسحب أو الضغط على المقبض يفتح الأقسام كبطاقات كبيرة."
+                com.nuvio.app.features.luxo.LuxoBarStyle.MAGNET -> "أيقونات صغيرة تكبر تحت الإصبع وتظهر أسماؤها."
+                com.nuvio.app.features.luxo.LuxoBarStyle.LIQUID -> "المؤشر قطرة تتمدد وتنسكب من قسم لقسم."
+                com.nuvio.app.features.luxo.LuxoBarStyle.COMMAND -> "كبسولة باسم القسم، والضغط عليها يفتح لوحة فيها البحث وكل الأقسام."
+                com.nuvio.app.features.luxo.LuxoBarStyle.GESTURE -> "بدون شريط: السحب بإصبعين يمين ويسار ينقل بين الأقسام، ونقاط صغيرة توضح المكان."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LuxoLabel(lx("مكان الشريط", "Position"))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("start" to "بداية", "center" to "وسط", "end" to "نهاية", "full" to "عرض الشاشة").forEach { (id, label) ->
+                FilterChip(selected = nav.barPosition == id, onClick = { LuxoNavSettingsRepository.update { it.copy(barPosition = id) } }, label = { Text(label) })
+            }
+        }
+        LuxoLabel(lx("أسماء الأقسام", "Labels"))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("always" to "دايم ظاهرة", "selected" to "للمفتوح فقط", "none" to "أيقونات فقط").forEach { (id, label) ->
+                FilterChip(selected = nav.barLabels == id, onClick = { LuxoNavSettingsRepository.update { it.copy(barLabels = id) } }, label = { Text(label) })
+            }
+        }
+        LuxoLabel(lx("الحجم", "Size"))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(0 to "صغير", 1 to "عادي", 2 to "كبير").forEach { (v, label) ->
+                FilterChip(selected = nav.barSize == v, onClick = { LuxoNavSettingsRepository.update { it.copy(barSize = v) } }, label = { Text(label) })
+            }
+        }
+        LuxoLabel(lx("الشفافية", "Transparency"))
+        androidx.compose.material3.Slider(
+            value = nav.barOpacity,
+            onValueChange = { v -> LuxoNavSettingsRepository.update { it.copy(barOpacity = v) } },
+            valueRange = 0.35f..1f,
+        )
+        FilterChip(
+            selected = false,
+            onClick = {
+                LuxoNavSettingsRepository.update {
+                    it.copy(barStyle = "dock", barPosition = "center", barLabels = "selected", barSize = 1, barOpacity = 0.94f)
+                }
+            },
+            label = { Text(lx("↺ رجّع الشكل السابق", "↺ Restore previous look")) },
         )
     }
     SettingsGroupDivider(isTablet = isTablet)

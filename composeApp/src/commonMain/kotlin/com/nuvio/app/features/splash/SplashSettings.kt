@@ -5,10 +5,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.serialization.json.Json
 
 @Serializable
-enum class SplashBackgroundStyle { STARS, WAVES, PARTICLES, GRADIENT, SOLID }
+enum class SplashBackgroundStyle { STARS, WAVES, PARTICLES, GRADIENT, SOLID, AURORA_RIBBONS, FILM, CURTAIN, NEON }
 
 @Serializable
 enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE }
@@ -41,12 +43,23 @@ data class SplashSettings(
     val density: Float = 1f,
     val glow: Boolean = true,
     val durationMs: Int = DEFAULT_DURATION_MS,
+    /** Luxo: a tap on the splash skips it. */
+    val tapToSkip: Boolean = true,
+    /** Luxo: end early (after 1.5 s) when the app is already ready. */
+    val shortenWhenReady: Boolean = true,
+    /** Luxo: the colours flow inside the letters of the written logo. */
+    val flowingLetters: Boolean = true,
 ) {
     companion object {
-        const val DEFAULT_DURATION_MS = 1300
-        const val MIN_DURATION_MS = 600
-        const val MAX_DURATION_MS = 4000
+        const val DEFAULT_DURATION_MS = 2000
+        const val MIN_DURATION_MS = 2000
+        const val MAX_DURATION_MS = 10000
     }
+}
+
+/** A tap on the splash asks the gate to move on. */
+object SplashSkip {
+    var requested by androidx.compose.runtime.mutableStateOf(false)
 }
 
 object SplashSettingsRepository {

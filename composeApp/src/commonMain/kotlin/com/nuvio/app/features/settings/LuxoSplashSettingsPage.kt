@@ -110,7 +110,7 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                 SettingsSwitchRow(
                     title = lx("إظهار شاشة الدخول", "Show launch screen"),
                     description = lx(
-                        "لو أوقفتها يفتح التطبيق على طول بدون الشاشة المتحركة",
+                        "عند الإيقاف يفتح التطبيق على طول بدون الشاشة المتحركة",
                         "When off, the app opens straight away without the animated screen",
                     ),
                     checked = settings.enabled,
@@ -123,6 +123,30 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                     checked = settings.glow,
                     isTablet = isTablet,
                     onCheckedChange = { checked -> update { it.copy(glow = checked) } },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = lx("ألوان تتموج داخل الحروف 🌊", "Colours flowing inside the letters 🌊"),
+                    description = lx("مثل أمواج «سمت»: الألوان تتحرك داخل كلمة Luxo", "Like Samt's waves: colours move inside the word"),
+                    checked = settings.flowingLetters,
+                    isTablet = isTablet,
+                    onCheckedChange = { checked -> update { it.copy(flowingLetters = checked) } },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = lx("التخطي بضغطة", "Tap to skip"),
+                    description = lx("الضغط على الشاشة ينهيها مباشرة", "A tap ends it straight away"),
+                    checked = settings.tapToSkip,
+                    isTablet = isTablet,
+                    onCheckedChange = { checked -> update { it.copy(tapToSkip = checked) } },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = lx("الاختصار لو جهز التطبيق", "End early when ready"),
+                    description = lx("تنتهي بعد ثانية ونص إذا كان التطبيق جاهز قبل المدة المختارة", "Ends after 1.5 s if the app is ready before the chosen time"),
+                    checked = settings.shortenWhenReady,
+                    isTablet = isTablet,
+                    onCheckedChange = { checked -> update { it.copy(shortenWhenReady = checked) } },
                 )
             }
         }
@@ -293,6 +317,10 @@ private fun SplashBackgroundStyle.label(): String = when (this) {
     SplashBackgroundStyle.PARTICLES -> lx("جزيئات", "Particles")
     SplashBackgroundStyle.GRADIENT -> lx("تدرّج متحرك", "Moving gradient")
     SplashBackgroundStyle.SOLID -> lx("لون سادة", "Solid colour")
+    SplashBackgroundStyle.AURORA_RIBBONS -> lx("شفق ✨", "Aurora ✨")
+    SplashBackgroundStyle.FILM -> lx("شريط فيلم 🎞️", "Film strip 🎞️")
+    SplashBackgroundStyle.CURTAIN -> lx("ستارة سينما 🎭", "Cinema curtain 🎭")
+    SplashBackgroundStyle.NEON -> lx("نبض نيون 💡", "Neon pulse 💡")
 }
 
 @Composable

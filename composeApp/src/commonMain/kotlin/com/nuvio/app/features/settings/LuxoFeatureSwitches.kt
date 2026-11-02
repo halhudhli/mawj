@@ -42,6 +42,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.companiesRedesign }, { f, v -> f.copy(companiesRedesign = v) },
         ),
         LuxoFeatureSwitch(
+            lx("بكرة الفيلم 🎞️", "Film reel 🎞️"),
+            lx("عند سحب شريط الوقت: ٥ لقطات مثل بكرة فيلم مع الوقت والفرق واسم الفصل، والرفع فوق الشريط يبطّئ السحب للدقة، واهتزاز خفيف كل ١٠ ثواني. الإيقاف يرجّع تصميم نوفيو", "While scrubbing: five frames like a film strip with time, difference and chapter; lifting the finger slows the scrub; a light tick every 10 s. Off returns Nuvio's preview"),
+            { it.filmReel }, { f, v -> f.copy(filmReel = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("حفظ الصور ⬇", "Save images ⬇"),
             lx("زر في عارض الخلفيات والملصقات يحفظ الصورة بدقتها الأصلية في الاستوديو", "A button in the image viewer that saves the original to the gallery"),
             { it.saveImages }, { f, v -> f.copy(saveImages = v) },

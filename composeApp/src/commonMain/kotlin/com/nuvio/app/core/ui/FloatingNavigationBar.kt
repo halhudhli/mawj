@@ -224,7 +224,8 @@ internal fun FloatingNavigationBar(
     // slots instead of keeping most of the expanded width.
     val inlineMaxWidth = run {
         val compactWidth = 64.dp * items.size + 8.dp
-        val expandedWidth = 640.dp
+        // Luxo: room for every name (e.g. «الملف الشخصي») instead of a fixed 640dp that cut it off.
+        val expandedWidth = (104.dp * items.size).coerceAtLeast(640.dp)
         compactWidth + (expandedWidth - compactWidth) * labelFraction
     }
 
