@@ -46,6 +46,9 @@ data class LuxoMediaBundle(
     val videos: List<MetaTrailer> = emptyList(),
     val englishTitle: String? = null,
     val year: String? = null,
+    /** Title in the work's own language (Turkish, Korean, Japanese…) and that language's code. */
+    val originalTitle: String? = null,
+    val originalLanguage: String? = null,
 )
 
 data class LuxoCredit(
@@ -147,6 +150,8 @@ object LuxoTmdb {
                 englishTitle = detailJ?.str(if (mediaType == "movie") "title" else "name")
                     ?: detailJ?.str(if (mediaType == "movie") "original_title" else "original_name"),
                 year = detailJ?.str(if (mediaType == "movie") "release_date" else "first_air_date")?.take(4),
+                originalTitle = detailJ?.str(if (mediaType == "movie") "original_title" else "original_name"),
+                originalLanguage = detailJ?.str("original_language"),
             )
             mediaCache[cacheKey] = bundle
             bundle
@@ -266,29 +271,65 @@ object LuxoTmdb {
             }
     }
 
-    /** Official soundtrack album from Deezer (free, no key) with 30-second previews. */
-    suspend fun soundtrack(title: String, year: String?, isSeries: Boolean): LuxoSoundtrack? = withContext(Dispatchers.Default) {
-        val cacheKey = "$title:$year"
+    /**
+     * Official soundtrack album from Deezer (free, no key) with 30-second previews. Searched first
+     * with the title in the work's own language (a Turkish series by its Turkish name, a K-drama by
+     * its Korean name…) and the words that language uses for a soundtrack, then in English.
+     */
+    suspend fun soundtrack(
+        title: String,
+        year: String?,
+        isSeries: Boolean,
+        originalTitle: String? = null,
+        originalLanguage: String? = null,
+    ): LuxoSoundtrack? = withContext(Dispatchers.Default) {
+        val cacheKey = "$title:$originalTitle:$year"
         if (soundtrackCache.containsKey(cacheKey)) return@withContext soundtrackCache[cacheKey]
-        val clean = normalize(title)
-        val queries = listOf(
-            "$title ${if (isSeries) "original series soundtrack" else "original motion picture soundtrack"}",
-            "$title soundtrack",
-            "$title original score",
-        )
-        val keywords = listOf("soundtrack", "original", "score", "music from", "ost", "motion picture", "series", "season")
+        val native = originalTitle?.takeIf { originalLanguage != null && originalLanguage != "en" && it != title }
+        val nativeWords = when (originalLanguage) {
+            "tr" -> listOf(if (isSeries) "dizi müzikleri" else "film müzikleri", "orijinal", "müzik")
+            "ko" -> listOf("OST", "드라마", "사운드트랙")
+            "ja" -> listOf("サウンドトラック", "オリジナル", "OST")
+            "zh", "cn" -> listOf("原声", "OST")
+            "es" -> listOf("banda sonora", "BSO")
+            "fr" -> listOf("bande originale", "BO")
+            "it" -> listOf("colonna sonora")
+            "de" -> listOf("soundtrack", "filmmusik")
+            "pt" -> listOf("trilha sonora")
+            "hi" -> listOf("soundtrack", "songs")
+            else -> listOf("soundtrack", "OST")
+        }
+        // (search text, title the album must contain)
+        val searches = buildList {
+            if (native != null) {
+                nativeWords.take(2).forEach { add("$native $it" to native) }
+                add(native to native)
+            }
+            add("$title ${if (isSeries) "original series soundtrack" else "original motion picture soundtrack"}" to title)
+            add("$title soundtrack" to title)
+            add("$title original score" to title)
+        }
+        val keywords = listOf(
+            "soundtrack", "original", "score", "music from", "ost", "motion picture", "series", "season",
+        ) + nativeWords.map { normalize(it) }
         var best: Pair<Int, JsonObject>? = null
-        for (q in queries) {
+        for ((q, mustContain) in searches) {
+            val clean = normalize(mustContain)
+            if (clean.isBlank()) continue
             val res = web("https://api.deezer.com/search/album?limit=15&q=${urlEncode(q)}") ?: continue
             res.arr("data").forEach { album ->
                 val albumTitle = album.str("title") ?: return@forEach
                 val norm = normalize(albumTitle)
                 if (!norm.contains(clean)) return@forEach
                 var score = 0
-                if (keywords.any { norm.contains(it) }) score += 3
+                if (keywords.any { it.isNotBlank() && norm.contains(it) }) score += 3
                 if (norm.startsWith(clean)) score += 1
+                if (mustContain == native) score += 1
                 if (norm.contains("karaoke") || norm.contains("tribute") || norm.contains("cover") || norm.contains("inspired")) score -= 5
-                if (score >= 3 && (best == null || score > best!!.first)) best = score to album
+                // Native-title search: an album named exactly after the series is usually its music too.
+                if (mustContain == native && score >= 2 && norm == clean) score += 1
+                val needed = if (mustContain == native) 2 else 3
+                if (score >= needed && (best == null || score > best!!.first)) best = score to album
             }
             if (best != null) break
         }

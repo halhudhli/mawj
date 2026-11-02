@@ -51,6 +51,8 @@ data class LuxoFeatures(
     val personPage: Boolean = true,
     /** Translate non-Arabic overviews/biographies and write people's names in Arabic. */
     val arabicTranslate: Boolean = true,
+    /** Player: if the picture freezes while data is buffered, recover it automatically. */
+    val stallGuard: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

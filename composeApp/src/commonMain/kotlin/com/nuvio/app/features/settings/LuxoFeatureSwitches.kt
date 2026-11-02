@@ -37,6 +37,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.videoColors }, { f, v -> f.copy(videoColors = v) },
         ),
         LuxoFeatureSwitch(
+            lx("منع تعليق الفيديو 🛟", "Freeze guard 🛟"),
+            lx("لو الصورة وقفت والتحميل يلف وهو محمّل أصلاً (مثل بعد الترجيع)، يرجّعه يشتغل لحاله", "If the picture freezes with a spinner while the video is already loaded (e.g. after seeking back), it gets it playing again by itself"),
+            { it.stallGuard }, { f, v -> f.copy(stallGuard = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("الوسائط في صفحة العمل 🎞️", "Media on the details page 🎞️"),
             lx("كل الخلفيات والملصقات والشعارات من TMDB، كل أنواع الفيديو، والموسيقى التصويرية مع تشغيل مقاطع منها", "Every TMDB backdrop, poster and logo, every video kind, and the soundtrack with previews"),
             { it.mediaHub }, { f, v -> f.copy(mediaHub = v) },

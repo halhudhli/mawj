@@ -243,10 +243,27 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
     var state by remember(meta.id) { mutableStateOf<Pair<Boolean, LuxoSoundtrack?>>(false to null) }
     var playing by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(meta.id) {
-        val result = runCatching { LuxoTmdb.soundtrack(title, data.year, meta.type != "movie") }.getOrNull()
+        val result = runCatching {
+            LuxoTmdb.soundtrack(title, data.year, meta.type != "movie", data.originalTitle, data.originalLanguage)
+        }.getOrNull()
         state = true to result
     }
     DisposableEffect(Unit) { onDispose { LuxoAudioPreview.stop() } }
+    // «تشغيل الكل»: previews play one after another.
+    var playAll by remember { mutableStateOf(false) }
+    fun playFrom(tracks: List<com.nuvio.app.features.luxo.LuxoTrack>, start: Int) {
+        val next = tracks.drop(start).firstOrNull { it.previewUrl != null } ?: run {
+            playing = null
+            playAll = false
+            return
+        }
+        val url = next.previewUrl!!
+        playing = url
+        LuxoAudioPreview.play(url) {
+            if (playing != url) return@play
+            if (playAll) playFrom(tracks, tracks.indexOf(next) + 1) else playing = null
+        }
+    }
     val (loaded, album) = state
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when {
@@ -273,6 +290,27 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
                         Text(album.albumTitle, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(album.artist, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
                         Text("${album.tracks.size} مقطوعة · اضغط ▶ تسمع ٣٠ ثانية", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            if (playAll) "⏹ إيقاف" else "▶ تشغيل الكل",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Brush.horizontalGradient(listOf(Accent1, Accent2)))
+                                .clickable {
+                                    if (playAll) {
+                                        playAll = false
+                                        playing = null
+                                        LuxoAudioPreview.stop()
+                                    } else {
+                                        playAll = true
+                                        playFrom(album.tracks.take(30), 0)
+                                    }
+                                }
+                                .padding(horizontal = 14.dp, vertical = 7.dp),
+                        )
                     }
                 }
                 Column(
@@ -293,6 +331,9 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
                                     if (isPlaying) {
                                         LuxoAudioPreview.stop()
                                         playing = null
+                                        playAll = false
+                                    } else if (playAll) {
+                                        playFrom(album.tracks.take(30), index)
                                     } else {
                                         playing = url
                                         LuxoAudioPreview.play(url) { if (playing == url) playing = null }
