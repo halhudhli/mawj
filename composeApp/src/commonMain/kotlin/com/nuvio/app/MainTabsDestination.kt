@@ -147,8 +147,12 @@ internal fun MainTabsDestination(
             }
         }
         val luxoDockOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock
-        // Luxo Dock takes over from every bar style, CLASSIC included.
-        val effectiveNavBarStyle = if (luxoDockOn && navBarStyleSetting == NavBarStyle.CLASSIC) NavBarStyle.EXPANDED else navBarStyleSetting
+        // Luxo: the chosen bar style decides on its own (it no longer needs the «Luxo Dock» switch).
+        val luxoChosenStyle = com.nuvio.app.features.luxo.LuxoBarStyle.of(luxoNav.barStyle)
+        val luxoStyledOn = luxoChosenStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoChosenStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL
+        val luxoDockBarOn = luxoDockOn && luxoChosenStyle == com.nuvio.app.features.luxo.LuxoBarStyle.DOCK
+        // Luxo Dock / styled bars take over from every bar style, CLASSIC included.
+        val effectiveNavBarStyle = if ((luxoDockBarOn || luxoStyledOn) && navBarStyleSetting == NavBarStyle.CLASSIC) NavBarStyle.EXPANDED else navBarStyleSetting
         val floatingBarOnTop = effectiveNavBarStyle != NavBarStyle.CLASSIC && navBarPosition == NavBarPosition.TOP
         // The backdrop source is only consumed by the custom floating bar, not native or CLASSIC navigation.
         val floatingBarVisible = tabsRouteActive && !useNativeBottomTabs && effectiveNavBarStyle != NavBarStyle.CLASSIC && !useSideRail
@@ -245,7 +249,7 @@ internal fun MainTabsDestination(
                         else -> {}
                     }
                     val luxoBarStyle = com.nuvio.app.features.luxo.LuxoBarStyle.of(luxoNav.barStyle)
-                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL) {
+                    if (luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoBarStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL) {
                         LuxoStyledBar(
                             style = luxoBarStyle,
                             items = floatingNavigationItems,
@@ -585,7 +589,10 @@ internal fun BoxScope.SettingsRouteNavigationBar(
     val density = LocalDensity.current
     val highlightedTab = AppScreenTab.Settings
     val luxoNav = luxoNavSettingsState()
-    val dockOnHere = com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock
+    val luxoHereStyle = com.nuvio.app.features.luxo.LuxoBarStyle.of(luxoNav.barStyle)
+    val luxoHereStyled = luxoHereStyle != com.nuvio.app.features.luxo.LuxoBarStyle.DOCK && luxoHereStyle != com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL
+    // «dockOnHere» = a Luxo bar replaces Nuvio's: the Dock (when its switch is on) or any other Luxo style.
+    val dockOnHere = luxoHereStyled || (com.nuvio.app.features.luxo.rememberLuxoFeatures().luxoDock && luxoHereStyle == com.nuvio.app.features.luxo.LuxoBarStyle.DOCK)
     val useSideRail = com.nuvio.app.features.luxo.luxoIsTv() || when (luxoNav.placementValue) {
         com.nuvio.app.features.luxo.LuxoNavPlacement.SIDE -> true
         com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> isWideLandscape

@@ -75,6 +75,8 @@ object LuxoPrivateMode {
 object LuxoIdle {
     var lastInputMs: Long = luxoNowMs()
     var playerOpen by mutableStateOf(false)
+    /** Luxo windows (dialogs, videos) that are open right now; the screensaver waits while any is. */
+    var busy by mutableIntStateOf(0)
     var showNow by mutableStateOf(false)
     var delayMinutes by mutableIntStateOf(LuxoPrefsStorage.load("screensaver_delay")?.toIntOrNull() ?: 5)
         private set
@@ -86,6 +88,15 @@ object LuxoIdle {
 
     fun touch() {
         lastInputMs = luxoNowMs()
+    }
+}
+
+/** Marks a Luxo window as open while it's on screen (touches inside dialogs don't reach the app's root). */
+@Composable
+fun LuxoIdleBusy() {
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        LuxoIdle.busy++
+        onDispose { LuxoIdle.busy = (LuxoIdle.busy - 1).coerceAtLeast(0) }
     }
 }
 
@@ -109,7 +120,8 @@ internal fun LuxoScreensaverHost() {
         while (true) {
             delay(15_000)
             val idle = luxoNowMs() - LuxoIdle.lastInputMs
-            if (!LuxoIdle.playerOpen && !LuxoIdle.showNow && idle > LuxoIdle.delayMinutes * 60_000L) LuxoIdle.showNow = true
+            val overlayOpen = LuxoOverlays.franchise != null || LuxoOverlays.traktDoctor || LuxoOverlays.guessGame
+            if (!LuxoIdle.playerOpen && LuxoIdle.busy == 0 && !overlayOpen && !LuxoIdle.showNow && idle > LuxoIdle.delayMinutes * 60_000L) LuxoIdle.showNow = true
         }
     }
     if (LuxoIdle.showNow) LuxoScreensaver(onExit = { LuxoIdle.touch(); LuxoIdle.showNow = false })
@@ -155,9 +167,9 @@ private fun LuxoScreensaver(onExit: () -> Unit) {
             Modifier
                 .fillMaxSize()
                 .background(Color.Black)
+                .onPreviewKeyEvent { onExit(); true }
                 .focusRequester(focus)
                 .focusable()
-                .onPreviewKeyEvent { onExit(); true }
                 .clickable(interactionSource = null, indication = null, onClick = onExit),
         ) {
             val slide = slides.getOrNull(index)
@@ -205,6 +217,7 @@ internal fun LuxoGuessGameDialog(onDismiss: () -> Unit) {
     LaunchedEffect(pool.size >= 4) { if (round == null) next() }
     val blur = if (picked == null) 18.dp else 0.dp
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        LuxoIdleBusy()
         Column(
             Modifier.widthIn(max = 720.dp).fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(26.dp)).background(Color(0xFF14121C)).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

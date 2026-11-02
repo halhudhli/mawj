@@ -71,6 +71,7 @@ private fun XChip(text: String, onClick: () -> Unit) {
 @Composable
 private fun XDialog(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Column(
             Modifier.widthIn(max = 640.dp).fillMaxWidth().heightIn(max = 720.dp).padding(16.dp)
                 .clip(RoundedCornerShape(26.dp)).background(Color(0xFF14121C)).padding(18.dp),

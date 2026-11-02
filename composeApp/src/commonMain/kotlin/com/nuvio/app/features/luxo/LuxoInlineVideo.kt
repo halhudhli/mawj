@@ -27,6 +27,7 @@ expect fun LuxoInlineVideo(url: String, modifier: Modifier)
 @Composable
 fun LuxoVideoDialog(url: String, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
             LuxoInlineVideo(url, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
             Box(

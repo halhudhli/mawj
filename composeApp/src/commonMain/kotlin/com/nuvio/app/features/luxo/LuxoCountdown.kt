@@ -460,6 +460,8 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
         .sortedBy { it.dateIso }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Box(
             Modifier
                 .fillMaxSize()

@@ -48,6 +48,7 @@ fun LuxoSceneShareDialog(frame: ImageBitmap, subtitle: String, title: String, la
     var line by remember { mutableStateOf(subtitle.trim()) }
     var failed by remember { mutableStateOf(false) }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Box(
                 Modifier

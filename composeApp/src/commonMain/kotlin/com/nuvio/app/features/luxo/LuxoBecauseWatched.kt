@@ -79,8 +79,10 @@ internal fun LuxoBecauseWatchedRows(onOpen: (MetaPreview) -> Unit, modifier: Mod
                 }
             if (picks.isEmpty()) null else BecauseRow(f.title, picks)
         }
-        LuxoBecauseCache.key = stamp
-        LuxoBecauseCache.rows = result
+        if (result.isNotEmpty()) {
+            LuxoBecauseCache.key = stamp
+            LuxoBecauseCache.rows = result
+        }
         rows = result
     }
     if (rows.isEmpty()) return

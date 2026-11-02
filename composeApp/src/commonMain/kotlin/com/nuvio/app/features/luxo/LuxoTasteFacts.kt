@@ -50,6 +50,8 @@ object LuxoTasteFacts {
     private val json = Json { ignoreUnknownKeys = true }
     private val ser = MapSerializer(String.serializer(), LuxoTitleFacts.serializer())
     private val mutex = Mutex()
+    /** Titles TMDB doesn't know (custom addons): not asked again this session. */
+    private val failed = mutableSetOf<String>()
 
     val facts = mutableStateMapOf<String, LuxoTitleFacts>().apply {
         LuxoPrefsStorage.load(KEY)?.let { p -> runCatching { json.decodeFromString(ser, p) }.getOrNull()?.let { putAll(it) } }
@@ -63,20 +65,28 @@ object LuxoTasteFacts {
 
     /** Fetches facts for titles not looked up yet (newest first). */
     suspend fun ensure(items: List<WatchedItem>, limit: Int = if (luxoLiteMode()) 60 else 220) = withContext(Dispatchers.Default) {
-        if (loading) return@withContext
         mutex.withLock {
             val distinct = items.sortedByDescending { it.markedAtEpochMs }.distinctBy { keyOf(it) }.take(limit)
-            val missing = distinct.filter { keyOf(it) !in facts }
+            val missing = distinct.filter { keyOf(it) !in facts && keyOf(it) !in failed }
             if (missing.isEmpty()) return@withLock
             loading = true
             val gate = Semaphore(if (luxoLiteMode()) 2 else 5)
-            coroutineScope {
-                missing.map { item ->
-                    async { gate.withPermit { runCatching { fetch(item) }.getOrNull()?.let { keyOf(item) to it } } }
-                }.awaitAll().filterNotNull().forEach { (k, v) -> facts[k] = v }
+            try {
+                coroutineScope {
+                    missing.map { item ->
+                        async {
+                            gate.withPermit {
+                                val f = runCatching { fetch(item) }.getOrNull()
+                                if (f != null) facts[keyOf(item)] = f else failed += keyOf(item)
+                            }
+                        }
+                    }.awaitAll()
+                }
+            } finally {
+                // Kept even when the page is left half way, so the next visit continues from here.
+                runCatching { save() }
+                loading = false
             }
-            save()
-            loading = false
         }
     }
 

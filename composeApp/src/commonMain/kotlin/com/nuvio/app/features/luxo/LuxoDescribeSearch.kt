@@ -165,6 +165,7 @@ fun LuxoDescribeSearchDialog(onOpen: (MetaPreview) -> Unit, onDismiss: () -> Uni
     }
     val voice = rememberLuxoVoiceInput { text = it; run() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Column(
             Modifier
                 .widthIn(max = 760.dp)

@@ -180,6 +180,7 @@ fun LuxoCompareDialog(title: String, tmdbId: String, mediaType: String, onDismis
         }
     }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
         Column(
             Modifier
                 .widthIn(max = 760.dp)
