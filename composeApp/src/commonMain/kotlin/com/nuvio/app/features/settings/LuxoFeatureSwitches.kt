@@ -63,23 +63,63 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("نبهني لما ينزل ⏰", "Release reminders ⏰"),
-            lx("للأفلام اللي لسا ما نزلت رقمياً، وأعمال الممثلين المتابَعين: إشعار عند النزول", "For movies not out digitally yet, and new work from followed actors: a notification when it's out"),
+            lx("للأفلام التي لم تُطرح رقمياً بعد، ولأعمال الممثلين المتابَعين: يصل إشعار عند النزول", "For movies not out digitally yet, and new work from followed actors: a notification when it's out"),
             { it.releaseReminders }, { f, v -> f.copy(releaseReminders = v) },
         ),
         LuxoFeatureSwitch(
             lx("البحث بالوصف والصوت 🔎🎙️", "Search by description and voice 🔎🎙️"),
-            lx("كتابة أو قول وصف العمل (مثل «رجل عالق في المريخ») ويطلع العمل", "Type or say what it's about and the title comes up"),
+            lx("يُكتب أو يُقال وصف العمل (مثل «رجل عالق في المريخ») فيظهر العمل", "Type or say what it's about and the title comes up"),
             { it.describeSearch }, { f, v -> f.copy(describeSearch = v) },
         ),
         LuxoFeatureSwitch(
             lx("قارن بين عملين ⚖️", "Compare two titles ⚖️"),
-            lx("جنب بعض: التقييمات والمدة والمواسم والممثلين المشتركين ورأي رفيق Luxo", "Side by side: ratings, runtime, seasons, shared cast and Luxo Companion's take"),
+            lx("جنباً إلى جنب: التقييم والمدة والمواسم والإخراج والبطولة ورأي رفيق Luxo", "Side by side: ratings, runtime, seasons, shared cast and Luxo Companion's take"),
             { it.compareTitles }, { f, v -> f.copy(compareTitles = v) },
         ),
         LuxoFeatureSwitch(
             lx("أغاني البداية والنهاية للأنمي 🎌", "Anime openings & endings 🎌"),
             lx("في الموسيقى: الأوبننق والإندنق الرسمية بالصوت والفيديو من AnimeThemes", "In Music: official openings and endings with audio and video"),
             { it.animeThemes }, { f, v -> f.copy(animeThemes = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("لوحة الذوق (Bento) 🍱", "Taste board 🍱"),
+            lx("في «ذوقي»: اللقب، خريطة العالم، ساعة المشاهدة، العقود، الممثلون والمخرجون والاستوديوهات، توأم الذوق ومزاج كل شهر، مع المشاركة", "In «My taste»: nickname, world map, watch clock, decades, favourite people, taste twin, monthly mood, share"),
+            { it.tasteBento }, { f, v -> f.copy(tasteBento = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الوقت المتبقي وخطة الإنهاء ⏳", "Time left & plan ⏳"),
+            lx("في صفحة المسلسل: كم حلقة وساعة متبقية، ومتى يُنتهى منه حسب عدد الحلقات يومياً", "On a series page: episodes and hours left, and when it'll be finished at your pace"),
+            { it.timeLeft }, { f, v -> f.copy(timeLeft = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ذاكرة إعدادات كل مسلسل 🧠", "Per-series memory 🧠"),
+            lx("لغة الصوت والترجمة وسرعة التشغيل تُحفظ لكل مسلسل وتُطبَّق تلقائياً في حلقاته", "Audio, subtitle and speed are remembered per series and applied to its episodes"),
+            { it.seriesMemory }, { f, v -> f.copy(seriesMemory = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الوضع الخاص 🕶️", "Private mode 🕶️"),
+            lx("زر في «حسابي»: عند تشغيله لا يُسجَّل التقدم ولا السجل ولا يُرسل شيء إلى Trakt", "A button in the profile: while on, no progress, history or Trakt is recorded"),
+            { it.privateMode }, { f, v -> f.copy(privateMode = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("لعبة «خمّن العمل» 🎯", "«Guess the title» 🎯"),
+            lx("تظهر لقطة مموّهة من عمل تمت مشاهدته، ويُختار اسمه من أربعة خيارات", "A blurred frame from something watched; pick the right title of four"),
+            { it.guessGame }, { f, v -> f.copy(guessGame = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("شاشة التوقف 🌌", "Screensaver 🌌"),
+            lx("بعد مدة بدون استخدام: خلفيات الأعمال تتحرك ببطء مع الساعة (أي لمسة أو زر يُعيد التطبيق)", "After idle time: slow-moving backdrops with the clock (any touch or key returns)"),
+            { it.screensaver }, { f, v -> f.copy(screensaver = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("صفوف «لأنه تمت مشاهدة…» 🧩", "«Because you watched» rows 🧩"),
+            lx("في الرئيسية: اقتراحات مبنية على آخر الأعمال التي تمت مشاهدتها", "On the home: picks based on what was watched last"),
+            { it.becauseWatched }, { f, v -> f.copy(becauseWatched = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("دليل الشخصيات بدون حرق 👥", "Spoiler-free character guide 👥"),
+            lx("في صفحة العمل: الشخصيات الرئيسية ومن يؤديها، حتى الحلقة التي تمت مشاهدتها فقط", "On the details page: main characters and who plays them, only up to where you are"),
+            { it.characterGuide }, { f, v -> f.copy(characterGuide = v) },
         ),
         LuxoFeatureSwitch(
             lx("بكرة الفيلم 🎞️", "Film reel 🎞️"),
@@ -261,6 +301,25 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
                     selected = false,
                     onClick = { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" },
                     label = { androidx.compose.material3.Text(lx("🎞️ السلاسل", "🎞️ Franchises")) },
+                )
+            }
+        }
+    }
+    if (features.screensaver) {
+        LuxoBlock(isTablet) {
+            LuxoLabel(lx("تظهر شاشة التوقف بعد", "Screensaver after"))
+            androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                listOf(2, 5, 10, 20).forEach { m ->
+                    androidx.compose.material3.FilterChip(
+                        selected = com.nuvio.app.features.luxo.LuxoIdle.delayMinutes == m,
+                        onClick = { com.nuvio.app.features.luxo.LuxoIdle.setDelay(m) },
+                        label = { androidx.compose.material3.Text(lx("$m دقائق", "$m min")) },
+                    )
+                }
+                androidx.compose.material3.FilterChip(
+                    selected = false,
+                    onClick = { com.nuvio.app.features.luxo.LuxoIdle.showNow = true },
+                    label = { androidx.compose.material3.Text(lx("معاينة", "Preview")) },
                 )
             }
         }

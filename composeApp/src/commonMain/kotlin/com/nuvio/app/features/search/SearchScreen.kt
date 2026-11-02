@@ -276,6 +276,13 @@ fun SearchScreen(
                             },
                         )
                     }
+                    com.nuvio.app.features.luxo.LuxoSearchExtrasRow(
+                        onVoiceText = { query = it },
+                        onOpen = { preview ->
+                            onPosterClick?.invoke(preview) ?: com.nuvio.app.features.luxo.LuxoOverlays.openMeta(preview)
+                        },
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp),
+                    )
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(14.dp))
                 }
             }

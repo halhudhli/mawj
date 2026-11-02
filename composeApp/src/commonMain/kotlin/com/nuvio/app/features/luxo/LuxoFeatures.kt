@@ -77,6 +77,22 @@ data class LuxoFeatures(
     val compareTitles: Boolean = true,
     /** Anime openings / endings video in the media section. */
     val animeThemes: Boolean = true,
+    /** «ذوقي» Bento board. */
+    val tasteBento: Boolean = true,
+    /** Time left to finish a series + a viewing plan. */
+    val timeLeft: Boolean = true,
+    /** Per-series audio/subtitle/speed memory. */
+    val seriesMemory: Boolean = true,
+    /** Private mode (nothing recorded while it's on) — the switch only shows the option. */
+    val privateMode: Boolean = true,
+    /** «خمّن العمل» game. */
+    val guessGame: Boolean = true,
+    /** Screensaver after idle time. */
+    val screensaver: Boolean = true,
+    /** «لأنه تمت مشاهدة…» rows on the home. */
+    val becauseWatched: Boolean = true,
+    /** Spoiler-free character guide. */
+    val characterGuide: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

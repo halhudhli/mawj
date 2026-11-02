@@ -398,6 +398,7 @@ private fun ProfileInsightsBody(
                 onRefresh = ProfileInsightsRefresher::refresh,
             )
             ProfileWatchTimeRow(stats = stats)
+            LuxoTasteBentoCard(isTablet = isTablet)
             SettingsSection(
                 title = stringResource(Res.string.profile_insights_section_taste),
                 isTablet = isTablet,
@@ -410,7 +411,7 @@ private fun ProfileInsightsBody(
                 profileName = profileName,
             )
             LuxoInsightPosterRow(
-                title = com.nuvio.app.features.luxo.lx("قاعد أتابعها", "Watching now"),
+                title = com.nuvio.app.features.luxo.lx("قيد المتابعة", "Watching now"),
                 items = (
                     insightCollections[ProfileInsightCollectionKind.Continue]?.items.orEmpty() +
                         insightCollections[ProfileInsightCollectionKind.Ongoing]?.items.orEmpty()
@@ -418,7 +419,7 @@ private fun ProfileInsightsBody(
                 onPosterClick = onPosterClick,
             )
             LuxoInsightPosterRow(
-                title = com.nuvio.app.features.luxo.lx("خلّصتها", "Finished"),
+                title = com.nuvio.app.features.luxo.lx("تمت مشاهدتها كاملة", "Finished"),
                 items = insightCollections[ProfileInsightCollectionKind.Completed]?.items.orEmpty(),
                 onPosterClick = onPosterClick,
             )

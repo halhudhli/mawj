@@ -44,6 +44,10 @@ internal fun PlayerDestination(
     LaunchedEffect(launch.videoId) {
         launch.videoId?.let { ResumePromptRepository.markPlayerEntered(it) }
     }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        com.nuvio.app.features.luxo.LuxoIdle.playerOpen = true
+        onDispose { com.nuvio.app.features.luxo.LuxoIdle.playerOpen = false }
+    }
     PlayerScreen(
         profileId = launch.profileId,
         title = launch.title,

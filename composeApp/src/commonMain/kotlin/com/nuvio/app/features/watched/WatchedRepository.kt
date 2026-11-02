@@ -762,6 +762,7 @@ object WatchedRepository {
     }
 
     internal fun markWatchedFromPlaybackCompletion(item: WatchedItem, syncRemote: Boolean = true) {
+        if (com.nuvio.app.features.luxo.LuxoPrivateMode.active) return
         markWatched(
             items = listOf(item),
             trackerHistorySync = WatchedTrackerHistorySync.Skip,

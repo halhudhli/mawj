@@ -1111,6 +1111,7 @@ object WatchProgressRepository {
         snapshot: PlayerPlaybackSnapshot,
         syncRemote: Boolean = true,
     ) {
+        if (com.nuvio.app.features.luxo.LuxoPrivateMode.active) return
         ensureLoaded()
         upsert(session = session, snapshot = snapshot, persist = true, syncRemote = syncRemote)
     }
@@ -1120,6 +1121,7 @@ object WatchProgressRepository {
         snapshot: PlayerPlaybackSnapshot,
         syncRemote: Boolean = true,
     ) {
+        if (com.nuvio.app.features.luxo.LuxoPrivateMode.active) return
         ensureLoaded()
         upsert(session = session, snapshot = snapshot, persist = true, syncRemote = syncRemote)
     }

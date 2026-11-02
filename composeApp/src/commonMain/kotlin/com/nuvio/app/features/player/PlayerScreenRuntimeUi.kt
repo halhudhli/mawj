@@ -402,6 +402,25 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         // LUXO «ترجمة الترجمة للعربي»: translate the chosen (or English) addon subtitle with Gemini.
         val luxoFeatures = com.nuvio.app.features.luxo.rememberLuxoFeatures()
         val luxoTranslateScope = androidx.compose.runtime.rememberCoroutineScope()
+        // LUXO «ذاكرة إعدادات كل مسلسل»: restore speed + dialogue/night sound once playback starts, then keep them updated.
+        val luxoSeriesKey = if (luxoFeatures.seriesMemory && parentMetaType != "movie") parentMetaId else ""
+        var luxoSeriesRestored by remember(luxoSeriesKey) { mutableStateOf(false) }
+        LaunchedEffect(luxoSeriesKey, playbackSnapshot.isLoading, playerController) {
+            if (luxoSeriesKey.isBlank() || luxoSeriesRestored || playbackSnapshot.isLoading) return@LaunchedEffect
+            val controller = playerController ?: return@LaunchedEffect
+            com.nuvio.app.features.luxo.LuxoSeriesMemory.get(luxoSeriesKey)?.let { saved ->
+                if (kotlin.math.abs(saved.speed - 1f) > 0.01f) controller.setPlaybackSpeed(saved.speed)
+                com.nuvio.app.features.luxo.LuxoAudioFx.set(saved.dialogue, saved.night)
+            }
+            luxoSeriesRestored = true
+        }
+        LaunchedEffect(luxoSeriesKey, luxoSeriesRestored, playbackSnapshot.playbackSpeed, com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night) {
+            if (luxoSeriesKey.isBlank() || !luxoSeriesRestored) return@LaunchedEffect
+            val speed = playbackSnapshot.playbackSpeed
+            com.nuvio.app.features.luxo.LuxoSeriesMemory.update(luxoSeriesKey) {
+                it.copy(speed = speed, dialogue = com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, night = com.nuvio.app.features.luxo.LuxoAudioFx.night)
+            }
+        }
         DisposableEffect(luxoFeatures.subtitleTranslate, addonSubtitles) {
             LuxoPlayerBridge.onTranslateSubtitlesClick = if (luxoFeatures.subtitleTranslate) {
                 {

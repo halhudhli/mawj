@@ -1208,6 +1208,12 @@ fun HomeScreen(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 14.dp),
                             )
                         }
+                        item(key = "luxo_because") {
+                            com.nuvio.app.features.luxo.LuxoBecauseWatchedRows(
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
+                            )
+                        }
                         item(key = "luxo_discovery") {
                             com.nuvio.app.features.luxo.LuxoDiscoveryCard(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },

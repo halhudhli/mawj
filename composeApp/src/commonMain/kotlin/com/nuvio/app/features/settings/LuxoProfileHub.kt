@@ -35,6 +35,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.SportsEsports
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Groups
@@ -211,6 +213,20 @@ internal fun LazyListScope.luxoProfileHubContent(
                 }
                 if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().franchises) {
                     add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
+                }
+                val luxoF = com.nuvio.app.features.luxo.LuxoFeaturesRepository.current()
+                if (luxoF.guessGame) {
+                    add(LuxoHall(lx("خمّن العمل", "Guess the title"), lx("لقطة مموّهة وأربعة خيارات", "A blurred frame, four choices"), Icons.Rounded.SportsEsports, Color(0xFF5ED6C9), { com.nuvio.app.features.luxo.LuxoOverlays.guessGame = true }))
+                }
+                if (luxoF.privateMode) {
+                    val on = com.nuvio.app.features.luxo.LuxoPrivateMode.active
+                    add(LuxoHall(
+                        lx(if (on) "الوضع الخاص: يعمل" else "الوضع الخاص", if (on) "Private mode: on" else "Private mode"),
+                        lx(if (on) "لا يُسجَّل شيء الآن · اضغط للإيقاف" else "مشاهدة بدون تسجيل التقدم ولا Trakt", if (on) "Nothing is recorded · tap to stop" else "Watch without recording progress or Trakt"),
+                        Icons.Rounded.VisibilityOff,
+                        if (on) Color(0xFF7BE0A3) else Color(0xFF9AA3AD),
+                        { com.nuvio.app.features.luxo.LuxoPrivateMode.toggle() },
+                    ))
                 }
                 add(LuxoHall(lx("الحساب", "Account"), lx("نوفيو والمزامنة", "Nuvio and sync"), Icons.Rounded.AccountCircle, Color(0xFF5CC8FF), onAccountClick))
                 if (onWatchPartyClick != null) {

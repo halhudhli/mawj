@@ -73,6 +73,8 @@ fun LuxoOverlayHost() {
     LaunchedEffect(Unit) { runCatching { luxoScheduleReminderChecks() } }
     LuxoOverlays.franchise?.let { key -> LuxoFranchiseDialog(startKey = key) }
     if (LuxoOverlays.traktDoctor) LuxoTraktDoctorDialog(onDismiss = { LuxoOverlays.traktDoctor = false })
+    if (LuxoOverlays.guessGame) LuxoGuessGameDialog(onDismiss = { LuxoOverlays.guessGame = false })
+    LuxoScreensaverHost()
 }
 
 @Composable

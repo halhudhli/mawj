@@ -83,6 +83,7 @@ private val Accent2 = Color(0xFFFF7EB6)
  * «الوسائط»: everything TMDB has for the title (backdrops, posters, logos, every video kind) and the
  * official soundtrack with previews — under the existing trailers.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun LuxoMediaHub(
     meta: MetaDetails,
@@ -116,7 +117,12 @@ internal fun LuxoMediaHub(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (showHeader) DetailSectionTitle(title = "الوسائط")
         LuxoFranchiseBanner(data)
-        LuxoReleaseReminderChip(meta, data)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LuxoReleaseReminderChip(meta, data)
+            com.nuvio.app.features.luxo.LuxoTimeLeftChip(meta.id, data.tmdbId, data.mediaType)
+            com.nuvio.app.features.luxo.LuxoCharacterGuideChip(meta.id, meta.name, data.tmdbId, data.mediaType, data.englishTitle, data.year)
+            com.nuvio.app.features.luxo.LuxoCompareChip(meta.name, data.tmdbId, data.mediaType)
+        }
         LuxoBookmarksBlock(meta)
         LazyRow(
             modifier = Modifier.nuvioHorizontalScrollBleed(horizontalScrollPadding).fillMaxWidth(),

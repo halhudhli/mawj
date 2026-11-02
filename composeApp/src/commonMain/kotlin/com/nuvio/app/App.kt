@@ -45,7 +45,7 @@ fun App(
     appGateController: AppGateController? = null,
 ) {
     AppEnvironment {
-      androidx.compose.foundation.layout.Box {
+      androidx.compose.foundation.layout.Box(com.nuvio.app.features.luxo.luxoIdleWatcher()) {
         AppGate(
             initialTab = initialTab,
             initialRoute = initialRoute,

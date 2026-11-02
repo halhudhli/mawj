@@ -30,6 +30,7 @@ object LuxoOverlays {
     /** null = closed, "" = the «السلاسل» home, "collection:ID" / "group:KEY" / "anime:ID" = one franchise. */
     var franchise by mutableStateOf<String?>(null)
     var traktDoctor by mutableStateOf(false)
+    var guessGame by mutableStateOf(false)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null

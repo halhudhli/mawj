@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -90,5 +91,39 @@ object LuxoAudioFx {
         night = !night
         nightOn = night
         persist()
+    }
+
+    fun set(dialogueValue: Boolean, nightValue: Boolean) {
+        dialogue = dialogueValue
+        night = nightValue
+        dialogueOn = dialogueValue
+        nightOn = nightValue
+        persist()
+    }
+}
+
+@Serializable
+data class LuxoSeriesPrefs(val speed: Float = 1f, val dialogue: Boolean = false, val night: Boolean = false)
+
+/**
+ * «🧠 ذاكرة إعدادات كل مسلسل»: playback speed and the dialogue / night sound are kept per series
+ * (audio and subtitle languages are already kept per title by the player itself).
+ */
+object LuxoSeriesMemory {
+    private const val KEY = "series_memory_v1"
+    private val json = Json { ignoreUnknownKeys = true }
+    private val ser = kotlinx.serialization.builtins.MapSerializer(String.serializer(), LuxoSeriesPrefs.serializer())
+    private val map: MutableMap<String, LuxoSeriesPrefs> = (
+        LuxoPrefsStorage.load(KEY)?.let { p -> runCatching { json.decodeFromString(ser, p) }.getOrNull() } ?: emptyMap()
+        ).toMutableMap()
+
+    fun get(id: String): LuxoSeriesPrefs? = map[id]
+
+    fun update(id: String, change: (LuxoSeriesPrefs) -> LuxoSeriesPrefs) {
+        if (id.isBlank()) return
+        val next = change(map[id] ?: LuxoSeriesPrefs())
+        if (map[id] == next) return
+        map[id] = next
+        LuxoPrefsStorage.save(KEY, json.encodeToString(ser, map.toMap()))
     }
 }
