@@ -86,6 +86,17 @@ fun TmdbEntityBrowseScreen(
     onOpenMeta: (MetaPreview) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // LUXO: the redesigned company / channel page.
+    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().companiesRedesign) {
+        LuxoCompanyPage(
+            kind = if (entityKind == TmdbEntityKind.NETWORK) "network" else "company",
+            id = entityId,
+            fallbackName = entityName,
+            onBack = onBack,
+            onOpenMeta = onOpenMeta,
+        )
+        return
+    }
     var uiState by remember(entityKind, entityId) {
         mutableStateOf<EntityBrowseUiState>(EntityBrowseUiState.Loading)
     }

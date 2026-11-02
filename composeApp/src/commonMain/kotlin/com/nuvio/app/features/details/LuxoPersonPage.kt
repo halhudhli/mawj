@@ -70,7 +70,8 @@ private val PAccent2 = Color(0xFFFF7EB6)
 
 private enum class LuxoCreditKind(val label: String) { ALL("الكل"), MOVIES("أفلام"), SERIES("مسلسلات") }
 private enum class LuxoCreditSort(val label: String) { FAME("الأشهر"), RATING("الأعلى تقييماً"), NEWEST("الأحدث"), OLDEST("الأقدم") }
-private enum class LuxoRatingFloor(val label: String, val min: Double) { ANY("كل التقييمات", 0.0), SIX("+6", 6.0), SEVEN("+7", 7.0), EIGHT("+8", 8.0) }
+private enum class LuxoRatingFloor(val label: String, val min: Double) { ANY("كل التقييمات", 0.0), SIX("+6", 6.0), SEVEN("+7", 7.0), EIGHT("+8", 8.0), NINE("+9", 9.0) }
+private enum class LuxoWatchFilter(val label: String) { ALL("الكل"), WATCHED("تمت مشاهدته ✅"), UNWATCHED("لم تتم مشاهدته") }
 
 /**
  * The Luxo actor page: a big full photo (not a circle), «اشتهر بـ», best collaborators, and the
@@ -111,13 +112,29 @@ internal fun LuxoPersonPage(
     var kind by remember { mutableStateOf(LuxoCreditKind.ALL) }
     var sort by remember { mutableStateOf(LuxoCreditSort.FAME) }
     var floor by remember { mutableStateOf(LuxoRatingFloor.ANY) }
+    var watchFilter by remember { mutableStateOf(LuxoWatchFilter.ALL) }
+    var yearFilter by remember(person.tmdbId) { mutableStateOf<String?>(null) }
+    val isWatched = com.nuvio.app.features.luxo.rememberLuxoWatchedMatcher()
+    var awards by remember(person.tmdbId) { mutableStateOf<Pair<List<com.nuvio.app.features.luxo.LuxoAward>, Int>?>(null) }
+    LaunchedEffect(extras?.wikidataId) {
+        extras?.wikidataId?.let { awards = com.nuvio.app.features.luxo.LuxoAwards.load(it) }
+    }
+    val birthYear = person.birthday?.take(4)?.toIntOrNull()
     var viewer by remember { mutableStateOf<Pair<List<LuxoImage>, Int>?>(null) }
 
     val today = remember { CurrentDateProvider.todayIsoDate() }
     val credits = extras?.credits.orEmpty()
-    val filtered = remember(credits, sort, floor) {
+    val filtered = remember(credits, sort, floor, watchFilter, yearFilter, isWatched) {
         credits
             .filter { floor == LuxoRatingFloor.ANY || (it.rating >= floor.min && it.votes >= 20) }
+            .filter { yearFilter == null || it.year == yearFilter }
+            .filter {
+                when (watchFilter) {
+                    LuxoWatchFilter.ALL -> true
+                    LuxoWatchFilter.WATCHED -> isWatched(it)
+                    LuxoWatchFilter.UNWATCHED -> !isWatched(it)
+                }
+            }
             .let { list ->
                 when (sort) {
                     LuxoCreditSort.FAME -> list.sortedByDescending { it.votes }
@@ -181,6 +198,9 @@ internal fun LuxoPersonPage(
                     wide = wide,
                     today = today,
                     onPhoto = { photos, i -> viewer = photos to i },
+                    watchedCount = credits.count(isWatched),
+                    followed = com.nuvio.app.features.luxo.LuxoFollowedPeople.isFollowed(person.tmdbId),
+                    onFollow = { com.nuvio.app.features.luxo.LuxoFollowedPeople.toggle(person.tmdbId) },
                 )
             }
 
@@ -206,6 +226,39 @@ internal fun LuxoPersonPage(
                 }
             }
 
+            // Hidden gems: high rating, not widely seen.
+            val gems = credits.filter { it.rating >= 7.3 && it.votes in 40..1500 && it.poster != null }
+                .sortedByDescending { it.rating }.take(12)
+            if (gems.isNotEmpty()) {
+                full { Header("جواهر مخفية 💎") }
+                full {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(gems, key = { "gem:${it.mediaType}:${it.id}" }) { credit ->
+                            Box(Modifier.width(if (wide) 138.dp else 112.dp)) {
+                                CreditCard(credit, today, isWatched(credit), birthYear) { open(credit) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Rating across the years.
+            val curve = credits.filter { it.votes >= 20 && it.year != null }
+                .groupBy { it.year!! }
+                .mapValues { (_, list) -> list.sumOf { it.rating } / list.size }
+                .entries.sortedBy { it.key }.associate { it.key to it.value }
+            if (curve.size >= 3) {
+                full { Header("منحنى التقييم 📈") }
+                full { RatingCurve(curve) }
+            }
+
+            awards?.let { (wins, nominations) ->
+                if (wins.isNotEmpty() || nominations > 0) {
+                    full { Header("الجوائز 🏆") }
+                    full { AwardsBlock(wins, nominations) }
+                }
+            }
+
             full { Header("الأعمال 🎬") }
             full {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -226,6 +279,26 @@ internal fun LuxoPersonPage(
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("المشاهدة", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp, modifier = Modifier.width(56.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(LuxoWatchFilter.entries) { w -> Chip(w.label, watchFilter == w, small = true) { watchFilter = w } }
+                        }
+                    }
+                    // Career timeline: tap a year to see only that year.
+                    val years = credits.mapNotNull { it.year }.groupingBy { it }.eachCount()
+                        .entries.sortedByDescending { it.key }.associate { it.key to it.value }
+                    if (years.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("المسيرة", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp, modifier = Modifier.width(56.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                item { Chip("كل السنين", yearFilter == null, small = true) { yearFilter = null } }
+                                items(years.entries.toList(), key = { it.key }) { (y, n) ->
+                                    YearChip(y, n, years.values.max(), yearFilter == y, birthYear) { yearFilter = if (yearFilter == y) null else y }
+                                }
+                            }
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("التقييم", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp, modifier = Modifier.width(56.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(LuxoRatingFloor.entries) { f -> Chip(if (f == LuxoRatingFloor.ANY) f.label else "★ ${f.label}", floor == f, small = true) { floor = f } }
@@ -241,10 +314,10 @@ internal fun LuxoPersonPage(
                     }
                 }
             } else {
-                if (kind != LuxoCreditKind.SERIES) creditGrid("الأفلام", movies, today, ::open)
-                if (kind != LuxoCreditKind.MOVIES) creditGrid("المسلسلات", series, today, ::open)
+                if (kind != LuxoCreditKind.SERIES) creditGrid("الأفلام", movies, today, isWatched, birthYear, ::open)
+                if (kind != LuxoCreditKind.MOVIES) creditGrid("المسلسلات", series, today, isWatched, birthYear, ::open)
                 if (filtered.isEmpty()) {
-                    full { Text("ما فيه أعمال بهالفلتر", color = Color.White.copy(alpha = 0.6f), modifier = Modifier.padding(12.dp)) }
+                    full { Text("لا توجد أعمال بهذا الفلتر", color = Color.White.copy(alpha = 0.6f), modifier = Modifier.padding(12.dp)) }
                 }
             }
         }
@@ -263,12 +336,19 @@ private fun LazyGridScope.full(content: @Composable () -> Unit) {
     item(span = { GridItemSpan(maxLineSpan) }) { content() }
 }
 
-private fun LazyGridScope.creditGrid(title: String, list: List<LuxoCredit>, today: String, onOpen: (LuxoCredit) -> Unit) {
+private fun LazyGridScope.creditGrid(
+    title: String,
+    list: List<LuxoCredit>,
+    today: String,
+    isWatched: (LuxoCredit) -> Boolean,
+    birthYear: Int?,
+    onOpen: (LuxoCredit) -> Unit,
+) {
     if (list.isEmpty()) return
     full {
         Text("$title · ${list.size}", color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
     }
-    items(list, key = { "$title:${it.mediaType}:${it.id}" }) { credit -> CreditCard(credit, today) { onOpen(credit) } }
+    items(list, key = { "$title:${it.mediaType}:${it.id}" }) { credit -> CreditCard(credit, today, isWatched(credit), birthYear) { onOpen(credit) } }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -281,6 +361,9 @@ private fun PersonHero(
     wide: Boolean,
     today: String,
     onPhoto: (List<LuxoImage>, Int) -> Unit,
+    watchedCount: Int = 0,
+    followed: Boolean = false,
+    onFollow: () -> Unit = {},
 ) {
     val photos = extras?.photos.orEmpty()
     val photo = photos.firstOrNull()?.url("h632") ?: person.profilePhoto
@@ -323,7 +406,22 @@ private fun PersonHero(
                 if (m > 0) Fact("🎬 $m فيلم")
                 if (s > 0) Fact("📺 $s مسلسل")
                 avg?.let { Fact("★ ${(it * 10).toInt() / 10.0} متوسط أعماله") }
+                if (credits.isNotEmpty()) Fact("✅ تمت مشاهدة $watchedCount من ${credits.size}")
             }
+            Text(
+                if (followed) "🔔 تتم متابعته" else "🔔 متابعة الممثل",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(
+                        if (followed) Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.12f)))
+                        else Brush.horizontalGradient(listOf(PAccent1, PAccent2)),
+                    )
+                    .clickable(onClick = onFollow)
+                    .padding(horizontal = 18.dp, vertical = 9.dp),
+            )
             bio?.takeIf { it.isNotBlank() }?.let { text ->
                 var expanded by remember(text) { mutableStateOf(false) }
                 Text(
@@ -438,7 +536,7 @@ private fun CollaboratorCard(c: LuxoCollaborator, name: String, onClick: () -> U
 }
 
 @Composable
-private fun CreditCard(credit: LuxoCredit, today: String, onClick: () -> Unit) {
+private fun CreditCard(credit: LuxoCredit, today: String, watched: Boolean = false, birthYear: Int? = null, onClick: () -> Unit) {
     Column(Modifier.clickable(onClick = onClick)) {
         Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.06f))) {
             if (credit.poster != null) {
@@ -447,6 +545,26 @@ private fun CreditCard(credit: LuxoCredit, today: String, onClick: () -> Unit) {
                 Text(credit.title, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, modifier = Modifier.align(Alignment.Center).padding(8.dp))
             }
             if (credit.rating > 0 && credit.votes >= 5) RatingBadge(credit.rating, Modifier.align(Alignment.TopEnd).padding(6.dp))
+            if (watched) {
+                Text(
+                    "✓",
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                        .background(Color(0xFF3DDC97), androidx.compose.foundation.shape.CircleShape).padding(horizontal = 6.dp, vertical = 1.dp),
+                )
+            }
+            val age = birthYear?.let { b -> credit.year?.toIntOrNull()?.minus(b) }?.takeIf { it in 3..110 }
+            if (age != null) {
+                Text(
+                    "عمره $age",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.BottomStart).padding(6.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp),
+                )
+            }
             if ((credit.date ?: "") > today) {
                 Text(
                     "قريباً",
@@ -506,4 +624,99 @@ private fun ageLine(birthday: String, deathday: String?, today: String): String 
     var age = endYear - by
     if (endMd < birthday.drop(5)) age -= 1
     return if (deathday != null) "🕯️ $by – ${deathday.take(4)} ($age سنة)" else "🎂 $by · $age سنة"
+}
+
+
+@Composable
+private fun YearChip(year: String, count: Int, max: Int, selected: Boolean, birthYear: Int?, onClick: () -> Unit) {
+    val age = birthYear?.let { year.toIntOrNull()?.minus(it) }
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (selected) Brush.verticalGradient(listOf(PAccent1, PAccent2))
+                else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.07f), Color.White.copy(alpha = 0.07f))),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // A small bar: taller = busier year.
+        Box(
+            Modifier
+                .width(18.dp)
+                .height((6 + 22f * count / max.coerceAtLeast(1)).dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.White.copy(alpha = if (selected) 0.9f else 0.45f)),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(year, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(if (age != null && age in 3..110) "$count · $age سنة" else "$count", color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+    }
+}
+
+@Composable
+private fun RatingCurve(points: Map<String, Double>) {
+    val entries = points.entries.toList()
+    val best = entries.maxByOrNull { it.value }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        best?.let { Text("أقوى سنة: ${it.key} · ★ ${(it.value * 10).toInt() / 10.0}", color = Color.White.copy(alpha = 0.75f), fontSize = 13.sp) }
+        Spacer(Modifier.height(10.dp))
+        androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(140.dp)) {
+            val minV = 4.0
+            val maxV = 9.5
+            fun x(i: Int) = if (entries.size == 1) size.width / 2 else size.width * i / (entries.size - 1)
+            fun y(v: Double) = size.height * (1f - ((v.coerceIn(minV, maxV) - minV) / (maxV - minV)).toFloat())
+            // guide lines at 6, 7, 8
+            listOf(6.0, 7.0, 8.0).forEach { g ->
+                drawLine(Color.White.copy(alpha = 0.08f), androidx.compose.ui.geometry.Offset(0f, y(g)), androidx.compose.ui.geometry.Offset(size.width, y(g)), 1.5f)
+            }
+            val path = androidx.compose.ui.graphics.Path()
+            entries.forEachIndexed { i, e -> if (i == 0) path.moveTo(x(i), y(e.value)) else path.lineTo(x(i), y(e.value)) }
+            drawPath(path, Brush.horizontalGradient(listOf(PAccent1, PAccent2)), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+            entries.forEachIndexed { i, e ->
+                drawCircle(if (e == best) PAccent2 else Color.White, radius = if (e == best) 8f else 4.5f, center = androidx.compose.ui.geometry.Offset(x(i), y(e.value)))
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.fillMaxWidth()) {
+            Text(entries.first().key, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+            Spacer(Modifier.weight(1f))
+            Text(entries.last().key, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+private fun AwardsBlock(wins: List<com.nuvio.app.features.luxo.LuxoAward>, nominations: Int) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Fact("🏆 ${wins.size} جائزة")
+            if (nominations > 0) Fact("🎖️ $nominations ترشيح")
+            Fact("المصدر: ويكي بيانات")
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(wins.take(40), key = { it.name + it.year }) { a ->
+                Column(
+                    Modifier
+                        .width(200.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Brush.linearGradient(listOf(Color(0x33FFD27B), Color(0x14FFFFFF))))
+                        .border(1.dp, Color(0x55FFD27B), RoundedCornerShape(16.dp))
+                        .padding(12.dp),
+                ) {
+                    Text("🏆 " + (a.year ?: ""), color = Color(0xFFFFD27B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(a.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    a.forWork?.let { Text("عن: $it", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                }
+            }
+        }
+    }
 }

@@ -101,7 +101,7 @@ internal fun LuxoShareCardDialog(title: LuxoSavedTitle, onDismiss: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    Text(lx("شفته على Luxo", "Watched on Luxo"), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                    Text(lx("تمت مشاهدته على Luxo", "Watched on Luxo"), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

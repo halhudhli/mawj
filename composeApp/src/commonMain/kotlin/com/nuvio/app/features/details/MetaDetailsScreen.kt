@@ -2538,10 +2538,14 @@ private fun ConfiguredMetaSections(
             }
             MetaScreenSectionKey.PRODUCTION -> {
                 if (hasProductionSection) {
-                    DetailProductionSection(meta = meta, showHeader = showHeader, onCompanyClick = onCompanyClick)
+                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().companiesRedesign) {
+                        LuxoProductionSection(meta = meta, showHeader = showHeader, horizontalScrollPadding = horizontalScrollPadding, onCompanyClick = onCompanyClick)
+                    } else {
+                        DetailProductionSection(meta = meta, showHeader = showHeader, onCompanyClick = onCompanyClick)
+                    }
                 }
             }
-            MetaScreenSectionKey.CAST -> {
+            MetaScreenSectionKey.CAST -> androidx.compose.foundation.layout.Column {
                 DetailCastSection(
                     cast = meta.cast,
                     showHeader = showHeader,
@@ -2550,6 +2554,7 @@ private fun ConfiguredMetaSections(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
                 )
+
                 if (!hasTrailersSection) {
                     androidx.compose.foundation.layout.Spacer(Modifier.height(20.dp))
                     LuxoMediaHub(meta = meta, horizontalScrollPadding = horizontalScrollPadding, onTrailerClick = onTrailerClick)
@@ -2573,17 +2578,17 @@ private fun ConfiguredMetaSections(
             }
             MetaScreenSectionKey.TRAILERS -> {
                 if (hasTrailersSection) {
-                    DetailTrailersSection(
-                        trailers = meta.trailers,
-                        onTrailerClick = onTrailerClick,
-                        showHeader = showHeader,
-                        horizontalScrollPadding = horizontalScrollPadding,
-                    )
-                }
-                // LUXO: «الوسائط» — gallery, every video kind and the soundtrack, under the trailers.
-                if (hasTrailersSection) {
-                    androidx.compose.foundation.layout.Spacer(Modifier.height(20.dp))
-                    LuxoMediaHub(meta = meta, horizontalScrollPadding = horizontalScrollPadding, onTrailerClick = onTrailerClick)
+                    // LUXO: trailers live as the first tab of «الوسائط» (one block, nothing overlaps).
+                    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().mediaHub) {
+                        LuxoMediaHub(meta = meta, horizontalScrollPadding = horizontalScrollPadding, onTrailerClick = onTrailerClick, showHeader = showHeader)
+                    } else {
+                        DetailTrailersSection(
+                            trailers = meta.trailers,
+                            onTrailerClick = onTrailerClick,
+                            showHeader = showHeader,
+                            horizontalScrollPadding = horizontalScrollPadding,
+                        )
+                    }
                 }
             }
             MetaScreenSectionKey.EPISODES -> {

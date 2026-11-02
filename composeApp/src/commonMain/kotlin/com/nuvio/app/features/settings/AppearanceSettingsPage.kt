@@ -649,7 +649,7 @@ private fun LuxoLookControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("مانع الحرق", "Spoiler protection"),
         description = lx(
-            "يغبّش صورة وعنوان ووصف الحلقات اللي ما شفتها للحين",
+            "يغبّش صورة وعنوان ووصف الحلقات التي لم تتم مشاهدتها بعد",
             "Blurs the image, title and description of episodes you haven't watched yet",
         ),
         checked = metaScreen.blurUnwatchedEpisodes,

@@ -1,5 +1,7 @@
 package com.nuvio.app.features.details.components
 
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -167,6 +169,26 @@ private fun CastItem(
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop,
                 )
+            } else if (com.nuvio.app.features.luxo.rememberLuxoFeatures().companiesRedesign) {
+                // LUXO: an elegant silhouette (tinted by the role) instead of bare initials.
+                val tint = when {
+                    person.role?.contains("مخرج") == true || person.role?.contains("Direct", true) == true -> androidx.compose.ui.graphics.Color(0xFF8C7BFF)
+                    person.role?.contains("كاتب") == true || person.role?.contains("Writ", true) == true -> androidx.compose.ui.graphics.Color(0xFF4FC3F7)
+                    else -> androidx.compose.ui.graphics.Color(0xFFFF7EB6)
+                }
+                androidx.compose.foundation.layout.Box(
+                    Modifier.matchParentSize().background(
+                        androidx.compose.ui.graphics.Brush.linearGradient(listOf(tint.copy(alpha = 0.55f), tint.copy(alpha = 0.15f))),
+                    ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Rounded.Person,
+                        contentDescription = null,
+                        tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.fillMaxWidth(0.55f).aspectRatio(1f),
+                    )
+                }
             } else {
                 Text(
                     text = person.name.initials(),

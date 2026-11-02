@@ -160,7 +160,7 @@ internal fun LuxoDiaryCard(isTablet: Boolean, onPosterClick: ((MetaPreview) -> U
     var open by remember { mutableStateOf(false) }
     JournalCard(
         title = lx("مذكراتي 📔", "My diary 📔"),
-        subtitle = lx("${items.size} مشاهدة مرتبة بالتاريخ مع تقييمك وملاحظاتك", "${items.size} entries by date, with your stars and notes"),
+        subtitle = lx("${items.size} مشاهدة مرتبة بالتاريخ مع التقييم والملاحظات", "${items.size} entries by date, with your stars and notes"),
         emoji = "🗓️",
         isTablet = isTablet,
         onClick = { open = true },
@@ -392,8 +392,8 @@ internal fun LuxoWrappedCard(isTablet: Boolean) {
     var open by remember { mutableStateOf(false) }
     val year = civilOf(luxoTodayEpochDay()).year
     JournalCard(
-        title = lx("سنتك في Luxo ${LuxoDateStyle.digits(year.toString())} 🎬", "Your $year in Luxo 🎬"),
-        subtitle = lx("ملخص سنتك على شكل ستوريز، وكل صفحة تقدر تشاركها", "Your year as stories you can share"),
+        title = lx("السنة في Luxo ${LuxoDateStyle.digits(year.toString())} 🎬", "Your $year in Luxo 🎬"),
+        subtitle = lx("ملخص السنة على شكل ستوريز، وكل صفحة قابلة للمشاركة", "Your year as stories you can share"),
         emoji = "✨",
         isTablet = isTablet,
         onClick = { open = true },
@@ -431,7 +431,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
     val white = Color.White
     val slides = buildList {
         add(WrappedSlide(listOf(Color(0xFF2B1B5C), Color(0xFF7B2E8F))) {
-            WrappedBig(lx("سنتك في", "Your year in"), "Luxo", LuxoDateStyle.digits(year.toString()))
+            WrappedBig(lx("السنة في", "Your year in"), "Luxo", LuxoDateStyle.digits(year.toString()))
         })
         add(WrappedSlide(listOf(Color(0xFF0E4D64), Color(0xFF1D8A99))) {
             WrappedBig(lx("شاهدت", "You watched"), LuxoDateStyle.digits("${movies.size + shows.size}"), lx("عمل · ${movies.size} فيلم و ${shows.size} مسلسل", "titles · ${movies.size} movies, ${shows.size} shows"))
@@ -441,7 +441,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
         })
         if (genres.isNotEmpty()) add(WrappedSlide(listOf(Color(0xFF1B3D2B), Color(0xFF2A9D8F))) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(lx("ذوقك هالسنة", "Your top genres"), color = white.copy(alpha = 0.8f), fontSize = 20.sp)
+                Text(lx("الذوق هالسنة", "Your top genres"), color = white.copy(alpha = 0.8f), fontSize = 20.sp)
                 genres.forEachIndexed { i, g ->
                     Text("${i + 1}. $g", color = white, fontSize = if (i == 0) 40.sp else 28.sp, fontWeight = FontWeight.Black)
                 }
@@ -450,7 +450,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
         favorite?.let { fav ->
             add(WrappedSlide(listOf(Color(0xFF3B2414), Color(0xFFB8860B))) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(lx("أعلى تقييم عندك", "Your top rated"), color = white.copy(alpha = 0.8f), fontSize = 20.sp)
+                    Text(lx("الأعلى تقييماً", "Your top rated"), color = white.copy(alpha = 0.8f), fontSize = 20.sp)
                     AsyncImage(fav.title.poster, null, contentScale = ContentScale.Crop, modifier = Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(16.dp)))
                     Text(fav.title.name, color = white, fontSize = 24.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
                     Text("★ ${luxoStarsLabel(fav.score)}/5", color = Color(0xFFFFD86B), fontSize = 20.sp, fontWeight = FontWeight.Bold)

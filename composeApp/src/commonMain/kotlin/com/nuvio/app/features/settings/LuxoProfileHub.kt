@@ -208,6 +208,9 @@ internal fun LazyListScope.luxoProfileHubContent(
                 if (onProfileClick != null) {
                     add(LuxoHall(lx("ذوقي", "My taste"), lx("الإحصائيات والأوسمة وخريطة المشاهدة", "Stats, badges and your watch map"), Icons.Rounded.AutoAwesome, Color(0xFFB57BFF), onProfileClick, wide = true))
                 }
+                if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().franchises) {
+                    add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
+                }
                 add(LuxoHall(lx("الحساب", "Account"), lx("نوفيو والمزامنة", "Nuvio and sync"), Icons.Rounded.AccountCircle, Color(0xFF5CC8FF), onAccountClick))
                 if (onWatchPartyClick != null) {
                     add(LuxoHall(lx("سهرة جماعية", "Watch party"), lx("شاهد مع الأصدقاء", "Watch together"), Icons.Rounded.Groups, Color(0xFFFF7BA9), onWatchPartyClick))
@@ -529,7 +532,7 @@ private fun LuxoPassFront(stats: LuxoPassStats) {
                 fontSize = 22.sp,
             )
             Text(
-                lx("اضغط للقلب", "Tap to flip"),
+                lx("الضغط يقلب البطاقة", "Tap to flip"),
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 9.sp,
                 textAlign = TextAlign.Center,

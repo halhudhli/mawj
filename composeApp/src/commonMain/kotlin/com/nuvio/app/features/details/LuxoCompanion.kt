@@ -222,7 +222,7 @@ internal fun LuxoCompanionSheet(
                 if (messages.isEmpty()) {
                     item {
                         Text(
-                            "أهلاً! اختر سؤال جاهز أو اكتب سؤالك تحت 👇",
+                            "أهلاً! يمكن اختيار سؤال جاهز أو كتابة سؤال تحت 👇",
                             color = Color.White.copy(alpha = 0.6f),
                             modifier = Modifier.padding(vertical = 8.dp),
                         )

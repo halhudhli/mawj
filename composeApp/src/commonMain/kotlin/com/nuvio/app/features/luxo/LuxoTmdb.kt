@@ -28,15 +28,36 @@ data class LuxoImage(val path: String, val width: Int, val height: Int, val lang
     fun url(size: String) = "https://image.tmdb.org/t/p/$size$path"
 }
 
-data class LuxoTrack(val title: String, val artist: String, val durationSec: Int, val previewUrl: String?)
+data class LuxoTrack(
+    val title: String,
+    val artist: String,
+    val durationSec: Int,
+    val previewUrl: String?,
+    /** "Deezer", "Apple Music", "AnimeThemes". */
+    val source: String = "",
+    /** Opening/ending video (AnimeThemes). */
+    val videoUrl: String? = null,
+)
 
-data class LuxoSoundtrack(
-    val albumTitle: String,
+data class LuxoAlbum(
+    val title: String,
     val artist: String,
     val cover: String?,
     val link: String,
+    val source: String,
+    val year: String?,
     val tracks: List<LuxoTrack>,
 )
+
+/** Everything found for a title, merged from every source with duplicates removed. */
+data class LuxoSoundtrack(
+    /** Openings / endings / inserts (anime). */
+    val themes: List<LuxoTrack> = emptyList(),
+    val albums: List<LuxoAlbum> = emptyList(),
+) {
+    val isEmpty: Boolean get() = themes.isEmpty() && albums.all { it.tracks.isEmpty() }
+    val allTracks: List<LuxoTrack> get() = themes + albums.flatMap { it.tracks }
+}
 
 data class LuxoMediaBundle(
     val backdrops: List<LuxoImage> = emptyList(),
@@ -49,6 +70,14 @@ data class LuxoMediaBundle(
     /** Title in the work's own language (Turkish, Korean, Japanese…) and that language's code. */
     val originalTitle: String? = null,
     val originalLanguage: String? = null,
+    /** Composers credited on TMDB (used to verify soundtrack albums). */
+    val composers: List<String> = emptyList(),
+    val isAnime: Boolean = false,
+    val tmdbId: String? = null,
+    val mediaType: String? = null,
+    /** TMDB collection the movie belongs to (for the «السلاسل» banner). */
+    val collectionId: Int? = null,
+    val collectionName: String? = null,
 )
 
 data class LuxoCredit(
@@ -63,6 +92,8 @@ data class LuxoCredit(
     val popularity: Double,
     val role: String?,
     val episodes: Int?,
+    /** English title (for matching the watch history). */
+    val enTitle: String? = null,
 ) {
     val year: String? get() = date?.take(4)?.takeIf { it.length == 4 }
     val metaId: String get() = "tmdb:$id"
@@ -80,6 +111,7 @@ data class LuxoPersonExtras(
     val imdbId: String? = null,
     val englishName: String? = null,
     val englishBiography: String? = null,
+    val wikidataId: String? = null,
 )
 
 /* ─────────────── Fetching ─────────────── */
@@ -88,14 +120,13 @@ object LuxoTmdb {
     private val json = Json { ignoreUnknownKeys = true }
     private val mediaCache = mutableMapOf<String, LuxoMediaBundle>()
     private val personCache = mutableMapOf<Int, LuxoPersonExtras>()
-    private val soundtrackCache = mutableMapOf<String, LuxoSoundtrack?>()
     private val gate = Semaphore(5)
 
-    private fun JsonElement?.obj(): JsonObject? = this as? JsonObject
-    private fun JsonObject.str(key: String): String? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
-    private fun JsonObject.int(key: String): Int? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.intOrNull
-    private fun JsonObject.dbl(key: String): Double? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.doubleOrNull
-    private fun JsonObject.arr(key: String): List<JsonObject> = (this[key] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
+    internal fun JsonElement?.obj(): JsonObject? = this as? JsonObject
+    internal fun JsonObject.str(key: String): String? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
+    internal fun JsonObject.int(key: String): Int? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.intOrNull
+    internal fun JsonObject.dbl(key: String): Double? = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.doubleOrNull
+    internal fun JsonObject.arr(key: String): List<JsonObject> = (this[key] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
 
     private suspend fun tmdb(endpoint: String, query: Map<String, String> = emptyMap()): JsonObject? {
         val apiKey = TmdbSettingsRepository.effectiveApiKey().takeIf { it.isNotBlank() } ?: return null
@@ -104,7 +135,7 @@ object LuxoTmdb {
         }
     }
 
-    private suspend fun web(url: String): JsonObject? =
+    internal suspend fun web(url: String): JsonObject? =
         runCatching { json.parseToJsonElement(httpGetText(url)) as? JsonObject }.getOrNull()
 
     private fun images(list: List<JsonObject>): List<LuxoImage> = list.mapNotNull { o ->
@@ -123,6 +154,7 @@ object LuxoTmdb {
             val imagesD = async { tmdb("$mediaType/$tmdbId/images", mapOf("include_image_language" to "ar,en,null,ja,ko")) }
             val videosD = async { tmdb("$mediaType/$tmdbId/videos", mapOf("include_video_language" to "ar,en,null")) }
             val detailD = async { tmdb("$mediaType/$tmdbId", mapOf("language" to "en-US")) }
+            val creditsD = async { tmdb(if (mediaType == "tv") "tv/$tmdbId/aggregate_credits" else "movie/$tmdbId/credits") }
             val imagesJ = imagesD.await()
             val videosJ = videosD.await()
             val detailJ = detailD.await()
@@ -152,6 +184,16 @@ object LuxoTmdb {
                 year = detailJ?.str(if (mediaType == "movie") "release_date" else "first_air_date")?.take(4),
                 originalTitle = detailJ?.str(if (mediaType == "movie") "original_title" else "original_name"),
                 originalLanguage = detailJ?.str("original_language"),
+                composers = creditsD.await()?.arr("crew").orEmpty().filter { c ->
+                    val jobs = listOfNotNull(c.str("job")) + ((c["jobs"] as? JsonArray)?.mapNotNull { (it as? JsonObject)?.str("job") }.orEmpty())
+                    jobs.any { it == "Original Music Composer" || it == "Music" || it == "Composer" || it == "Theme Song Performance" }
+                }.mapNotNull { it.str("name") }.distinct().take(6),
+                isAnime = detailJ?.str("original_language") == "ja" &&
+                    (detailJ["genres"] as? JsonArray)?.any { (it as? JsonObject)?.int("id") == 16 } == true,
+                tmdbId = tmdbId,
+                mediaType = mediaType,
+                collectionId = (detailJ?.get("belongs_to_collection") as? JsonObject)?.int("id"),
+                collectionName = (detailJ?.get("belongs_to_collection") as? JsonObject)?.str("name"),
             )
             mediaCache[cacheKey] = bundle
             bundle
@@ -195,6 +237,7 @@ object LuxoTmdb {
                 imdbId = socials?.str("imdb_id"),
                 englishName = en?.str("name"),
                 englishBiography = en?.str("biography"),
+                wikidataId = socials?.str("wikidata_id"),
             )
             personCache[personId] = extras
             extras
@@ -226,6 +269,7 @@ object LuxoTmdb {
                 popularity = c.dbl("popularity") ?: 0.0,
                 role = role,
                 episodes = c.int("episode_count"),
+                enTitle = enTitles[id],
             ),
             self,
         )
@@ -271,94 +315,7 @@ object LuxoTmdb {
             }
     }
 
-    /**
-     * Official soundtrack album from Deezer (free, no key) with 30-second previews. Searched first
-     * with the title in the work's own language (a Turkish series by its Turkish name, a K-drama by
-     * its Korean name…) and the words that language uses for a soundtrack, then in English.
-     */
-    suspend fun soundtrack(
-        title: String,
-        year: String?,
-        isSeries: Boolean,
-        originalTitle: String? = null,
-        originalLanguage: String? = null,
-    ): LuxoSoundtrack? = withContext(Dispatchers.Default) {
-        val cacheKey = "$title:$originalTitle:$year"
-        if (soundtrackCache.containsKey(cacheKey)) return@withContext soundtrackCache[cacheKey]
-        val native = originalTitle?.takeIf { originalLanguage != null && originalLanguage != "en" && it != title }
-        val nativeWords = when (originalLanguage) {
-            "tr" -> listOf(if (isSeries) "dizi müzikleri" else "film müzikleri", "orijinal", "müzik")
-            "ko" -> listOf("OST", "드라마", "사운드트랙")
-            "ja" -> listOf("サウンドトラック", "オリジナル", "OST")
-            "zh", "cn" -> listOf("原声", "OST")
-            "es" -> listOf("banda sonora", "BSO")
-            "fr" -> listOf("bande originale", "BO")
-            "it" -> listOf("colonna sonora")
-            "de" -> listOf("soundtrack", "filmmusik")
-            "pt" -> listOf("trilha sonora")
-            "hi" -> listOf("soundtrack", "songs")
-            else -> listOf("soundtrack", "OST")
-        }
-        // (search text, title the album must contain)
-        val searches = buildList {
-            if (native != null) {
-                nativeWords.take(2).forEach { add("$native $it" to native) }
-                add(native to native)
-            }
-            add("$title ${if (isSeries) "original series soundtrack" else "original motion picture soundtrack"}" to title)
-            add("$title soundtrack" to title)
-            add("$title original score" to title)
-        }
-        val keywords = listOf(
-            "soundtrack", "original", "score", "music from", "ost", "motion picture", "series", "season",
-        ) + nativeWords.map { normalize(it) }
-        var best: Pair<Int, JsonObject>? = null
-        for ((q, mustContain) in searches) {
-            val clean = normalize(mustContain)
-            if (clean.isBlank()) continue
-            val res = web("https://api.deezer.com/search/album?limit=15&q=${urlEncode(q)}") ?: continue
-            res.arr("data").forEach { album ->
-                val albumTitle = album.str("title") ?: return@forEach
-                val norm = normalize(albumTitle)
-                if (!norm.contains(clean)) return@forEach
-                var score = 0
-                if (keywords.any { it.isNotBlank() && norm.contains(it) }) score += 3
-                if (norm.startsWith(clean)) score += 1
-                if (mustContain == native) score += 1
-                if (norm.contains("karaoke") || norm.contains("tribute") || norm.contains("cover") || norm.contains("inspired")) score -= 5
-                // Native-title search: an album named exactly after the series is usually its music too.
-                if (mustContain == native && score >= 2 && norm == clean) score += 1
-                val needed = if (mustContain == native) 2 else 3
-                if (score >= needed && (best == null || score > best!!.first)) best = score to album
-            }
-            if (best != null) break
-        }
-        val album = best?.second
-        val result = album?.let { a ->
-            val albumId = a.int("id") ?: return@let null
-            val tracksJ = web("https://api.deezer.com/album/$albumId/tracks?limit=100")
-            val tracks = tracksJ?.arr("data").orEmpty().mapNotNull { t ->
-                LuxoTrack(
-                    title = t.str("title") ?: return@mapNotNull null,
-                    artist = t["artist"].obj()?.str("name").orEmpty(),
-                    durationSec = t.int("duration") ?: 0,
-                    previewUrl = t.str("preview"),
-                )
-            }
-            if (tracks.isEmpty()) return@let null
-            LuxoSoundtrack(
-                albumTitle = a.str("title").orEmpty(),
-                artist = a["artist"].obj()?.str("name").orEmpty(),
-                cover = a.str("cover_xl") ?: a.str("cover_big"),
-                link = a.str("link") ?: "https://www.deezer.com/album/$albumId",
-                tracks = tracks,
-            )
-        }
-        soundtrackCache[cacheKey] = result
-        result
-    }
-
-    private fun normalize(s: String): String =
+    internal fun normalize(s: String): String =
         s.lowercase().replace(Regex("[^\\p{L}\\p{N} ]"), " ").replace(Regex("\\s+"), " ").trim()
 }
 

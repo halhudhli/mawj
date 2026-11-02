@@ -198,7 +198,8 @@ private fun CountdownRing(days: Long, modifier: Modifier, stroke: Float = 5f) {
 
 @Composable
 private fun rememberUpcoming(classify: Boolean = true): List<LibraryUpcomingEpisode> {
-    val episodes by remember { libraryUpcomingEpisodesFlow(days = 90) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val range = LuxoCountdownRange.days
+    val episodes by remember(range) { libraryUpcomingEpisodesFlow(days = LuxoCountdownRange.effective()) }.collectAsStateWithLifecycle(initialValue = emptyList())
     // Classify new series in the background, once.
     LaunchedEffect(episodes.map { it.item.seriesKey() }.distinct(), classify) {
         if (!classify) return@LaunchedEffect
@@ -248,7 +249,8 @@ internal object LuxoHomeStripPicks {
 
 @Composable
 private fun rememberStripEntries(): List<StripEntry> {
-    val episodes = rememberUpcoming(classify = false)
+    // TV: no background classification on Home (it froze weak boxes). Tablet: as before.
+    val episodes = rememberUpcoming(classify = !luxoIsTv())
     val world by LuxoWorldCountdown.items.collectAsStateWithLifecycle()
     val today = remember { luxoTodayEpochDay() }
     return remember(episodes, world) {
@@ -285,9 +287,9 @@ private fun rememberStripEntries(): List<StripEntry> {
 internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifier = Modifier) {
     if (!rememberLuxoFeatures().countdown) return
     val picks = LuxoHomeStripPicks.picks
-    // The world schedule is heavy: only load it on Home when a world show was picked.
+    // TV: the world schedule only loads on Home when a world show was picked. Tablet: always, as before.
     LaunchedEffect(picks.any { !it.startsWith("lib:") }) {
-        if (picks.any { !it.startsWith("lib:") }) LuxoWorldCountdown.refresh()
+        if (!luxoIsTv() || picks.any { !it.startsWith("lib:") }) LuxoWorldCountdown.refresh()
     }
     val entries = rememberStripEntries()
     var pageOpen by remember { mutableStateOf(false) }
@@ -319,7 +321,7 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
         }
         if (shown.isEmpty()) {
             Text(
-                lx("اختر المسلسلات اللي تبيها هنا من «✎ اختيار»", "Pick the shows to show here with “✎ Choose”"),
+                lx("يتم اختيار المسلسلات من «✎ اختيار»", "Pick the shows to show here with “✎ Choose”"),
                 color = tokens.colors.textMuted,
                 fontSize = 13.sp,
                 modifier = Modifier.clip(RoundedCornerShape(14.dp)).clickable { picking = true }.padding(vertical = 8.dp),
@@ -383,7 +385,7 @@ private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(lx("مسلسلات الشريط في الرئيسية", "Shows on the Home strip"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text(
-                        if (picks.isEmpty()) lx("الحين تلقائي: متابعاتك الأقرب موعداً", "Automatic: your followed shows") else lx("${picks.size} مختار", "${picks.size} chosen"),
+                        if (picks.isEmpty()) lx("الحين تلقائي: المتابَعات الأقرب موعداً", "Automatic: your followed shows") else lx("${picks.size} مختار", "${picks.size} chosen"),
                         fontSize = 12.sp,
                         color = tokens.colors.textMuted,
                     )
@@ -472,7 +474,7 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
                     Column(Modifier.weight(1f)) {
                         Text(lx("العد التنازلي ⏳", "Countdown ⏳"), fontWeight = FontWeight.Black, fontSize = 26.sp, color = tokens.colors.textPrimary)
                         Text(
-                            lx("${episodes.size} حلقة جاية خلال 3 شهور · اضغط مطولاً على أي عمل لنقله لقسم", "${episodes.size} upcoming episodes · long-press a show to move it"),
+                            lx("${episodes.size} حلقة قادمة خلال ${LuxoCountdownRange.label(LuxoCountdownRange.days)} · الضغط المطوّل على أي عمل ينقله لقسم", "${episodes.size} upcoming episodes · long-press a show to move it"),
                             fontSize = 12.sp,
                             color = tokens.colors.textMuted,
                         )
@@ -496,6 +498,29 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
                                 .background(if (worldMode == mode) Brush.horizontalGradient(accents) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)))
                                 .clickable { worldMode = mode }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+                // How far ahead: one week up to six months.
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(lx("المدة", "Range"), color = tokens.colors.textMuted, fontSize = 12.sp)
+                    LuxoCountdownRange.options.forEach { d ->
+                        val on = LuxoCountdownRange.days == d
+                        val capped = luxoLiteMode() && d > 60
+                        Text(
+                            LuxoCountdownRange.label(d) + if (capped) " · 60" else "",
+                            color = if (on) Color.White else tokens.colors.textPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (on) Brush.horizontalGradient(accents) else Brush.horizontalGradient(listOf(tokens.colors.surface, tokens.colors.surface)))
+                                .clickable { LuxoCountdownRange.set(d) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         )
                     }
                 }

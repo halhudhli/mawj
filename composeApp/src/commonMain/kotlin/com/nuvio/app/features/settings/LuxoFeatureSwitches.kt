@@ -32,6 +32,21 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     )
     val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(
+            lx("السلاسل 🎞️", "Franchises 🎞️"),
+            lx("كتالوج الأعمال اللي لها أكثر من جزء: أفلام ومسلسلات وأنمي، بترتيب المشاهدة وعلامة على اللي تمت مشاهدته", "Multi-part works: movies, series and anime, in watch order with what's been watched"),
+            { it.franchises }, { f, v -> f.copy(franchises = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("القنوات وشركات الإنتاج بتصميم Luxo 🏢", "Luxo channels and companies 🏢"),
+            lx("بطاقات داكنة بشعارات واضحة، وصفحة جديدة لكل شركة فيها الأفلام والمسلسلات مع ترتيب وفلتر تقييم", "Dark cards with clear logos and a new page per company with sorting and a rating filter"),
+            { it.companiesRedesign }, { f, v -> f.copy(companiesRedesign = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حفظ الصور ⬇", "Save images ⬇"),
+            lx("زر في عارض الخلفيات والملصقات يحفظ الصورة بدقتها الأصلية في الاستوديو", "A button in the image viewer that saves the original to the gallery"),
+            { it.saveImages }, { f, v -> f.copy(saveImages = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("ألوان الصورة في المشغل 🎨", "Picture colours in the player 🎨"),
             lx("تعديلات جاهزة (ذكي، زاهي، طبيعي، سينما، إنقاذ HDR…) وتعديل يدوي للإضاءة والتباين والتشبع، للشاشات اللي ما تدعم HDR", "Ready looks (smart, vivid, natural, cinema, HDR rescue…) plus manual brightness, contrast and saturation for screens without HDR"),
             { it.videoColors }, { f, v -> f.copy(videoColors = v) },
@@ -83,7 +98,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("طابور الاستكشاف 🧭", "Discovery queue 🧭"),
-            lx("كروت تسحبها يمين للي يعجبك ويسار للي ما يعجبك، واللي يعجبك ينحفظ في قائمة", "Swipe right to keep, left to skip; kept titles go to a list"),
+            lx("كروت تُسحب يميناً للإعجاب ويساراً للتخطي، والمعجَب به ينحفظ في قائمة", "Swipe right to keep, left to skip; kept titles go to a list"),
             { it.discoveryQueue }, { f, v -> f.copy(discoveryQueue = v) },
         ),
         LuxoFeatureSwitch(
@@ -128,7 +143,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("تكرار مقطع (A-B)", "A-B loop"),
-            lx("حدد بداية ونهاية مقطع ويعيده تلقائياً", "Mark a start and end and it repeats"),
+            lx("تحديد بداية ونهاية مقطع ليتكرر تلقائياً", "Mark a start and end and it repeats"),
             { it.playerAbLoop }, { f, v -> f.copy(playerAbLoop = v) },
         ),
         LuxoFeatureSwitch(
@@ -138,12 +153,12 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("العد التنازلي للحلقات ⏳", "Episode countdown ⏳"),
-            lx("في الرئيسية، وصفحة كاملة مقسّمة: كيدراما، أجنبي، أنمي، وأقسامك الخاصة", "On Home, plus a full page split into K-drama, international, anime and your own sections"),
+            lx("في الرئيسية، وصفحة كاملة مقسّمة: كيدراما، أجنبي، أنمي، وأقسام مخصصة", "On Home, plus a full page split into K-drama, international, anime and your own sections"),
             { it.countdown }, { f, v -> f.copy(countdown = v) },
         ),
         LuxoFeatureSwitch(
             lx("مذكراتي 📔", "My diary 📔"),
-            lx("كل مشاهداتك بالتاريخ مع تقييمك وملاحظتك، في صفحة «ذوقي»", "Everything you watched by date, in My taste"),
+            lx("كل المشاهدات بالتاريخ مع التقييم والملاحظة، في صفحة «ذوقي»", "Everything you watched by date, in My taste"),
             { it.diary }, { f, v -> f.copy(diary = v) },
         ),
         LuxoFeatureSwitch(
@@ -152,8 +167,8 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.challenge }, { f, v -> f.copy(challenge = v) },
         ),
         LuxoFeatureSwitch(
-            lx("سنتك في Luxo 🎬", "Your year in Luxo 🎬"),
-            lx("ملخص السنة على شكل ستوريز تقدر تشاركها", "Your year as shareable stories"),
+            lx("السنة في Luxo 🎬", "Your year in Luxo 🎬"),
+            lx("ملخص السنة على شكل ستوريز قابلة للمشاركة", "Your year as shareable stories"),
             { it.wrapped }, { f, v -> f.copy(wrapped = v) },
         ),
         LuxoFeatureSwitch(
@@ -173,7 +188,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("استوديو الثيمات", "Theme studio"),
-            lx("ألوان Luxo الجاهزة وتركيب ألوانك ومشاركتها بكود", "Luxo palettes, your own mix and a shareable code"),
+            lx("ألوان Luxo الجاهزة وتركيب ألوان خاصة ومشاركتها بكود", "Luxo palettes, your own mix and a shareable code"),
             { it.themeStudio }, { f, v -> f.copy(themeStudio = v) },
         ),
     )
@@ -185,6 +200,22 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
                     selected = features.glowLevel == level,
                     onClick = { LuxoFeaturesRepository.update { it.copy(glowLevel = level) } },
                     label = { androidx.compose.material3.Text(label) },
+                )
+            }
+        }
+    }
+    LuxoBlock(isTablet) {
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.FilterChip(
+                selected = false,
+                onClick = { com.nuvio.app.features.luxo.LuxoOverlays.traktDoctor = true },
+                label = { androidx.compose.material3.Text(lx("🩺 فاحص Trakt", "🩺 Trakt doctor")) },
+            )
+            if (features.franchises) {
+                androidx.compose.material3.FilterChip(
+                    selected = false,
+                    onClick = { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" },
+                    label = { androidx.compose.material3.Text(lx("🎞️ السلاسل", "🎞️ Franchises")) },
                 )
             }
         }

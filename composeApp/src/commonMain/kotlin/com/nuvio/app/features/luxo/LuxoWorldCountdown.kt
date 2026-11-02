@@ -72,6 +72,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * World countdown: the next episode of every airing series, from three sources merged without
@@ -98,6 +99,7 @@ internal object LuxoWorldCountdown {
     private val _items = MutableStateFlow<List<LuxoAiring>?>(null)
     val items: StateFlow<List<LuxoAiring>?> = _items.asStateFlow()
     private var loadedAt = 0L
+    private var loadedDays = 0
     private var loading = false
 
     private val excludedCountries = setOf(
@@ -121,8 +123,10 @@ internal object LuxoWorldCountdown {
 
     private suspend fun refreshOffMain(force: Boolean) {
         if (loading) return
-        if (!force && _items.value != null && now() - loadedAt < 3 * 3_600_000L) return
+        val days = LuxoCountdownRange.effective()
+        if (!force && _items.value != null && loadedDays == days && now() - loadedAt < 3 * 3_600_000L) return
         loading = true
+        rangeEndMs = now() + days * 86_400_000L
         try {
             val tvmaze = runCatching { fromTvmaze() }.getOrDefault(emptyList())
             // Show TVmaze straight away, then merge the others in as they arrive.
@@ -132,17 +136,21 @@ internal object LuxoWorldCountdown {
             val simkl = runCatching { fromSimkl() }.getOrDefault(emptyList())
             merge(tvmaze + trakt + simkl)
             loadedAt = now()
+            loadedDays = days
         } finally {
             loading = false
         }
     }
 
     /** Keep the earliest upcoming episode per series; sources earlier in the list win ties. */
+    private var rangeEndMs = Long.MAX_VALUE
+
     private fun merge(all: List<LuxoAiring>) {
         val now = now()
+        val end = rangeEndMs
         val seen = mutableMapOf<String, LuxoAiring>()
         val byIds = mutableMapOf<String, String>()
-        all.filter { it.airMs > now - 3_600_000L && !isExcluded(it.country, it.language) }.forEach { item ->
+        all.filter { it.airMs > now - 3_600_000L && it.airMs <= end && !isExcluded(it.country, it.language) }.forEach { item ->
             val ids = listOfNotNull(
                 item.imdb?.let { "imdb:$it" },
                 item.tmdb?.let { "tmdb:$it" },
@@ -200,7 +208,9 @@ internal object LuxoWorldCountdown {
     // --- TVmaze: free, exact airstamp, country and language on every show.
     private suspend fun fromTvmaze(): List<LuxoAiring> = coroutineScope {
         val gate = Semaphore(3) // TVmaze allows ~20 calls / 10 s
-        val urls = (0..4).flatMap { day ->
+        // Daily schedules: two weeks on a tablet, five days on a TV in light mode (one call per day and country).
+        val tvmazeDays = if (luxoLiteMode()) 5 else LuxoCountdownRange.effective().coerceAtMost(14)
+        val urls = (0 until tvmazeDays).flatMap { day ->
             val date = isoDate(day)
             listOf("US", "GB", "KR", "JP", "CA", "AU").map { "https://api.tvmaze.com/schedule?country=$it&date=$date" } +
                 "https://api.tvmaze.com/schedule/web?date=$date"
@@ -245,10 +255,15 @@ internal object LuxoWorldCountdown {
     // --- Trakt: used when a Trakt client id is configured for the build.
     private suspend fun fromTrakt(): List<LuxoAiring> {
         if (TraktConfig.CLIENT_ID.isBlank()) return emptyList()
-        val root = get(
-            "https://api.trakt.tv/calendars/all/shows/${isoDate(0)}/14?extended=full",
-            mapOf("trakt-api-key" to TraktConfig.CLIENT_ID, "trakt-api-version" to "2"),
-        ) as? JsonArray ?: return emptyList()
+        // Trakt gives up to 31 days per call, so 6 months = 6 calls.
+        val total = LuxoCountdownRange.effective()
+        val root = (0 until total step 31).flatMap { start ->
+            val span = (total - start).coerceAtMost(31)
+            (get(
+                "https://api.trakt.tv/calendars/all/shows/${isoDate(start)}/$span?extended=full",
+                mapOf("trakt-api-key" to TraktConfig.CLIENT_ID, "trakt-api-version" to "2"),
+            ) as? JsonArray).orEmpty()
+        }
         return root.mapNotNull { element ->
             val obj = element.obj() ?: return@mapNotNull null
             val show = obj["show"].obj() ?: return@mapNotNull null
@@ -275,9 +290,11 @@ internal object LuxoWorldCountdown {
     }
 
     // --- Simkl: public calendar files (no key). No country, so anime is JP and TV is filled in by the merge.
-    private suspend fun fromSimkl(): List<LuxoAiring> = listOf(
-        "https://data.simkl.in/calendar/anime.json" to true,
-    ).flatMap { (url, anime) ->
+    private suspend fun fromSimkl(): List<LuxoAiring> = (
+        listOf("https://data.simkl.in/calendar/anime.json" to true) +
+            // The general TV file is big: tablets only.
+            (if (luxoLiteMode()) emptyList() else listOf("https://data.simkl.in/calendar/tv.json" to false))
+        ).flatMap { (url, anime) ->
         (get(url) as? JsonArray).orEmpty().mapNotNull { element ->
             val obj = element.obj() ?: return@mapNotNull null
             val airMs = obj.str("date")?.let { runCatching { Instant.parse(it).toEpochMilliseconds() }.getOrNull() } ?: return@mapNotNull null
@@ -356,7 +373,9 @@ internal fun LuxoWorldCountdownContent(onOpen: (MetaPreview) -> Unit, modifier: 
     val items by LuxoWorldCountdown.items.collectAsStateWithLifecycle()
     var selected by remember { mutableStateOf("ALL") }
     var now by remember { mutableLongStateOf(Clock.System.now().toEpochMilliseconds()) }
-    LaunchedEffect(Unit) { LuxoWorldCountdown.refresh() }
+    LaunchedEffect(LuxoCountdownRange.days) { LuxoWorldCountdown.refresh() }
+    // Longer ranges read better by time: this week, this month, next month, then month by month.
+    var byTime by remember(LuxoCountdownRange.days) { mutableStateOf(LuxoCountdownRange.days > 30) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(1_000L)
@@ -370,18 +389,31 @@ internal fun LuxoWorldCountdownContent(onOpen: (MetaPreview) -> Unit, modifier: 
         LuxoSkeletonList(modifier = modifier.padding(16.dp))
         return
     }
-    val grouped = list.groupBy { it.sectionId() }
-    val sectionIds = grouped.keys.sortedWith(compareBy({ sectionOrder.indexOf(it).let { i -> if (i < 0) 99 else i } }, { -(grouped[it]?.size ?: 0) }))
+    val grouped = if (byTime) list.groupBy { luxoTimeBucket(it.airMs, now) } else list.groupBy { it.sectionId() }
+    val sectionIds = if (byTime) grouped.keys.sorted() else
+        grouped.keys.sortedWith(compareBy({ sectionOrder.indexOf(it).let { i -> if (i < 0) 99 else i } }, { -(grouped[it]?.size ?: 0) }))
+    @Composable
+    fun groupLabel(id: String): String = if (id.startsWith("T")) luxoTimeBucketLabel(id) else sectionLabel(id)
     Column(modifier) {
         Row(
             Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            Text(
+                if (byTime) lx("🕐 حسب الوقت", "🕐 By time") else lx("🌍 حسب الدولة", "🌍 By country"),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Brush.horizontalGradient(accents))
+                    .clickable { byTime = !byTime; selected = "ALL" }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            )
             (listOf("ALL") + sectionIds).forEach { id ->
                 val isOn = id == selected
                 val count = if (id == "ALL") list.size else grouped[id]?.size ?: 0
                 Text(
-                    text = (if (id == "ALL") lx("الكل", "All") else sectionLabel(id)) + "  " + LuxoDateStyle.digits("$count"),
+                    text = (if (id == "ALL") lx("الكل", "All") else groupLabel(id)) + "  " + LuxoDateStyle.digits("$count"),
                     color = if (isOn) Color.White else tokens.colors.textPrimary,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
@@ -413,7 +445,7 @@ internal fun LuxoWorldCountdownContent(onOpen: (MetaPreview) -> Unit, modifier: 
                         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(9.dp).clip(CircleShape).background(Brush.linearGradient(accents)))
                             Spacer(Modifier.width(8.dp))
-                            Text(sectionLabel(sectionId), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = tokens.colors.textPrimary)
+                            Text(groupLabel(sectionId), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = tokens.colors.textPrimary)
                             Spacer(Modifier.weight(1f))
                             Text(LuxoDateStyle.digits("${sectionItems.size}"), color = tokens.colors.textMuted)
                         }
@@ -474,3 +506,34 @@ internal fun LuxoWorldCountdownContent(onOpen: (MetaPreview) -> Unit, modifier: 
     }
 }
 
+
+
+/** Sortable time bucket ids: T0 this week, T1 this month, T2 next month, T3yyyy-mm later months. */
+internal fun luxoTimeBucket(airMs: Long, nowMs: Long): String {
+    val days = (airMs - nowMs) / 86_400_000L
+    return when {
+        days < 7 -> "T0"
+        days < 30 -> "T1"
+        days < 60 -> "T2"
+        else -> {
+            val ld = kotlin.time.Instant.fromEpochMilliseconds(airMs)
+                .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+            "T3" + ld.year + "-" + (ld.month.ordinal + 1).toString().padStart(2, '0')
+        }
+    }
+}
+
+@Composable
+internal fun luxoTimeBucketLabel(id: String): String = when {
+    id == "T0" -> lx("هذا الأسبوع", "This week")
+    id == "T1" -> lx("هذا الشهر", "This month")
+    id == "T2" -> lx("الشهر القادم", "Next month")
+    id.startsWith("T3") -> {
+        val parts = id.removePrefix("T3").split("-")
+        val m = parts.getOrNull(1)?.toIntOrNull() ?: 1
+        val ar = listOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
+        val en = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+        lx("${ar[m - 1]} ${parts[0]}", "${en[m - 1]} ${parts[0]}")
+    }
+    else -> id
+}

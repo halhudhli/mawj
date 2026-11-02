@@ -188,7 +188,7 @@ internal fun LuxoVideoColorPanel(visible: Boolean, onDismiss: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text("ألوان الصورة 🎨", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        if (isHdr) "الفيديو هذا HDR · جرّب «ذكي» أو «إنقاذ HDR»" else "التغيير يظهر على الفيديو مباشرة",
+                        if (isHdr) "الفيديو HDR · يُنصح بـ «ذكي» أو «إنقاذ HDR»" else "التغيير يظهر على الفيديو مباشرة",
                         color = Color.White.copy(alpha = 0.6f),
                         fontSize = 12.sp,
                     )
@@ -245,7 +245,7 @@ internal fun LuxoVideoColorPanel(visible: Boolean, onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("احفظ الشكل لكل الفيديوهات", color = Color.White, fontSize = 14.sp)
-                    Text("لو طفيته يرجع الأصلي في المرة الجاية", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+                    Text("عند الإيقاف يرجع الأصلي في المرة الجاية", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
                 }
                 Switch(checked = color.remember, onCheckedChange = { v -> LuxoVideoColorRepository.update { it.copy(remember = v) } })
             }

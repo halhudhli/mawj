@@ -132,7 +132,7 @@ internal fun LuxoListsScreen(
         if (rated.isNotEmpty()) {
             item(key = "rated") {
                 LuxoListRow(
-                    title = lx("⭐  أفضل اللي شفته", "⭐  My top rated"),
+                    title = lx("⭐  الأعلى تقييماً من المشاهدات", "⭐  My top rated"),
                     count = rated.size,
                     items = rated.map { it.title },
                     badges = rated.associate { LuxoUserData.key(it.title.type, it.title.id) to luxoStarsLabel(it.score) },
@@ -160,7 +160,7 @@ internal fun LuxoListsScreen(
     }
     if (showRatings) {
         LuxoTitlesSheet(
-            title = lx("⭐  أفضل اللي شفته", "⭐  My top rated"),
+            title = lx("⭐  الأعلى تقييماً من المشاهدات", "⭐  My top rated"),
             items = rated.map { it.title },
             notes = rated.associate { LuxoUserData.key(it.title.type, it.title.id) to "★ ${luxoStarsLabel(it.score)}" + (if (it.note.isNotBlank()) " · ${it.note}" else "") },
             onDismiss = { showRatings = false },

@@ -159,7 +159,7 @@ internal fun LuxoDiscoveryCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(lx("طابور الاستكشاف", "Discovery queue"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
             Text(
-                lx("اسحب يمين للي يعجبك ويسار للي ما يعجبك", "Swipe right to keep, left to skip"),
+                lx("السحب يميناً للإعجاب ويساراً للتخطي", "Swipe right to keep, left to skip"),
                 style = MaterialTheme.typography.bodySmall,
                 color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
             )

@@ -116,7 +116,7 @@ private fun LuxoFontsSettingsBody(isTablet: Boolean) {
             }
         }
 
-        SettingsSection(title = lx("خطوطك", "Your fonts"), isTablet = isTablet) {
+        SettingsSection(title = lx("الخطوط المضافة", "Your fonts"), isTablet = isTablet) {
             SettingsGroup(isTablet = isTablet) {
                 LuxoBlock(isTablet) {
                     Text(

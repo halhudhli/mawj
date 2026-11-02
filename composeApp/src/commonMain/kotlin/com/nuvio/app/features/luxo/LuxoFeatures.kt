@@ -53,6 +53,12 @@ data class LuxoFeatures(
     val arabicTranslate: Boolean = true,
     /** Player: if the picture freezes while data is buffered, recover it automatically. */
     val stallGuard: Boolean = true,
+    /** «السلاسل»: franchises and watch order. */
+    val franchises: Boolean = true,
+    /** Dark glass cards for channels / companies and the new company page. */
+    val companiesRedesign: Boolean = true,
+    /** Save gallery images to the device. */
+    val saveImages: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

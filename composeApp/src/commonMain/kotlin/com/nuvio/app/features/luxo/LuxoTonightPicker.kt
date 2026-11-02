@@ -94,7 +94,7 @@ internal fun LuxoTonightCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(lx("وش أشوف الليلة؟", "What should I watch tonight?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
             Text(
-                lx("اختر مزاجك ونقترح لك من الكتالوج", "Pick a mood and get picks from your catalog"),
+                lx("اختيار المزاج يعطي اقتراحات من الكتالوج", "Pick a mood and get picks from your catalog"),
                 style = MaterialTheme.typography.bodySmall,
                 color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
             )
@@ -168,14 +168,14 @@ internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Un
         ) {
             LuxoAssistantHeader(
                 title = "وش أشوف الليلة؟",
-                subtitle = if (busy) "يدوّر لك على شي يناسبك…" else "اختر مزاجك أو اكتب اللي في بالك",
+                subtitle = if (busy) "جاري البحث عن اقتراح مناسب…" else "اختيار مزاج أو كتابة وصف للمطلوب",
                 thinking = busy,
             )
             Text("المزاج", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TonightMood.entries.forEach { option -> TonightChip(option.label, mood == option) { mood = option } }
             }
-            Text("وش تبي؟", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+            Text("المطلوب", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TonightTime.entries.forEach { option -> TonightChip(option.label, time == option) { time = option } }
             }

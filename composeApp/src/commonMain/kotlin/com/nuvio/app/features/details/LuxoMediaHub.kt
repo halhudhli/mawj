@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 import com.nuvio.app.core.ui.nuvioHorizontalScrollBleed
 import com.nuvio.app.features.details.components.DetailSectionTitle
 import com.nuvio.app.features.luxo.LuxoAudioPreview
@@ -67,6 +68,7 @@ import com.nuvio.app.features.luxo.rememberLuxoFeatures
 import com.nuvio.app.features.luxo.urlEncode
 
 private enum class LuxoMediaTab(val label: String) {
+    TRAILERS("الإعلانات"),
     BACKDROPS("الخلفيات"),
     POSTERS("الملصقات"),
     LOGOS("الشعارات"),
@@ -86,25 +88,34 @@ internal fun LuxoMediaHub(
     meta: MetaDetails,
     horizontalScrollPadding: Dp,
     onTrailerClick: (MetaTrailer) -> Unit,
+    showHeader: Boolean = true,
 ) {
     if (!rememberLuxoFeatures().mediaHub) return
     var bundle by remember(meta.id) { mutableStateOf<LuxoMediaBundle?>(null) }
     LaunchedEffect(meta.id) {
         bundle = runCatching { LuxoTmdb.media(meta.id, meta.type, meta.imdbId) }.getOrNull()
     }
-    val data = bundle ?: return
+    val data = bundle ?: LuxoMediaBundle()
+    if (bundle == null && meta.trailers.isEmpty()) return
+    // Trailers already shown under «الإعلانات» aren't repeated under «فيديوهات».
+    val trailerKeys = remember(meta.trailers) { meta.trailers.map { it.key }.toSet() }
+    val otherVideos = remember(data.videos, trailerKeys) { data.videos.filter { it.key !in trailerKeys } }
     val tabs = buildList {
+        if (meta.trailers.isNotEmpty()) add(LuxoMediaTab.TRAILERS to meta.trailers.size)
         if (data.backdrops.isNotEmpty()) add(LuxoMediaTab.BACKDROPS to data.backdrops.size)
         if (data.posters.isNotEmpty()) add(LuxoMediaTab.POSTERS to data.posters.size)
         if (data.logos.isNotEmpty()) add(LuxoMediaTab.LOGOS to data.logos.size)
-        if (data.videos.isNotEmpty()) add(LuxoMediaTab.VIDEOS to data.videos.size)
-        add(LuxoMediaTab.SOUNDTRACK to -1)
+        if (otherVideos.isNotEmpty()) add(LuxoMediaTab.VIDEOS to otherVideos.size)
+        if (bundle != null) add(LuxoMediaTab.SOUNDTRACK to -1)
     }
-    var selected by remember(meta.id) { mutableStateOf(tabs.first().first) }
+    if (tabs.isEmpty()) return
+    var selectedState by remember(meta.id) { mutableStateOf(tabs.first().first) }
+    val selected = if (tabs.any { it.first == selectedState }) selectedState else tabs.first().first
     var viewer by remember { mutableStateOf<Pair<List<LuxoImage>, Int>?>(null) }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        DetailSectionTitle(title = "الوسائط")
+        if (showHeader) DetailSectionTitle(title = "الوسائط")
+        LuxoFranchiseBanner(data)
         LazyRow(
             modifier = Modifier.nuvioHorizontalScrollBleed(horizontalScrollPadding).fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = horizontalScrollPadding),
@@ -124,7 +135,7 @@ internal fun LuxoMediaHub(
                             else Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.08f))),
                         )
                         .border(1.dp, Color.White.copy(alpha = if (on) 0.4f else 0.12f), RoundedCornerShape(50))
-                        .clickable { selected = tab }
+                        .clickable { selectedState = tab }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
@@ -132,10 +143,16 @@ internal fun LuxoMediaHub(
 
         AnimatedContent(targetState = selected, label = "luxo_media_tab") { tab ->
             when (tab) {
+                LuxoMediaTab.TRAILERS -> com.nuvio.app.features.details.components.DetailTrailersSection(
+                    trailers = meta.trailers,
+                    onTrailerClick = onTrailerClick,
+                    showHeader = false,
+                    horizontalScrollPadding = horizontalScrollPadding,
+                )
                 LuxoMediaTab.BACKDROPS -> ImageRow(data.backdrops, 16f / 9f, 260.dp, "w780", horizontalScrollPadding) { viewer = data.backdrops to it }
                 LuxoMediaTab.POSTERS -> ImageRow(data.posters, 2f / 3f, 130.dp, "w342", horizontalScrollPadding) { viewer = data.posters to it }
                 LuxoMediaTab.LOGOS -> ImageRow(data.logos, 16f / 9f, 220.dp, "w300", horizontalScrollPadding, fit = true) { viewer = data.logos to it }
-                LuxoMediaTab.VIDEOS -> VideoRows(data.videos, horizontalScrollPadding, onTrailerClick)
+                LuxoMediaTab.VIDEOS -> VideoRows(otherVideos, horizontalScrollPadding, onTrailerClick)
                 LuxoMediaTab.SOUNDTRACK -> SoundtrackPanel(meta, data, horizontalScrollPadding)
             }
         }
@@ -240,19 +257,28 @@ private fun VideoRows(videos: List<MetaTrailer>, padding: Dp, onTrailerClick: (M
 private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: Dp) {
     val uri = LocalUriHandler.current
     val title = data.englishTitle ?: meta.name
-    var state by remember(meta.id) { mutableStateOf<Pair<Boolean, LuxoSoundtrack?>>(false to null) }
+    var loaded by remember(meta.id) { mutableStateOf(false) }
+    var result by remember(meta.id) { mutableStateOf(com.nuvio.app.features.luxo.LuxoSoundtrack()) }
     var playing by remember { mutableStateOf<String?>(null) }
+    var playAll by remember { mutableStateOf(false) }
     LaunchedEffect(meta.id) {
-        val result = runCatching {
-            LuxoTmdb.soundtrack(title, data.year, meta.type != "movie", data.originalTitle, data.originalLanguage)
-        }.getOrNull()
-        state = true to result
+        result = runCatching {
+            com.nuvio.app.features.luxo.LuxoSoundtrackFinder.find(
+                title = title,
+                originalTitle = data.originalTitle,
+                language = data.originalLanguage,
+                year = data.year,
+                isSeries = meta.type != "movie",
+                isAnime = data.isAnime || meta.type == "anime",
+                composers = data.composers,
+            )
+        }.getOrDefault(com.nuvio.app.features.luxo.LuxoSoundtrack())
+        loaded = true
     }
     DisposableEffect(Unit) { onDispose { LuxoAudioPreview.stop() } }
-    // «تشغيل الكل»: previews play one after another.
-    var playAll by remember { mutableStateOf(false) }
-    fun playFrom(tracks: List<com.nuvio.app.features.luxo.LuxoTrack>, start: Int) {
-        val next = tracks.drop(start).firstOrNull { it.previewUrl != null } ?: run {
+    val all = result.allTracks
+    fun playFrom(index: Int) {
+        val next = all.drop(index).firstOrNull { it.previewUrl != null } ?: run {
             playing = null
             playAll = false
             return
@@ -261,127 +287,175 @@ private fun SoundtrackPanel(meta: MetaDetails, data: LuxoMediaBundle, padding: D
         playing = url
         LuxoAudioPreview.play(url) {
             if (playing != url) return@play
-            if (playAll) playFrom(tracks, tracks.indexOf(next) + 1) else playing = null
+            if (playAll) playFrom(all.indexOf(next) + 1) else playing = null
         }
     }
-    val (loaded, album) = state
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    fun toggle(track: com.nuvio.app.features.luxo.LuxoTrack) {
+        val url = track.previewUrl ?: return
+        if (playing == url) {
+            LuxoAudioPreview.stop()
+            playing = null
+            playAll = false
+        } else if (playAll) {
+            playFrom(all.indexOf(track))
+        } else {
+            playing = url
+            LuxoAudioPreview.play(url) { if (playing == url) playing = null }
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         when {
             !loaded -> Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                 Spacer(Modifier.width(10.dp))
-                Text("ندوّر على الموسيقى التصويرية…", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
+                Text("يتم البحث في Deezer و Apple Music و MusicBrainz و AnimeThemes…", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
             }
-            album == null -> Text(
-                "ما لقينا ألبوم موسيقى رسمي لهالعمل، تقدر تدوّر عليه من هنا:",
+            result.isEmpty -> Text(
+                "لم يتم العثور على موسيقى تصويرية رسمية مؤكدة لهذا العمل. يمكن البحث عنها من هنا:",
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 13.sp,
             )
             else -> {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(
-                        model = album.cover,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(96.dp).clip(RoundedCornerShape(16.dp)),
+                    Text(
+                        "${all.size} مقطوعة بدون تكرار · من ${(result.albums.map { it.source } + (if (result.themes.isNotEmpty()) listOf("AnimeThemes") else emptyList())).distinct().joinToString(" و ")}",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(album.albumTitle, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Text(album.artist, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
-                        Text("${album.tracks.size} مقطوعة · اضغط ▶ تسمع ٣٠ ثانية", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            if (playAll) "⏹ إيقاف" else "▶ تشغيل الكل",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(Brush.horizontalGradient(listOf(Accent1, Accent2)))
-                                .clickable {
-                                    if (playAll) {
-                                        playAll = false
-                                        playing = null
-                                        LuxoAudioPreview.stop()
-                                    } else {
-                                        playAll = true
-                                        playFrom(album.tracks.take(30), 0)
-                                    }
+                    Text(
+                        if (playAll) "⏹ إيقاف" else "▶ تشغيل الكل",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(Brush.horizontalGradient(listOf(Accent1, Accent2)))
+                            .clickable {
+                                if (playAll) {
+                                    playAll = false
+                                    playing = null
+                                    LuxoAudioPreview.stop()
+                                } else {
+                                    playAll = true
+                                    playFrom(0)
                                 }
-                                .padding(horizontal = 14.dp, vertical = 7.dp),
-                        )
-                    }
+                            }
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                    )
                 }
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
-                        .padding(vertical = 6.dp),
-                ) {
-                    album.tracks.take(30).forEachIndexed { index, track ->
-                        val isPlaying = playing == track.previewUrl && track.previewUrl != null
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = track.previewUrl != null) {
-                                    val url = track.previewUrl ?: return@clickable
-                                    if (isPlaying) {
-                                        LuxoAudioPreview.stop()
-                                        playing = null
-                                        playAll = false
-                                    } else if (playAll) {
-                                        playFrom(album.tracks.take(30), index)
-                                    } else {
-                                        playing = url
-                                        LuxoAudioPreview.play(url) { if (playing == url) playing = null }
-                                    }
-                                }
-                                .padding(horizontal = 14.dp, vertical = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isPlaying) Brush.linearGradient(listOf(Accent1, Accent2))
-                                        else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.White.copy(alpha = 0.1f))),
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (track.previewUrl == null) Text("${index + 1}", color = Color.White, fontSize = 12.sp)
-                                else Icon(if (isPlaying) Icons.Rounded.Stop else Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(track.title, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                if (track.artist.isNotBlank() && track.artist != album.artist) {
-                                    Text(track.artist, color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, maxLines = 1)
-                                }
-                            }
-                            Text(
-                                "${track.durationSec / 60}:${(track.durationSec % 60).toString().padStart(2, '0')}",
-                                color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 12.sp,
-                            )
-                        }
-                    }
+                if (result.themes.isNotEmpty()) {
+                    TrackGroup(
+                        header = "أغاني البداية والنهاية 🎌",
+                        sub = "AnimeThemes",
+                        cover = null,
+                        tracks = result.themes,
+                        playing = playing,
+                        onToggle = ::toggle,
+                        onVideo = { url -> runCatching { uri.openUri(url) } },
+                    )
+                }
+                result.albums.forEach { album ->
+                    TrackGroup(
+                        header = album.title,
+                        sub = listOfNotNull(album.artist.takeIf { it.isNotBlank() }, album.year, album.source).joinToString(" · "),
+                        cover = album.cover,
+                        tracks = album.tracks,
+                        playing = playing,
+                        onToggle = ::toggle,
+                        onHeaderClick = { runCatching { uri.openUri(album.link) } },
+                    )
                 }
             }
         }
-        val query = urlEncode("$title soundtrack")
+        val query = urlEncode("${data.originalTitle?.takeIf { data.originalLanguage != "en" } ?: title} soundtrack")
         LazyRow(
             modifier = Modifier.nuvioHorizontalScrollBleed(padding).fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = padding),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            album?.let { a -> item { LinkChip("الألبوم كامل · Deezer") { runCatching { uri.openUri(a.link) } } } }
             item { LinkChip("Spotify") { runCatching { uri.openUri("https://open.spotify.com/search/$query") } } }
             item { LinkChip("YouTube Music") { runCatching { uri.openUri("https://music.youtube.com/search?q=$query") } } }
             item { LinkChip("Apple Music") { runCatching { uri.openUri("https://music.apple.com/search?term=$query") } } }
+            item { LinkChip("Deezer") { runCatching { uri.openUri("https://www.deezer.com/search/$query") } } }
+        }
+    }
+}
+
+@Composable
+private fun TrackGroup(
+    header: String,
+    sub: String,
+    cover: String?,
+    tracks: List<com.nuvio.app.features.luxo.LuxoTrack>,
+    playing: String?,
+    onToggle: (com.nuvio.app.features.luxo.LuxoTrack) -> Unit,
+    onHeaderClick: (() -> Unit)? = null,
+    onVideo: ((String) -> Unit)? = null,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
+            .padding(vertical = 8.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().then(if (onHeaderClick != null) Modifier.clickable(onClick = onHeaderClick) else Modifier).padding(horizontal = 14.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (cover != null) {
+                AsyncImage(model = cover, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)))
+                Spacer(Modifier.width(12.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(header, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(sub, color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        tracks.forEach { track ->
+            val isPlaying = track.previewUrl != null && playing == track.previewUrl
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = track.previewUrl != null) { onToggle(track) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isPlaying) Brush.linearGradient(listOf(Accent1, Accent2))
+                            else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.White.copy(alpha = 0.1f))),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (track.previewUrl == null) Icon(Icons.Rounded.MusicNote, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                    else Icon(if (isPlaying) Icons.Rounded.Stop else Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(track.title, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (track.artist.isNotBlank()) Text(track.artist, color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (track.videoUrl != null && onVideo != null) {
+                    Text(
+                        "🎬",
+                        fontSize = 18.sp,
+                        modifier = Modifier.clip(CircleShape).clickable { onVideo(track.videoUrl) }.padding(8.dp),
+                    )
+                } else if (track.durationSec > 0) {
+                    Text(
+                        "${track.durationSec / 60}:${(track.durationSec % 60).toString().padStart(2, '0')}",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
         }
     }
 }
@@ -450,6 +524,27 @@ internal fun LuxoImageViewer(images: List<LuxoImage>, start: Int, onDismiss: () 
                     )
                 }
                 Spacer(Modifier.width(8.dp))
+                // Save the original-resolution file to the gallery.
+                if (com.nuvio.app.features.luxo.rememberLuxoFeatures().saveImages) {
+                    val scope = androidx.compose.runtime.rememberCoroutineScope()
+                    var saveState by remember { mutableStateOf<Boolean?>(null) }
+                    Text(
+                        when (saveState) { true -> "✅ تم الحفظ"; false -> "تعذّر الحفظ"; null -> "⬇ حفظ" },
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .clickable {
+                                val img = images.getOrNull(pager.currentPage) ?: return@clickable
+                                scope.launch { saveState = com.nuvio.app.features.luxo.luxoSaveImageFromUrl(img.url("original"), "Luxo") }
+                            }
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                    )
+                    LaunchedEffect(pager.currentPage) { saveState = null }
+                    Spacer(Modifier.width(8.dp))
+                }
                 Box(
                     Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.5f)).clickable(onClick = onDismiss),
                     contentAlignment = Alignment.Center,
@@ -458,5 +553,37 @@ internal fun LuxoImageViewer(images: List<LuxoImage>, start: Int, onDismiss: () 
                 }
             }
         }
+    }
+}
+
+
+/** «هذا الجزء ٣ من ٥ في سلسلة X» → opens the franchise page. */
+@Composable
+private fun LuxoFranchiseBanner(data: LuxoMediaBundle) {
+    if (!rememberLuxoFeatures().franchises) return
+    val key = data.collectionId?.let { "collection:$it" }
+        ?: data.tmdbId?.toIntOrNull()?.let { id -> data.mediaType?.let { com.nuvio.app.features.luxo.LuxoFranchiseRepository.groupForTmdb(it, id) } }
+        ?: return
+    var info by remember(key) { mutableStateOf<String?>(null) }
+    LaunchedEffect(key) {
+        val f = com.nuvio.app.features.luxo.LuxoFranchiseRepository.load(key) ?: return@LaunchedEffect
+        val index = f.parts.indexOfFirst { it.tmdbId?.toString() == data.tmdbId }
+        info = if (index >= 0) "هذا الجزء ${index + 1} من ${f.parts.size} في «${f.title}»" else "جزء من «${f.title}»"
+    }
+    val text = info ?: data.collectionName?.let { "جزء من «$it»" } ?: return
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.horizontalGradient(listOf(Accent1.copy(alpha = 0.25f), Accent2.copy(alpha = 0.15f))))
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+            .clickable { com.nuvio.app.features.luxo.LuxoOverlays.franchise = key }
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("🎞️", fontSize = 18.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(text, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text("عرض السلسلة ←", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }

@@ -68,6 +68,7 @@ fun App(
         )
         com.nuvio.app.features.luxo.LuxoAppLockOverlay()
         com.nuvio.app.features.luxo.LuxoCrashReportDialog()
+        com.nuvio.app.features.luxo.LuxoOverlayHost()
       }
     }
 }
