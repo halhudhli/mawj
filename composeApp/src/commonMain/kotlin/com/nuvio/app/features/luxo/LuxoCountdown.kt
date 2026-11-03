@@ -253,7 +253,8 @@ private fun rememberStripEntries(): List<StripEntry> {
     val episodes = rememberUpcoming(classify = !luxoIsTv())
     val world by LuxoWorldCountdown.items.collectAsStateWithLifecycle()
     val today = remember { luxoTodayEpochDay() }
-    return remember(episodes, world) {
+    val tmdbPicked = LuxoTmdbShows.picked.toMap()
+    return remember(episodes, world, tmdbPicked) {
         val followed = episodes.distinctBy { it.item.seriesKey() }.map { ep ->
             StripEntry(
                 key = "lib:" + ep.item.seriesKey(),
@@ -277,7 +278,20 @@ private fun rememberStripEntries(): List<StripEntry> {
                 followed = false,
             )
         }
-        (followed + others).sortedBy { it.airMs ?: (it.epochDay * 86_400_000L) }.filter { it.epochDay >= today }
+        val knownNames = (followed + others).map { it.title.lowercase() }.toSet()
+        // Shows picked from the TMDB search (anime, Turkish, Korean… anything with an announced episode).
+        val searched = tmdbPicked.values.filter { it.nextDate != null && it.title.lowercase() !in knownNames }.map { sh ->
+            StripEntry(
+                key = sh.key,
+                title = sh.title,
+                poster = sh.poster,
+                airMs = null,
+                epochDay = luxoEpochDay(sh.nextDate!!),
+                preview = MetaPreview(id = sh.key, type = "series", name = sh.title, poster = sh.poster),
+                followed = false,
+            )
+        }
+        (followed + others + searched).sortedBy { it.airMs ?: (it.epochDay * 86_400_000L) }.filter { it.epochDay >= today }
     }
 }
 
@@ -291,6 +305,7 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
     LaunchedEffect(picks.any { !it.startsWith("lib:") }) {
         if (!luxoIsTv() || picks.any { !it.startsWith("lib:") }) LuxoWorldCountdown.refresh()
     }
+    LaunchedEffect(picks) { runCatching { LuxoTmdbShows.refresh(picks) } }
     val entries = rememberStripEntries()
     var pageOpen by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
@@ -327,8 +342,9 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
                 modifier = Modifier.clip(RoundedCornerShape(14.dp)).clickable { picking = true }.padding(vertical = 8.dp),
             )
         } else {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                shown.forEach { entry ->
+            // A lazy row scrolls and flings smoothly inside the Home list (the plain scrolling row didn't).
+            androidx.compose.foundation.lazy.LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                items(shown, key = { it.key }) { entry ->
                     val days = entry.epochDay - today
                     Column(
                         Modifier
@@ -402,7 +418,62 @@ private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             )
             val filtered = entries.filter { query.isBlank() || it.title.contains(query.trim(), ignoreCase = true) }
+            var found by remember { mutableStateOf<List<LuxoTmdbShow>>(emptyList()) }
+            var searching by remember { mutableStateOf(false) }
+            LaunchedEffect(query) {
+                val q = query.trim()
+                if (q.length < 2) { found = emptyList(); return@LaunchedEffect }
+                kotlinx.coroutines.delay(450)
+                searching = true
+                val shownNames = filtered.map { it.title.lowercase() }.toSet()
+                found = runCatching { LuxoTmdbShows.search(q) }.getOrDefault(emptyList()).filter { it.title.lowercase() !in shownNames }
+                searching = false
+            }
             LazyColumn(Modifier.fillMaxWidth().height(460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (query.isNotBlank() && (searching || found.isNotEmpty())) {
+                    item(key = "tmdb_header") {
+                        Text(
+                            if (searching) lx("يتم البحث في كل المسلسلات…", "Searching every show…") else lx("كل المسلسلات", "Every show"),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = tokens.colors.textMuted,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                    items(found, key = { "f_" + it.key }) { sh ->
+                        val on = sh.key in picks
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (on) tokens.colors.accent.copy(alpha = 0.14f) else Color.Transparent)
+                                .clickable {
+                                    LuxoTmdbShows.remember(sh)
+                                    LuxoHomeStripPicks.toggle(sh.key)
+                                }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            AsyncImage(
+                                model = sh.poster,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f)),
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(sh.title + (sh.year?.let { " ($it)" } ?: ""), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    sh.nextDate?.let { d -> listOfNotNull(sh.nextLabel, daysLabel(luxoEpochDay(d) - luxoTodayEpochDay())).joinToString(" · ") }
+                                        ?: lx("لا توجد حلقة قادمة معلنة", "No upcoming episode announced"),
+                                    fontSize = 12.sp,
+                                    color = tokens.colors.textMuted,
+                                )
+                            }
+                            Text(if (on) "✓" else "＋", fontWeight = FontWeight.Black, fontSize = 18.sp, color = if (on) tokens.colors.accent else tokens.colors.textMuted)
+                        }
+                    }
+                }
                 items(filtered, key = { it.key }) { entry ->
                     val on = entry.key in picks
                     Row(

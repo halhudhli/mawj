@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -180,7 +181,7 @@ internal fun BoxScope.LuxoStyledBar(
         }
     when (style) {
         LuxoBarStyle.ISLAND -> IslandBar(items, labels, alpha, hideProgress, place)
-        LuxoBarStyle.CINEMA -> CinemaBar(items, alpha, Modifier.align(if (onTop) Alignment.TopCenter else Alignment.BottomCenter).fillMaxWidth().then(slide), onTop)
+        LuxoBarStyle.CINEMA -> CinemaBar(items, alpha, Modifier.align(if (onTop) Alignment.TopCenter else Alignment.BottomCenter).then(slide), onTop)
         LuxoBarStyle.SPLIT -> SplitBar(items, labels, alpha, if (full) place.fillMaxWidth() else place)
         LuxoBarStyle.NEON -> NeonBar(items, place)
         LuxoBarStyle.DISCS -> DiscsBar(items, labels, place)
@@ -256,25 +257,21 @@ private fun CinemaBar(items: List<FloatingNavigationItem>, alpha: Float, modifie
     val w by animateFloatAsState(target?.second ?: 0f, spring(dampingRatio = 0.8f, stiffness = 300f), label = "cin_w")
     val density = LocalDensity.current
     val top = if (onTop) WindowInsets.statusBars.asPaddingValues().calculateTopPadding() else 0.dp
+    // Centred and only as wide as its tabs, so it never covers the page title at the side.
     Row(
         modifier
+            .padding(top = if (onTop) top + 6.dp else 0.dp, bottom = if (onTop) 0.dp else 8.dp)
+            .clip(RoundedCornerShape(22.dp))
             .background(
                 Brush.verticalGradient(
-                    if (onTop) listOf(Color.Black.copy(alpha = 0.85f * alpha), Color.Transparent)
-                    else listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f * alpha)),
+                    if (onTop) listOf(Color.Black.copy(alpha = 0.78f * alpha), Color.Black.copy(alpha = 0.35f * alpha))
+                    else listOf(Color.Black.copy(alpha = 0.35f * alpha), Color.Black.copy(alpha = 0.78f * alpha)),
                 ),
             )
-            .padding(top = top + 10.dp, bottom = 14.dp, start = 22.dp, end = 22.dp),
+            .padding(top = 8.dp, bottom = 12.dp, start = 22.dp, end = 22.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            "Luxo",
-            style = TextStyle(brush = Brush.horizontalGradient(listOf(BA1, BA2))),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Black,
-        )
-        Spacer(Modifier.width(28.dp))
-        Box(Modifier.weight(1f)) {
+        Box {
             Row(horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
                 items.forEachIndexed { i, item ->
                     if (item.isProfile) return@forEachIndexed
@@ -294,7 +291,7 @@ private fun CinemaBar(items: List<FloatingNavigationItem>, alpha: Float, modifie
             if (target != null) {
                 Box(
                     Modifier
-                        .offset { IntOffset(x.roundToInt(), with(density) { 34.dp.roundToPx() }) }
+                        .absoluteOffset { IntOffset(x.roundToInt(), with(density) { 34.dp.roundToPx() }) }
                         .width(with(density) { w.toDp() })
                         .height(3.dp)
                         .clip(RoundedCornerShape(50))
@@ -303,6 +300,7 @@ private fun CinemaBar(items: List<FloatingNavigationItem>, alpha: Float, modifie
             }
         }
         items.firstOrNull { it.isProfile }?.let { p ->
+            Spacer(Modifier.width(22.dp))
             Box(Modifier.size(38.dp).clip(CircleShape).navClick(p), contentAlignment = Alignment.Center) { ItemIcon(p, Color.White, 32.dp) }
         }
     }
