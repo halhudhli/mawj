@@ -76,7 +76,7 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
         val cx = w / 2f
 
         val wordSize = (minOf(w * 0.30f, h * 0.30f) * settings.logoScale).coerceAtLeast(40f)
-        val word = cache.getOrPut("w${wordSize.toInt()}") {
+        val word = cache.getOrPut("w${wordSize.toInt()}_${swash.hashCode()}") {
             measurer.measure(
                 "مَوج",
                 TextStyle(fontFamily = swash, fontWeight = FontWeight.Black, fontSize = (wordSize / density).sp),
