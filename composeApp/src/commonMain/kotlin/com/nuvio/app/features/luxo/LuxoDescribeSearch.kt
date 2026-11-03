@@ -62,8 +62,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 
-private val DAccent1 = Color(0xFF8C7BFF)
-private val DAccent2 = Color(0xFFFF7EB6)
+private val DAccent1 = Color(0xFF6F8FBF)
+private val DAccent2 = Color(0xFF9DB1CF)
 
 data class LuxoDescribeHit(val preview: MetaPreview, val year: String?, val why: String)
 
@@ -74,7 +74,7 @@ object LuxoDescribeSearch {
     suspend fun find(description: String): Result<List<LuxoDescribeHit>> = withContext(Dispatchers.Default) {
         val q = description.trim()
         cache[q]?.let { return@withContext Result.success(it) }
-        val key = LuxoCompanionApi.loadKey() ?: return@withContext Result.failure(IllegalStateException("لم يتم ضبط مفتاح «رفيق Luxo»"))
+        val key = LuxoCompanionApi.loadKey() ?: return@withContext Result.failure(IllegalStateException("لم يتم ضبط مفتاح «رفيق موج»"))
         val prompt = "يبحث مستخدم عن فيلم أو مسلسل أو أنمي بهذا الوصف: «$q».\n" +
             "اقترح حتى 12 عملاً حقيقياً هي الأقرب للوصف، الأكثر تطابقاً أولاً. استبعد الأعمال العربية. " +
             "لكل عمل: العنوان الإنجليزي الرسمي كما في TMDB، سنة الإصدار، النوع movie أو tv، وسبب قصير جداً بالعربية بصيغة المجهول (مثل: «تُروى فيه قصة…»).\n" +

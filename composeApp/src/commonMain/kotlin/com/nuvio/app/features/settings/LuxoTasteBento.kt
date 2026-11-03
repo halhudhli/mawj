@@ -69,8 +69,8 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.time.Instant
 
-private val B1 = Color(0xFF8C7BFF)
-private val B2 = Color(0xFFFF7EB6)
+private val B1 = Color(0xFF6F8FBF)
+private val B2 = Color(0xFF9DB1CF)
 private val B3 = Color(0xFF5ED6C9)
 private val BTile = Color(0xFF17151F)
 
@@ -196,7 +196,7 @@ internal fun LuxoTasteBentoCard(isTablet: Boolean) {
             if (LuxoTasteFacts.loading) Text("يتم تحليل السجل…", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
             Box(
                 Modifier.padding(start = 8.dp).clip(RoundedCornerShape(50)).background(Brush.horizontalGradient(listOf(B1, B2)))
-                    .clickable { scope.launch { runCatching { layer.toImageBitmap() }.getOrNull()?.let { luxoShareImage(it, "ذوقي على Luxo") } } }
+                    .clickable { scope.launch { runCatching { layer.toImageBitmap() }.getOrNull()?.let { luxoShareImage(it, "ذوقي على موج") } } }
                     .padding(horizontal = 14.dp, vertical = 7.dp),
             ) { Text("مشاركة", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
         }
@@ -240,7 +240,7 @@ internal fun LuxoTasteBentoCard(isTablet: Boolean) {
                 MoodTile(stats, Modifier.fillMaxWidth())
                 TwinTile(stats, facts, Modifier.fillMaxWidth())
             }
-            Text("Luxo", color = Color.White.copy(alpha = 0.35f), fontSize = 11.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.End).padding(end = 6.dp))
+            Text("موج", color = Color.White.copy(alpha = 0.35f), fontSize = 11.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.End).padding(end = 6.dp))
         }
     }
 }
@@ -476,7 +476,7 @@ private fun TwinTile(s: LuxoBentoStats, facts: Map<String, LuxoTitleFacts>, modi
                         val answer = LuxoCompanionApi.ask(key, prompt).replace("**", "").trim()
                         if (answer.isNotBlank()) { twin = answer; LuxoPrefsStorage.save("taste_twin_v1", answer) }
                     } else {
-                        twin = "يلزم ضبط مفتاح «رفيق Luxo»"
+                        twin = "يلزم ضبط مفتاح «رفيق موج»"
                     }
                     loading = false
                 }

@@ -188,7 +188,7 @@ private fun LuxoScreensaver(onExit: () -> Unit) {
                 Text(clock, color = Color.White, fontSize = 64.sp, fontWeight = FontWeight.Black)
                 slide?.let { Text(it.title, color = Color.White.copy(alpha = 0.8f), fontSize = 18.sp) }
             }
-            Text("Luxo", color = Color.White.copy(alpha = 0.5f), fontSize = 22.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.TopEnd).padding(32.dp))
+            Text("موج", color = Color.White.copy(alpha = 0.5f), fontSize = 22.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.TopEnd).padding(32.dp))
         }
     }
 }
@@ -269,7 +269,7 @@ internal fun LuxoGuessGameDialog(onDismiss: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (round != null) {
                     Box(
-                        Modifier.clip(RoundedCornerShape(50)).background(Brush.horizontalGradient(listOf(Color(0xFF8C7BFF), Color(0xFFFF7EB6))))
+                        Modifier.clip(RoundedCornerShape(50)).background(Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF))))
                             .clickable { next() }.padding(horizontal = 20.dp, vertical = 10.dp),
                     ) { Text(if (picked == null) "تخطٍّ" else "التالي", color = Color.White, fontWeight = FontWeight.Bold) }
                 }

@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.sp
 import nuvio.composeapp.generated.resources.luxo_barlow_bold
 import nuvio.composeapp.generated.resources.luxo_bebas
 import nuvio.composeapp.generated.resources.luxo_cinzel
+import nuvio.composeapp.generated.resources.mawj_swash
 import nuvio.composeapp.generated.resources.luxo_poppins_bold
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.FontResource
@@ -101,6 +102,11 @@ fun LuxoSplashScreen(
     ) {
         if (!settings.enabled) return@Box
 
+        if (settings.style == SplashBackgroundStyle.MAWJ) {
+            // «موج»: the scene draws its own word, so no separate logo.
+            MawjSplashScene(settings, replayKey)
+            return@Box
+        }
         SplashAnimatedBackground(settings)
         SplashLogo(settings, replayKey)
     }
@@ -125,6 +131,7 @@ private fun SplashAnimatedBackground(settings: SplashSettings) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val t = time * settings.speed
         when (settings.style) {
+            SplashBackgroundStyle.MAWJ -> Unit
             SplashBackgroundStyle.STARS -> drawStars(stars, t, accent)
             SplashBackgroundStyle.WAVES -> drawWaves(waveCount, t, accent)
             SplashBackgroundStyle.PARTICLES -> drawParticles(particles, t, accent)
@@ -223,7 +230,7 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
             while (true) withFrameNanos { now -> flow = (now - start) / 1_000_000_000f * settings.speed }
         }
     }
-    val flowColors = listOf(rgbColor(settings.accentColor), Color(0xFF8C7BFF), Color(0xFFFF7EB6), rgbColor(settings.accentColor))
+    val flowColors = listOf(rgbColor(settings.accentColor), Color(0xFF6F8FBF), Color(0xFF9DB1CF), rgbColor(settings.accentColor))
     val animatedModifier = Modifier.graphicsLayer {
         this.alpha = alpha.value
         scaleX = scale.value
@@ -263,7 +270,7 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
     if (fontResource == null) {
         Image(
             painter = painterResource(settings.logoVariant.resource()),
-            contentDescription = "Luxo",
+            contentDescription = "موج",
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .width((230 * settings.logoScale).dp)
@@ -271,10 +278,10 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
         )
     } else {
         Text(
-            text = "LUXO",
+            text = if (settings.logoFont == SplashLogoFont.MAWJ) "مَوج" else "MAWJ",
             fontFamily = FontFamily(Font(fontResource)),
             fontSize = (54 * settings.logoScale * settings.logoFont.sizeFactor()).sp,
-            letterSpacing = (10 * settings.logoScale).sp,
+            letterSpacing = if (settings.logoFont == SplashLogoFont.MAWJ) 0.sp else (10 * settings.logoScale).sp,
             maxLines = 1,
             style = TextStyle(
                 color = rgbColor(settings.logoTextColor),
@@ -287,6 +294,7 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
 
 /** Font used to write "LUXO"; null means the image wordmark. */
 internal fun SplashLogoFont.fontResource(): FontResource? = when (this) {
+    SplashLogoFont.MAWJ -> Res.font.mawj_swash
     SplashLogoFont.DEFAULT -> null
     SplashLogoFont.CINZEL -> Res.font.luxo_cinzel
     SplashLogoFont.BEBAS -> Res.font.luxo_bebas
@@ -494,7 +502,7 @@ private fun DrawScope.drawNeonRings(t: Float, accent: Int) {
         val phase = (t * 0.45f + i * 0.25f) % 1f
         val radius = size.minDimension * (0.12f + phase * 0.55f)
         drawCircle(
-            color = (if (i % 2 == 0) Color(0xFFFF7EB6) else rgbColor(accent)).copy(alpha = (1f - phase) * 0.55f),
+            color = (if (i % 2 == 0) Color(0xFF9DB1CF) else rgbColor(accent)).copy(alpha = (1f - phase) * 0.55f),
             radius = radius,
             center = c,
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f * (1f - phase) + 1.5f),
@@ -570,7 +578,7 @@ private fun DrawScope.drawBokeh(lights: List<Particle>, t: Float, accent: Int) {
         val x = size.width * wrap(p.x + sin(t * 0.2f + i) * 0.03f)
         val y = size.height * wrap(p.y - t * 0.01f * (p.rise * 15f))
         val r = size.minDimension * (0.03f + p.radius * 0.012f)
-        val col = if (i % 3 == 0) Color(0xFFFF7EB6) else if (i % 3 == 1) Color(0xFF8C7BFF) else rgbColor(accent)
+        val col = if (i % 3 == 0) Color(0xFF9DB1CF) else if (i % 3 == 1) Color(0xFF6F8FBF) else rgbColor(accent)
         drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.32f), col.copy(alpha = 0.08f), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
     }
 }

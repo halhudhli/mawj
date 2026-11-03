@@ -21,11 +21,11 @@ actual suspend fun luxoSaveImageFromUrl(url: String, name: String): Boolean = wi
             else -> "jpg"
         }
         val mime = when (ext) { "png" -> "image/png"; "svg" -> "image/svg+xml"; else -> "image/jpeg" }
-        val safe = name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").take(60).ifBlank { "Luxo" }
+        val safe = name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").take(60).ifBlank { "موج" }
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$safe-${System.currentTimeMillis()}.$ext")
             put(MediaStore.Images.Media.MIME_TYPE, mime)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Luxo")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Mawj")
         }
         val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return@runCatching false
         context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) } != null

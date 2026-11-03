@@ -97,7 +97,7 @@ internal fun LuxoAppLockOverlay() {
 
     val scope = rememberCoroutineScope()
     var prompting by remember { mutableStateOf(false) }
-    val title = lx("افتح Luxo", "Unlock Luxo")
+    val title = lx("افتح موج", "Unlock Mawj")
     val subtitle = lx("استخدم البصمة أو قفل الجهاز", "Use your fingerprint or device lock")
     val prompt: () -> Unit = {
         if (!prompting) {
@@ -132,7 +132,7 @@ internal fun LuxoAppLockOverlay() {
                 modifier = Modifier.size(72.dp),
             )
             Text(
-                text = lx("Luxo مقفول", "Luxo is locked"),
+                text = lx("موج مقفول", "Mawj is locked"),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,

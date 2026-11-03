@@ -171,7 +171,7 @@ private fun DoctorButton(text: String, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(50))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF8C7BFF), Color(0xFFFF7EB6))))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF))))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 9.dp),
     ) { Text(text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp) }

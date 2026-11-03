@@ -204,7 +204,7 @@
         <receiver
             android:name="com.nuvio.app.features.luxo.LuxoContinueWidget"
             android:exported="true"
-            android:label="Luxo · تابع المشاهدة">
+            android:label="موج · تابع المشاهدة">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

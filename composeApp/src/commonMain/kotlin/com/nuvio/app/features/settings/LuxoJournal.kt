@@ -392,7 +392,7 @@ internal fun LuxoWrappedCard(isTablet: Boolean) {
     var open by remember { mutableStateOf(false) }
     val year = civilOf(luxoTodayEpochDay()).year
     JournalCard(
-        title = lx("السنة في Luxo ${LuxoDateStyle.digits(year.toString())} 🎬", "Your $year in Luxo 🎬"),
+        title = lx("السنة في موج ${LuxoDateStyle.digits(year.toString())} 🎬", "Your $year in Mawj 🎬"),
         subtitle = lx("ملخص السنة على شكل ستوريز، وكل صفحة قابلة للمشاركة", "Your year as stories you can share"),
         emoji = "✨",
         isTablet = isTablet,
@@ -431,7 +431,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
     val white = Color.White
     val slides = buildList {
         add(WrappedSlide(listOf(Color(0xFF2B1B5C), Color(0xFF7B2E8F))) {
-            WrappedBig(lx("السنة في", "Your year in"), "Luxo", LuxoDateStyle.digits(year.toString()))
+            WrappedBig(lx("السنة في", "Your year in"), "موج", LuxoDateStyle.digits(year.toString()))
         })
         add(WrappedSlide(listOf(Color(0xFF0E4D64), Color(0xFF1D8A99))) {
             WrappedBig(lx("شاهدت", "You watched"), LuxoDateStyle.digits("${movies.size + shows.size}"), lx("عمل · ${movies.size} فيلم و ${shows.size} مسلسل", "titles · ${movies.size} movies, ${shows.size} shows"))
@@ -502,7 +502,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 slides[index].content()
-                Text("LUXO", color = white.copy(alpha = 0.7f), fontWeight = FontWeight.Black, letterSpacing = 6.sp, modifier = Modifier.align(Alignment.BottomCenter))
+                Text("MAWJ", color = white.copy(alpha = 0.7f), fontWeight = FontWeight.Black, letterSpacing = 6.sp, modifier = Modifier.align(Alignment.BottomCenter))
             }
             Column(
                 Modifier
@@ -532,7 +532,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.End) {
                     IconButton(onClick = {
                         scope.launch {
-                            runCatching { layer.toImageBitmap() }.getOrNull()?.let { luxoShareImage(it, "Luxo $year") }
+                            runCatching { layer.toImageBitmap() }.getOrNull()?.let { luxoShareImage(it, "Mawj $year") }
                         }
                     }) { Icon(Icons.Rounded.Share, null, tint = white) }
                     IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, null, tint = white) }

@@ -20,7 +20,7 @@ internal object LuxoMonthRecap {
         val minutes = progress.sumOf { it.lastPositionMs } / 60_000L
 
         return buildString {
-            append("أنت «رفيق Luxo». اكتب للمشاهد ملخصاً شهرياً ممتعاً بالعربية لمشاهداته خلال آخر 30 يوماً، بأسلوب مثل Spotify Wrapped: ")
+            append("أنت «رفيق موج». اكتب للمشاهد ملخصاً شهرياً ممتعاً بالعربية لمشاهداته خلال آخر 30 يوماً، بأسلوب مثل Spotify Wrapped: ")
             append("عناوين قصيرة، أرقام، ملاحظة عن ذوقه، واقتراحان لما يشاهده بعدها. لا تختلق أعمالاً لم تُذكر.\n")
             append("الأفلام المكتملة (${movies.size}): ").append(movies.joinToString("، ").ifBlank { "لا يوجد" })
             append("\nحلقات المسلسلات المكتملة: ")

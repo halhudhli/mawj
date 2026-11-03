@@ -81,15 +81,15 @@ internal fun LuxoNavExtrasControls(isTablet: Boolean) {
         }
         Text(
             text = when (com.nuvio.app.features.luxo.LuxoBarStyle.of(nav.barStyle)) {
-                com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL -> "شريط نوفيو الأصلي بدون تعديلات Luxo."
+                com.nuvio.app.features.luxo.LuxoBarStyle.ORIGINAL -> "شريط نوفيو الأصلي بدون تعديلات موج."
                 com.nuvio.app.features.luxo.LuxoBarStyle.DOCK -> "الكبسولة الزجاجية والقسم المفتوح ينصبغ."
                 com.nuvio.app.features.luxo.LuxoBarStyle.ISLAND -> "كبسولة صغيرة بالأيقونات، القسم المفتوح يتمدد باسمه، وتنكمش مع النزول."
-                com.nuvio.app.features.luxo.LuxoBarStyle.CINEMA -> "شريط بعرض الشاشة: شعار Luxo، أقسام نصية، وخط متوهج ينزلق تحت القسم المفتوح."
+                com.nuvio.app.features.luxo.LuxoBarStyle.CINEMA -> "شريط بعرض الشاشة: شعار موج، أقسام نصية، وخط متوهج ينزلق تحت القسم المفتوح."
                 com.nuvio.app.features.luxo.LuxoBarStyle.SPLIT -> "الأقسام في كبسولة، والبحث والبروفايل في دوائر عائمة لحالها."
                 com.nuvio.app.features.luxo.LuxoBarStyle.NEON -> "كلمات كبيرة بدون خلفية، والقسم المفتوح يتوهج بتدرج."
                 com.nuvio.app.features.luxo.LuxoBarStyle.DISCS -> "دوائر منفصلة، والمفتوحة تكبر وتتلون."
                 com.nuvio.app.features.luxo.LuxoBarStyle.GREETING -> "تحية حسب الوقت والساعة بجانب الأقسام."
-                com.nuvio.app.features.luxo.LuxoBarStyle.FAN -> "كرة Luxo عائمة في الزاوية، والضغط عليها يفتح الأقسام على شكل قوس."
+                com.nuvio.app.features.luxo.LuxoBarStyle.FAN -> "كرة موج عائمة في الزاوية، والضغط عليها يفتح الأقسام على شكل قوس."
                 com.nuvio.app.features.luxo.LuxoBarStyle.CURTAIN -> "الشريط مخفي، والسحب أو الضغط على المقبض يفتح الأقسام كبطاقات كبيرة."
                 com.nuvio.app.features.luxo.LuxoBarStyle.MAGNET -> "أيقونات صغيرة تكبر تحت الإصبع وتظهر أسماؤها."
                 com.nuvio.app.features.luxo.LuxoBarStyle.LIQUID -> "المؤشر قطرة تتمدد وتنسكب من قسم لقسم."

@@ -187,7 +187,7 @@ internal fun LuxoPlayerExtrasHost(
             {
                 scope.launch {
                     val saved = luxoSaveVideoScreenshot(title)
-                    LuxoPlayerBridge.toast = if (saved) "انحفظت اللقطة في الصور ← Luxo 📸" else "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
+                    LuxoPlayerBridge.toast = if (saved) "انحفظت اللقطة في الصور ← موج 📸" else "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
                     delay(2_500L)
                     LuxoPlayerBridge.toast = null
                 }
@@ -319,7 +319,7 @@ internal fun LuxoPlayerExtrasHost(
             episodeTitle?.takeIf { it.isNotBlank() }?.let { append(" «").append(it).append("»") }
         }
         val context = buildString {
-            append("أنت «رفيق Luxo»، مساعد عربي ودود داخل مشغّل الفيديو. اكتب بالعربية الفصحى السهلة وباختصار، ")
+            append("أنت «رفيق موج»، مساعد عربي ودود داخل مشغّل الفيديو. اكتب بالعربية الفصحى السهلة وباختصار، ")
             append("ولا تحرق أي حدث يقع بعد اللحظة الحالية أبداً.\n")
             append("المشاهد يشاهد: ").append(where)
             if (totalMinutes > 0) append("\nوصل إلى الدقيقة $minute من $totalMinutes")

@@ -113,7 +113,7 @@ internal fun LazyListScope.appearanceSettingsContent(
 ) {
     item {
         SettingsSection(
-            title = "Luxo",
+            title = "موج",
             isTablet = isTablet,
         ) {
             SettingsGroup(isTablet = isTablet) {
@@ -147,7 +147,7 @@ internal fun LazyListScope.appearanceSettingsContent(
     }
     item {
         SettingsSection(
-            title = lx("شريط التنقل · Luxo", "Navigation · Luxo"),
+            title = lx("شريط التنقل · موج", "Navigation · Mawj"),
             isTablet = isTablet,
         ) {
             SettingsGroup(isTablet = isTablet) {
@@ -157,7 +157,7 @@ internal fun LazyListScope.appearanceSettingsContent(
     }
     item {
         SettingsSection(
-            title = lx("إضافات Luxo", "Luxo extras"),
+            title = lx("إضافات موج", "Mawj extras"),
             isTablet = isTablet,
         ) {
             SettingsGroup(isTablet = isTablet) {
@@ -671,8 +671,8 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("ترجمة الترجمات للعربي تلقائياً ✨", "Auto-translate subtitles to Arabic ✨"),
         description = lx(
-            "إذا الحلقة ما لها ترجمة عربية، رفيق Luxo يترجم الإنجليزية ويضيفها «عربي ✨ ترجمة Luxo». يحتاج مفتاح Gemini",
-            "When there's no Arabic subtitle, Luxo Companion translates the English one. Needs a Gemini key",
+            "إذا الحلقة ما لها ترجمة عربية، رفيق موج يترجم الإنجليزية ويضيفها «عربي ✨ ترجمة موج». يحتاج مفتاح Gemini",
+            "When there's no Arabic subtitle, Mawj Companion translates the English one. Needs a Gemini key",
         ),
         checked = autoTranslate,
         isTablet = isTablet,
@@ -703,8 +703,8 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("قفل التطبيق بالبصمة 🔒", "Lock the app 🔒"),
         description = lx(
-            "يطلب البصمة أو رمز الجوال عند فتح Luxo أو الرجوع له بعد 30 ثانية",
-            "Asks for your fingerprint or device lock when you open Luxo or return after 30 seconds",
+            "يطلب البصمة أو رمز الجوال عند فتح موج أو الرجوع له بعد 30 ثانية",
+            "Asks for your fingerprint or device lock when you open Mawj or return after 30 seconds",
         ),
         checked = appLock,
         isTablet = isTablet,
@@ -745,10 +745,10 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     )
     SettingsGroupDivider(isTablet = isTablet)
     SettingsNavigationRow(
-        title = lx("شهرك في Luxo ✨", "Your month in Luxo ✨"),
+        title = lx("شهرك في موج ✨", "Your month in Mawj ✨"),
         description = lx(
-            "رفيق Luxo يلخّص مشاهدات آخر 30 يوم والذوق، ويقترح أعمال جديدة",
-            "Luxo Companion sums up your last 30 days of watching and suggests what's next",
+            "رفيق موج يلخّص مشاهدات آخر 30 يوم والذوق، ويقترح أعمال جديدة",
+            "Mawj Companion sums up your last 30 days of watching and suggests what's next",
         ),
         isTablet = isTablet,
         onClick = { recapOpen = true },
@@ -756,7 +756,7 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     if (recapOpen) {
         com.nuvio.app.features.details.LuxoCompanionSheet(
             subjectKey = "month_recap",
-            subjectTitle = lx("شهرك في Luxo", "Your month in Luxo"),
+            subjectTitle = lx("شهرك في موج", "Your month in Mawj"),
             context = remember { com.nuvio.app.features.luxo.LuxoMonthRecap.context() },
             quickActions = listOf(
                 "ملخص شهري" to "اكتب الملخص الشهري الآن.",

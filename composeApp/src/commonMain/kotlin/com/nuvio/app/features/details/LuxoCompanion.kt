@@ -113,7 +113,7 @@ private fun LuxoCompanionPanel(
         modifier = modifier.navigationBarsPadding().padding(16.dp),
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        text = { Text("رفيق Luxo") },
+        text = { Text("رفيق موج") },
         icon = { Text("✨") },
     )
     if (!open) return
@@ -157,7 +157,7 @@ internal fun LuxoCompanionSheet(
             listState.animateScrollToItem(messages.size)
             // Recent turns give follow-up questions their context.
             val history = messages.dropLast(1).takeLast(6).joinToString("\n") { (user, text) ->
-                (if (user) "المشاهد: " else "رفيق Luxo: ") + text.take(600)
+                (if (user) "المشاهد: " else "رفيق موج: ") + text.take(600)
             }
             val fullPrompt = buildString {
                 append(context)
@@ -188,7 +188,7 @@ internal fun LuxoCompanionSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             com.nuvio.app.features.luxo.LuxoAssistantHeader(
-                title = "رفيق Luxo",
+                title = "رفيق موج",
                 subtitle = if (busy) "يفكّر…" else subjectTitle,
                 thinking = busy,
             )
@@ -286,7 +286,7 @@ internal object LuxoCompanionApi {
     const val PERSON_TRIVIA = "اذكر 5 معلومات طريفة أو غير معروفة عنه، مؤكدة وغير مختلقة."
 
     fun personContext(person: PersonDetail): String = buildString {
-        append("أنت «رفيق Luxo»، مساعد عربي ودود داخل تطبيق مشاهدة. اكتب بالعربية الفصحى السهلة، باختصار ووضوح، ولا تختلق معلومات؛ إذا لم تكن متأكداً فقل ذلك.\n")
+        append("أنت «رفيق موج»، مساعد عربي ودود داخل تطبيق مشاهدة. اكتب بالعربية الفصحى السهلة، باختصار ووضوح، ولا تختلق معلومات؛ إذا لم تكن متأكداً فقل ذلك.\n")
         append("الشخص: ").append(person.name)
         person.knownFor?.let { append("\nمعروف بـ: ").append(it) }
         person.birthday?.let { append("\nتاريخ الميلاد: ").append(it) }
@@ -309,7 +309,7 @@ internal object LuxoCompanionApi {
     fun saveKey(value: String) = AppFileCache.write(KEY_PATH, value)
 
     fun context(meta: MetaDetails): String = buildString {
-        append("أنت «رفيق Luxo»، مساعد عربي ودود داخل تطبيق مشاهدة. اكتب بالعربية الفصحى السهلة، باختصار ووضوح، ولا تحرق أي أحداث مهمة أبداً.\n")
+        append("أنت «رفيق موج»، مساعد عربي ودود داخل تطبيق مشاهدة. اكتب بالعربية الفصحى السهلة، باختصار ووضوح، ولا تحرق أي أحداث مهمة أبداً.\n")
         append("العمل: ").append(meta.name)
         meta.releaseInfo?.let { append(" (").append(it).append(")") }
         append("\nالنوع: ").append(meta.type)

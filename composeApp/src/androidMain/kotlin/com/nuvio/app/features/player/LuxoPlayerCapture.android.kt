@@ -66,12 +66,12 @@ internal actual suspend fun luxoSaveVideoScreenshot(name: String): Boolean = run
     val bitmap = copyFrame(0, 0) ?: return false
     val context = LuxoPrefsStorage.appContext ?: return false
     withContext(Dispatchers.IO) {
-        val safe = name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").take(60).ifBlank { "Luxo" }
+        val safe = name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").take(60).ifBlank { "موج" }
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$safe-${System.currentTimeMillis()}.png")
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Luxo")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Mawj")
             }
         }
         val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return@withContext false

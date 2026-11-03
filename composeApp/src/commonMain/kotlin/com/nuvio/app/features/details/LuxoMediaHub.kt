@@ -76,8 +76,8 @@ private enum class LuxoMediaTab(val label: String) {
     SOUNDTRACK("الموسيقى 🎵"),
 }
 
-private val Accent1 = Color(0xFF8C7BFF)
-private val Accent2 = Color(0xFFFF7EB6)
+private val Accent1 = Color(0xFF6F8FBF)
+private val Accent2 = Color(0xFF9DB1CF)
 
 /**
  * «الوسائط»: everything TMDB has for the title (backdrops, posters, logos, every video kind) and the
@@ -553,7 +553,7 @@ internal fun LuxoImageViewer(images: List<LuxoImage>, start: Int, onDismiss: () 
                             .background(Color.Black.copy(alpha = 0.5f))
                             .clickable {
                                 val img = images.getOrNull(pager.currentPage) ?: return@clickable
-                                scope.launch { saveState = com.nuvio.app.features.luxo.luxoSaveImageFromUrl(img.url("original"), "Luxo") }
+                                scope.launch { saveState = com.nuvio.app.features.luxo.luxoSaveImageFromUrl(img.url("original"), "موج") }
                             }
                             .padding(horizontal = 14.dp, vertical = 9.dp),
                     )

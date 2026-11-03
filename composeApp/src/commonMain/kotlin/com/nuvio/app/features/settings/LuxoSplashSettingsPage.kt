@@ -127,7 +127,7 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsSwitchRow(
                     title = lx("ألوان تتموج داخل الحروف 🌊", "Colours flowing inside the letters 🌊"),
-                    description = lx("مثل أمواج «سمت»: الألوان تتحرك داخل كلمة Luxo", "Like Samt's waves: colours move inside the word"),
+                    description = lx("مثل أمواج «سمت»: الألوان تتحرك داخل كلمة موج", "Like Samt's waves: colours move inside the word"),
                     checked = settings.flowingLetters,
                     isTablet = isTablet,
                     onCheckedChange = { checked -> update { it.copy(flowingLetters = checked) } },
@@ -312,6 +312,7 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
 
 @Composable
 private fun SplashBackgroundStyle.label(): String = when (this) {
+    SplashBackgroundStyle.MAWJ -> lx("موج 🌊", "Mawj 🌊")
     SplashBackgroundStyle.STARS -> lx("نجوم", "Stars")
     SplashBackgroundStyle.WAVES -> lx("موجات ضوئية", "Light waves")
     SplashBackgroundStyle.PARTICLES -> lx("جزيئات", "Particles")
@@ -357,6 +358,7 @@ private fun SplashLogoVariant.label(): String = when (this) {
 
 @Composable
 private fun SplashLogoFont.label(): String = when (this) {
+    SplashLogoFont.MAWJ -> lx("مَوج (ثمانية)", "Mawj (Thmanyah)")
     SplashLogoFont.DEFAULT -> lx("الشعار", "Logo")
     SplashLogoFont.CINZEL -> "Cinzel"
     SplashLogoFont.BEBAS -> "Bebas"

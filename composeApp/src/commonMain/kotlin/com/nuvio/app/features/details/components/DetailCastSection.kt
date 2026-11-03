@@ -172,9 +172,9 @@ private fun CastItem(
             } else if (com.nuvio.app.features.luxo.rememberLuxoFeatures().companiesRedesign) {
                 // LUXO: an elegant silhouette (tinted by the role) instead of bare initials.
                 val tint = when {
-                    person.role?.contains("مخرج") == true || person.role?.contains("Direct", true) == true -> androidx.compose.ui.graphics.Color(0xFF8C7BFF)
+                    person.role?.contains("مخرج") == true || person.role?.contains("Direct", true) == true -> androidx.compose.ui.graphics.Color(0xFF6F8FBF)
                     person.role?.contains("كاتب") == true || person.role?.contains("Writ", true) == true -> androidx.compose.ui.graphics.Color(0xFF4FC3F7)
-                    else -> androidx.compose.ui.graphics.Color(0xFFFF7EB6)
+                    else -> androidx.compose.ui.graphics.Color(0xFF9DB1CF)
                 }
                 androidx.compose.foundation.layout.Box(
                     Modifier.matchParentSize().background(

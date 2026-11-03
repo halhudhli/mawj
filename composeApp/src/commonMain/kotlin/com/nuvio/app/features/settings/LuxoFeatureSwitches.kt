@@ -37,7 +37,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.franchises }, { f, v -> f.copy(franchises = v) },
         ),
         LuxoFeatureSwitch(
-            lx("القنوات وشركات الإنتاج بتصميم Luxo 🏢", "Luxo channels and companies 🏢"),
+            lx("القنوات وشركات الإنتاج بتصميم موج 🏢", "Mawj channels and companies 🏢"),
             lx("بطاقات داكنة بشعارات واضحة، وصفحة جديدة لكل شركة فيها الأفلام والمسلسلات مع ترتيب وفلتر تقييم", "Dark cards with clear logos and a new page per company with sorting and a rating filter"),
             { it.companiesRedesign }, { f, v -> f.copy(companiesRedesign = v) },
         ),
@@ -73,7 +73,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("قارن بين عملين ⚖️", "Compare two titles ⚖️"),
-            lx("جنباً إلى جنب: التقييم والمدة والمواسم والإخراج والبطولة ورأي رفيق Luxo", "Side by side: ratings, runtime, seasons, shared cast and Luxo Companion's take"),
+            lx("جنباً إلى جنب: التقييم والمدة والمواسم والإخراج والبطولة ورأي رفيق موج", "Side by side: ratings, runtime, seasons, shared cast and Mawj Companion's take"),
             { it.compareTitles }, { f, v -> f.copy(compareTitles = v) },
         ),
         LuxoFeatureSwitch(
@@ -147,7 +147,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.mediaHub }, { f, v -> f.copy(mediaHub = v) },
         ),
         LuxoFeatureSwitch(
-            lx("صفحة الممثل بتصميم Luxo 🎭", "Luxo actor page 🎭"),
+            lx("صفحة الممثل بتصميم موج 🎭", "Mawj actor page 🎭"),
             lx("صورة كاملة كبيرة، اشتهر بـ، أفضل المتعاونين، والأعمال بترتيب وفلتر تقييم والأفلام والمسلسلات منفصلة", "Big full photo, known for, top collaborators, and the filmography with sorting, a rating filter and movies / series apart"),
             { it.personPage }, { f, v -> f.copy(personPage = v) },
         ),
@@ -157,18 +157,18 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.arabicTranslate }, { f, v -> f.copy(arabicTranslate = v) },
         ),
         LuxoFeatureSwitch(
-            lx("تصميم Luxo الكامل ✨", "Full Luxo design ✨"),
+            lx("تصميم موج الكامل ✨", "Full Mawj design ✨"),
             lx("كروت زجاجية وعناوين متدرجة ومفاتيح متوهجة في كل الصفحات. إيقافه يرجع شكل نوفيو", "Glass cards, gradient titles and glowing switches everywhere. Off returns the original look"),
             { it.luxoDesign }, { f, v -> f.copy(luxoDesign = v) },
         ),
         LuxoFeatureSwitch(
-            lx("شريط Luxo Dock 🚀", "Luxo Dock bar 🚀"),
+            lx("شريط موج Dock 🚀", "Mawj Dock bar 🚀"),
             lx("الشريط العائم الجديد: القسم المفتوح يتمدد بتدرج متوهج وحلقة ضوء عند التنقل", "The new floating bar: the open tab grows into a glowing pill with a ring of light"),
             { it.luxoDock }, { f, v -> f.copy(luxoDock = v) },
         ),
         LuxoFeatureSwitch(
-            lx("صفحة الملف الشخصي بتصميم Luxo 🎟️", "Luxo profile page 🎟️"),
-            lx("بطاقة Luxo Pass والقاعات بدل قائمة الإعدادات العادية", "The Luxo Pass and halls instead of the plain settings list"),
+            lx("صفحة الملف الشخصي بتصميم موج 🎟️", "Mawj profile page 🎟️"),
+            lx("بطاقة موج Pass والقاعات بدل قائمة الإعدادات العادية", "The Mawj Pass and halls instead of the plain settings list"),
             { it.profileHub }, { f, v -> f.copy(profileHub = v) },
         ),
         LuxoFeatureSwitch(
@@ -252,7 +252,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.challenge }, { f, v -> f.copy(challenge = v) },
         ),
         LuxoFeatureSwitch(
-            lx("السنة في Luxo 🎬", "Your year in Luxo 🎬"),
+            lx("السنة في موج 🎬", "Your year in Mawj 🎬"),
             lx("ملخص السنة على شكل ستوريز قابلة للمشاركة", "Your year as shareable stories"),
             { it.wrapped }, { f, v -> f.copy(wrapped = v) },
         ),
@@ -273,7 +273,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("استوديو الثيمات", "Theme studio"),
-            lx("ألوان Luxo الجاهزة وتركيب ألوان خاصة ومشاركتها بكود", "Luxo palettes, your own mix and a shareable code"),
+            lx("ألوان موج الجاهزة وتركيب ألوان خاصة ومشاركتها بكود", "Mawj palettes, your own mix and a shareable code"),
             { it.themeStudio }, { f, v -> f.copy(themeStudio = v) },
         ),
     )

@@ -80,7 +80,7 @@ fun LuxoSceneShareDialog(frame: ImageBitmap, subtitle: String, title: String, la
                             Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             if (label.isNotBlank()) Text(label, color = Color.White.copy(alpha = 0.65f), fontSize = 11.sp)
                         }
-                        Text("Luxo", style = TextStyle(brush = Brush.horizontalGradient(listOf(Color(0xFF8C7BFF), Color(0xFFFF7EB6)))), fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Text("موج", style = TextStyle(brush = Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF)))), fontSize = 20.sp, fontWeight = FontWeight.Black)
                     }
                 }
             }
@@ -112,7 +112,7 @@ private fun ShareButton(text: String, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(50))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF8C7BFF), Color(0xFFFF7EB6))))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF))))
             .clickable(onClick = onClick)
             .padding(horizontal = 22.dp, vertical = 11.dp),
     ) { Text(text, color = Color.White, fontWeight = FontWeight.Bold) }

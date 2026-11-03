@@ -65,8 +65,8 @@ import com.nuvio.app.features.tmdb.TmdbMetadataService
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
 import kotlinx.coroutines.launch
 
-private val PAccent1 = Color(0xFF8C7BFF)
-private val PAccent2 = Color(0xFFFF7EB6)
+private val PAccent1 = Color(0xFF6F8FBF)
+private val PAccent2 = Color(0xFF9DB1CF)
 
 private enum class LuxoCreditKind(val label: String) { ALL("الكل"), MOVIES("أفلام"), SERIES("مسلسلات") }
 private enum class LuxoCreditSort(val label: String) { FAME("الأشهر"), RATING("الأعلى تقييماً"), NEWEST("الأحدث"), OLDEST("الأقدم") }

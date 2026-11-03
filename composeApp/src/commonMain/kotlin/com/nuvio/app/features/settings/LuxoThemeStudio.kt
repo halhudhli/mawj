@@ -64,7 +64,7 @@ internal fun LuxoThemeStudio(isTablet: Boolean) {
     var draft by remember(current) { mutableStateOf(current.colors.map(::formatHexColor)) }
     var message by remember { mutableStateOf<String?>(null) }
     val msgApplied = lx("تم تطبيق الثيم ✨", "Theme applied ✨")
-    val msgCopied = lx("انسخ الكود وأرسله لأي أحد يستخدم Luxo", "Code copied — share it with any Luxo user")
+    val msgCopied = lx("انسخ الكود وأرسله لأي أحد يستخدم موج", "Code copied — share it with any Mawj user")
     val msgBad = lx("الكود غير صحيح", "That code isn't valid")
 
     fun apply(colors: CustomThemeColors) {

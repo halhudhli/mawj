@@ -53,8 +53,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
-private val X1 = Color(0xFF8C7BFF)
-private val X2 = Color(0xFFFF7EB6)
+private val X1 = Color(0xFF6F8FBF)
+private val X2 = Color(0xFF9DB1CF)
 
 @Composable
 private fun XChip(text: String, onClick: () -> Unit) {

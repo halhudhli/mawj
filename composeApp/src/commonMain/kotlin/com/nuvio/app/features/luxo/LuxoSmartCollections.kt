@@ -51,7 +51,7 @@ internal object LuxoSmartCollections {
                             key = "luxo_smart_${contentType}_${definition.key}",
                             title = definition.title,
                             subtitle = "TMDB",
-                            addonName = "Luxo",
+                            addonName = "موج",
                             target = CatalogTarget.Addon(
                                 manifestUrl = "luxo://smart",
                                 contentType = contentType,

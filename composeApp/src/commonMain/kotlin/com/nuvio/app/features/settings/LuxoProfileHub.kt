@@ -209,7 +209,7 @@ internal fun LazyListScope.luxoProfileHubContent(
             )
             val halls = buildList {
                 if (onProfileClick != null) {
-                    add(LuxoHall(lx("ذوقي", "My taste"), lx("الإحصائيات والأوسمة وخريطة المشاهدة", "Stats, badges and your watch map"), Icons.Rounded.AutoAwesome, Color(0xFFB57BFF), onProfileClick, wide = true))
+                    add(LuxoHall(lx("ذوقي", "My taste"), lx("الإحصائيات والأوسمة وخريطة المشاهدة", "Stats, badges and your watch map"), Icons.Rounded.AutoAwesome, Color(0xFF8FB0DA), onProfileClick, wide = true))
                 }
                 if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().franchises) {
                     add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
@@ -232,7 +232,7 @@ internal fun LazyListScope.luxoProfileHubContent(
                 if (onWatchPartyClick != null) {
                     add(LuxoHall(lx("سهرة جماعية", "Watch party"), lx("شاهد مع الأصدقاء", "Watch together"), Icons.Rounded.Groups, Color(0xFFFF7BA9), onWatchPartyClick))
                 }
-                add(LuxoHall(lx("المظهر", "Appearance"), lx("الثيمات والخطوط والشريط وإضافات Luxo", "Themes, fonts, the bar and Luxo extras"), Icons.Rounded.Palette, Color(0xFFFFB95C), onAppearanceClick, wide = true))
+                add(LuxoHall(lx("المظهر", "Appearance"), lx("الثيمات والخطوط والشريط وإضافات موج", "Themes, fonts, the bar and Mawj extras"), Icons.Rounded.Palette, Color(0xFFFFB95C), onAppearanceClick, wide = true))
                 add(LuxoHall(lx("المحتوى", "Content"), lx("الإضافات والكتالوج", "Addons and catalogs"), Icons.Rounded.Extension, Color(0xFF7BE0A3), onContentDiscoveryClick))
                 add(LuxoHall(lx("التشغيل", "Playback"), lx("المشغل والترجمة", "Player and subtitles"), Icons.Rounded.PlayArrow, Color(0xFFFF6B6B), onPlaybackClick))
                 add(LuxoHall(lx("التكاملات", "Integrations"), lx("الخدمات المرتبطة", "Linked services"), Icons.Rounded.Link, Color(0xFF8C9EFF), onIntegrationsClick))
@@ -240,7 +240,7 @@ internal fun LazyListScope.luxoProfileHubContent(
                 add(LuxoHall(lx("التتبّع", "Tracking"), "Trakt", Icons.Rounded.Sync, Color(0xFFED1C24), onTrackingClick))
                 add(LuxoHall(lx("متقدم", "Advanced"), lx("النسخ الاحتياطي وكل الخيارات", "Backup and every option"), Icons.Rounded.Tune, Color(0xFF9AA3AD), onAdvancedClick))
                 if (onCheckForUpdatesClick != null) {
-                    add(LuxoHall(lx("التحديثات", "Updates"), lx("آخر إصدار من Luxo", "Latest Luxo release"), Icons.Rounded.NewReleases, Color(0xFF6BE3FF), onCheckForUpdatesClick))
+                    add(LuxoHall(lx("التحديثات", "Updates"), lx("آخر إصدار من موج", "Latest Mawj release"), Icons.Rounded.NewReleases, Color(0xFF6BE3FF), onCheckForUpdatesClick))
                 }
                 add(LuxoHall(lx("حول", "About"), lx("التراخيص والشكر", "Licenses and credits"), Icons.Rounded.Info, Color(0xFFC9B6FF), onLicensesAttributionsClick))
             }
@@ -476,7 +476,7 @@ private fun LuxoPassFront(stats: LuxoPassStats) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "LUXO PASS",
+                    "MAWJ PASS",
                     color = Color.White,
                     fontWeight = FontWeight.Black,
                     fontSize = 15.sp,
@@ -498,7 +498,7 @@ private fun LuxoPassFront(stats: LuxoPassStats) {
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        profile?.name?.takeIf { it.isNotBlank() } ?: "Luxo",
+                        profile?.name?.takeIf { it.isNotBlank() } ?: "موج",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
@@ -577,7 +577,7 @@ private fun LuxoPassBack(stats: LuxoPassStats) {
             LuxoPassStat(stats.lists.toString(), lx("قائمة", "Lists"))
         }
         Text(
-            "Luxo · " + AppVersionConfig.VERSION_NAME,
+            "موج · " + AppVersionConfig.VERSION_NAME,
             color = Color.White.copy(alpha = 0.45f),
             fontSize = 10.sp,
         )

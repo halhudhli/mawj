@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.serialization.json.Json
 
 @Serializable
-enum class SplashBackgroundStyle { STARS, WAVES, PARTICLES, GRADIENT, SOLID, AURORA_RIBBONS, FILM, CURTAIN, NEON, PROJECTOR, SPOTLIGHTS, FILM_LEADER, RAIN, BOKEH, WARP, OLD_FILM }
+enum class SplashBackgroundStyle { MAWJ, STARS, WAVES, PARTICLES, GRADIENT, SOLID, AURORA_RIBBONS, FILM, CURTAIN, NEON, PROJECTOR, SPOTLIGHTS, FILM_LEADER, RAIN, BOKEH, WARP, OLD_FILM }
 
 @Serializable
 enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE, SLIDE_UP, DROP, FLIP, SPIN, FLICKER }
@@ -19,19 +19,19 @@ enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE, SLIDE_UP, DROP, FLIP, 
 enum class SplashLogoVariant { SILVER, ORIGINAL, GOLD, ROSE_GOLD, COPPER, EMERALD, ARCTIC_BLUE, GRAPHITE }
 
 @Serializable
-enum class SplashLogoFont { DEFAULT, CINZEL, BEBAS, BARLOW, POPPINS }
+enum class SplashLogoFont { MAWJ, DEFAULT, CINZEL, BEBAS, BARLOW, POPPINS }
 
 @Serializable
 data class SplashSettings(
     val enabled: Boolean = true,
-    val style: SplashBackgroundStyle = SplashBackgroundStyle.WAVES,
+    val style: SplashBackgroundStyle = SplashBackgroundStyle.MAWJ,
     /** 0xRRGGBB */
-    val backgroundColor: Int = 0x0D0D0D,
+    val backgroundColor: Int = 0x050608,
     /** 0xRRGGBB — colour of stars / waves / particles / gradient accent. */
     val accentColor: Int = 0xC9CDD4,
     val logoVariant: SplashLogoVariant = SplashLogoVariant.ORIGINAL,
     /** DEFAULT shows the image wordmark; the others write "LUXO" in that font. */
-    val logoFont: SplashLogoFont = SplashLogoFont.DEFAULT,
+    val logoFont: SplashLogoFont = SplashLogoFont.MAWJ,
     /** 0xRRGGBB — colour of the written "LUXO". */
     val logoTextColor: Int = 0xE8E8EC,
     val logoAnimation: SplashLogoAnimation = SplashLogoAnimation.ZOOM,
@@ -51,7 +51,7 @@ data class SplashSettings(
     val flowingLetters: Boolean = true,
 ) {
     companion object {
-        const val DEFAULT_DURATION_MS = 2000
+        const val DEFAULT_DURATION_MS = 5000
         const val MIN_DURATION_MS = 2000
         const val MAX_DURATION_MS = 10000
     }
@@ -73,10 +73,26 @@ object SplashSettingsRepository {
     fun ensureLoaded() {
         if (loaded) return
         loaded = true
-        val payload = LuxoPrefsStorage.load(storageKey) ?: return
-        runCatching { json.decodeFromString(SplashSettings.serializer(), payload) }
-            .onSuccess { _state.value = it.sanitized() }
+        LuxoPrefsStorage.load(storageKey)?.let { payload ->
+            runCatching { json.decodeFromString(SplashSettings.serializer(), payload) }
+                .onSuccess { _state.value = it.sanitized() }
+        }
+        // «موج»: the new identity's splash becomes the default once (the old choices stay selectable).
+        if (LuxoPrefsStorage.load(MAWJ_APPLIED_KEY) != "1") {
+            val cur = _state.value
+            _state.value = cur.copy(
+                style = SplashBackgroundStyle.MAWJ,
+                logoFont = SplashLogoFont.MAWJ,
+                backgroundColor = 0x050608,
+                accentColor = 0xC9CED6,
+                durationMs = maxOf(cur.durationMs, SplashSettings.DEFAULT_DURATION_MS),
+            ).sanitized()
+            LuxoPrefsStorage.save(storageKey, json.encodeToString(SplashSettings.serializer(), _state.value))
+            LuxoPrefsStorage.save(MAWJ_APPLIED_KEY, "1")
+        }
     }
+
+    private const val MAWJ_APPLIED_KEY = "mawj_splash_applied_v1"
 
     fun update(transform: (SplashSettings) -> SplashSettings) {
         ensureLoaded()

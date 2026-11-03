@@ -230,7 +230,7 @@ internal fun PlayerControlActions(
     val luxoSleepLabel = LuxoPlayerBridge.sleepLabel
     val secondaryActions = listOfNotNull(
         LuxoPlayerBridge.onCompanionClick?.let {
-            PlayerControlAction("رفيق Luxo", it, icon = Icons.Rounded.AutoAwesome)
+            PlayerControlAction("رفيق موج", it, icon = Icons.Rounded.AutoAwesome)
         },
         LuxoPlayerBridge.onColorsClick?.let {
             PlayerControlAction("ألوان الصورة", it, icon = Icons.Rounded.Palette)

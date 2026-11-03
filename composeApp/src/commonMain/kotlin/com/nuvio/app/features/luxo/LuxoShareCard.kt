@@ -82,7 +82,7 @@ internal fun LuxoShareCardDialog(title: LuxoSavedTitle, onDismiss: () -> Unit) {
                     Modifier.fillMaxSize().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("LUXO", color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 6.sp)
+                    Text("MAWJ", color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 6.sp)
                     Spacer(Modifier.height(18.dp))
                     AsyncImage(
                         model = title.poster,
@@ -101,7 +101,7 @@ internal fun LuxoShareCardDialog(title: LuxoSavedTitle, onDismiss: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    Text(lx("تمت مشاهدته على Luxo", "Watched on Luxo"), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                    Text(lx("تمت مشاهدته على موج", "Watched on Mawj"), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

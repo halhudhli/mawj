@@ -62,8 +62,8 @@ internal object LuxoSubtitleTranslator {
             id = "luxo-translated-${source.id}",
             url = uri,
             language = "ar",
-            display = "عربي ✨ ترجمة Luxo",
-            addonName = "Luxo · ${source.addonName ?: source.display}",
+            display = "عربي ✨ ترجمة موج",
+            addonName = "موج · ${source.addonName ?: source.display}",
         )
     }
 

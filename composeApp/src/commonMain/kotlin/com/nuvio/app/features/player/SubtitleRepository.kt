@@ -63,7 +63,7 @@ object SubtitleRepository {
                 LuxoSubtitleTranslator.canTranslate()
             if (shouldTranslate) {
                 _loadingProgress.update { progress ->
-                    progress?.copy(addonName = "ترجمة Luxo ✨")
+                    progress?.copy(addonName = "ترجمة موج ✨")
                 }
                 val translated = englishCandidates.value.take(2).firstNotNullOfOrNull { LuxoSubtitleTranslator.translate(it) }
                 if (translated != null) _addonSubtitles.update { it + translated }

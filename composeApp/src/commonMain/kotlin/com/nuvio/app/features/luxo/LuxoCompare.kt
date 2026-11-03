@@ -54,8 +54,8 @@ import com.nuvio.app.features.luxo.LuxoTmdbLite.s
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-private val CAccent1 = Color(0xFF8C7BFF)
-private val CAccent2 = Color(0xFFFF7EB6)
+private val CAccent1 = Color(0xFF6F8FBF)
+private val CAccent2 = Color(0xFF9DB1CF)
 
 data class LuxoCompareSide(
     val tmdbId: String,
@@ -272,7 +272,7 @@ fun LuxoCompareDialog(title: String, tmdbId: String, mediaType: String, onDismis
                                     .background(Brush.linearGradient(listOf(CAccent1.copy(alpha = 0.18f), CAccent2.copy(alpha = 0.14f))))
                                     .padding(14.dp),
                             ) {
-                                Text("✨ رأي رفيق Luxo", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text("✨ رأي رفيق موج", color = Color.White, fontWeight = FontWeight.Bold)
                                 when {
                                     verdictLoading -> Text("جارٍ التحليل…", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
                                     verdict != null -> Text(verdict!!, color = Color.White.copy(alpha = 0.88f), fontSize = 13.sp, lineHeight = 20.sp)

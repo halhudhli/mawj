@@ -3519,8 +3519,8 @@ private fun LuxoTasteSummaryCard(
             )
             Text(
                 text = com.nuvio.app.features.luxo.lx(
-                    "رفيق Luxo يقرأ سجل المشاهدة كامل (من الحساب)، يوصف الذوق ويقترح أعمال تناسبه",
-                    "Luxo Companion reads everything you've watched (from your account), describes your taste and suggests what's next",
+                    "رفيق موج يقرأ سجل المشاهدة كامل (من الحساب)، يوصف الذوق ويقترح أعمال تناسبه",
+                    "Mawj Companion reads everything you've watched (from your account), describes your taste and suggests what's next",
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = tokens.colors.textMuted,
@@ -3588,7 +3588,7 @@ private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
     if (episodes.isEmpty()) return
     val tokens = MaterialTheme.nuvio
     var message by remember { mutableStateOf<String?>(null) }
-    val calendarDescription = com.nuvio.app.features.luxo.lx("حلقة جديدة في Luxo", "New episode on Luxo")
+    val calendarDescription = com.nuvio.app.features.luxo.lx("حلقة جديدة في موج", "New episode on Mawj")
     val noCalendarMessage = com.nuvio.app.features.luxo.lx("ما لقيت تطبيق تقويم", "No calendar app found")
     NuvioSurfaceCard(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -69,8 +69,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 
-private val CAccent1 = Color(0xFF8C7BFF)
-private val CAccent2 = Color(0xFFFF7EB6)
+private val CAccent1 = Color(0xFF6F8FBF)
+private val CAccent2 = Color(0xFF9DB1CF)
 
 private enum class CompanyTab(val label: String, val media: String) { MOVIES("أفلام", "movie"), SERIES("مسلسلات", "tv") }
 private enum class CompanySort(val label: String) { POPULAR("الأشهر"), RATING("الأعلى تقييماً"), NEWEST("الأحدث"), OLDEST("الأقدم") }

@@ -61,8 +61,8 @@ import com.nuvio.app.core.ui.PlatformBackHandler
 import com.nuvio.app.features.watched.WatchedRepository
 import kotlinx.coroutines.launch
 
-private val FA1 = Color(0xFF8C7BFF)
-private val FA2 = Color(0xFFFF7EB6)
+private val FA1 = Color(0xFF6F8FBF)
+private val FA2 = Color(0xFF9DB1CF)
 private val FBg = Color(0xFF0B0D14)
 
 private enum class FranchiseFilter(val label: String) { ALL("الكل"), NOT_STARTED("لم تبدأ"), IN_PROGRESS("لم تكتمل"), DONE("مكتملة 🏆") }

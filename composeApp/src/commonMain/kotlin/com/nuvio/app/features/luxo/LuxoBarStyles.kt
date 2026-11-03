@@ -91,7 +91,7 @@ import kotlin.math.sin
 /** The bar looks Luxo offers (the original Nuvio bar and Luxo Dock stay available). */
 enum class LuxoBarStyle(val id: String, val ar: String) {
     ORIGINAL("original", "الأصلي (نوفيو)"),
-    DOCK("dock", "Luxo Dock"),
+    DOCK("dock", "Mawj Dock"),
     ISLAND("island", "الجزيرة 🏝️"),
     CINEMA("cinema", "السينمائي 🎬"),
     SPLIT("split", "المنقسم ✂️"),
@@ -111,8 +111,8 @@ enum class LuxoBarStyle(val id: String, val ar: String) {
     }
 }
 
-private val BA1 = Color(0xFF8C7BFF)
-private val BA2 = Color(0xFFFF7EB6)
+private val BA1 = Color(0xFF6F8FBF)
+private val BA2 = Color(0xFF9DB1CF)
 
 private val FloatingNavigationItem.isProfile: Boolean get() = content != null
 private val FloatingNavigationItem.isSearch: Boolean get() = id == LuxoNavTabIds.SEARCH
@@ -528,7 +528,7 @@ private fun BoxScope.CurtainBar(items: List<FloatingNavigationItem>, onTop: Bool
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(28.dp).height(4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.6f)))
             Spacer(Modifier.width(10.dp))
-            Text(current?.label ?: "Luxo", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(current?.label ?: "موج", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
     if (open) {
@@ -693,7 +693,7 @@ private fun CommandBar(items: List<FloatingNavigationItem>, alpha: Float, modifi
     ) {
         Text("⌘", color = BA2, fontSize = 16.sp, fontWeight = FontWeight.Black)
         Spacer(Modifier.width(10.dp))
-        Text(current?.label ?: "Luxo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(current?.label ?: "موج", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
         Spacer(Modifier.width(10.dp))
         Text("▾", color = Color.White.copy(alpha = 0.6f))
     }

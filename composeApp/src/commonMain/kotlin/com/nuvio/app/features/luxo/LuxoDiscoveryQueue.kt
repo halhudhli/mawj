@@ -147,7 +147,7 @@ internal fun LuxoDiscoveryCard(
             .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.horizontalGradient(
-                    listOf(Color(0xFF2BD1C4).copy(alpha = 0.30f), Color(0xFF4F7BFF).copy(alpha = 0.22f), Color(0xFFB57BFF).copy(alpha = 0.16f)),
+                    listOf(Color(0xFF2BD1C4).copy(alpha = 0.30f), Color(0xFF4F7BFF).copy(alpha = 0.22f), Color(0xFF8FB0DA).copy(alpha = 0.16f)),
                 ),
             )
             .clickable { open = true }

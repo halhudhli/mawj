@@ -26,7 +26,7 @@ class LuxoContinueWidget : AppWidgetProvider() {
                 ?.filter { it.isNotBlank() }
                 .orEmpty()
             val views = RemoteViews(context.packageName, R.layout.luxo_widget_continue)
-            views.setTextViewText(R.id.luxo_widget_line1, lines.getOrNull(0) ?: "افتح Luxo وابدأ مشاهدة")
+            views.setTextViewText(R.id.luxo_widget_line1, lines.getOrNull(0) ?: "افتح موج وابدأ مشاهدة")
             views.setTextViewText(R.id.luxo_widget_line2, lines.getOrNull(1) ?: "")
             views.setTextViewText(R.id.luxo_widget_line3, lines.getOrNull(2) ?: "")
             val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
