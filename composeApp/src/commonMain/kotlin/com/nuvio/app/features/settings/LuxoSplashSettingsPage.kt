@@ -321,6 +321,13 @@ private fun SplashBackgroundStyle.label(): String = when (this) {
     SplashBackgroundStyle.FILM -> lx("شريط فيلم 🎞️", "Film strip 🎞️")
     SplashBackgroundStyle.CURTAIN -> lx("ستارة سينما 🎭", "Cinema curtain 🎭")
     SplashBackgroundStyle.NEON -> lx("نبض نيون 💡", "Neon pulse 💡")
+    SplashBackgroundStyle.PROJECTOR -> lx("ضوء العارض 📽️", "Projector beam 📽️")
+    SplashBackgroundStyle.SPOTLIGHTS -> lx("كشافات العرض الأول 🔦", "Premiere spotlights 🔦")
+    SplashBackgroundStyle.FILM_LEADER -> lx("عدّاد الفيلم القديم ⏱️", "Film leader ⏱️")
+    SplashBackgroundStyle.RAIN -> lx("مطر 🌧️", "Rain 🌧️")
+    SplashBackgroundStyle.BOKEH -> lx("أضواء ضبابية ✨", "Bokeh ✨")
+    SplashBackgroundStyle.WARP -> lx("قفزة فضائية 🚀", "Warp 🚀")
+    SplashBackgroundStyle.OLD_FILM -> lx("بكرة قديمة 🎞️", "Old reel 🎞️")
 }
 
 @Composable
@@ -329,6 +336,11 @@ private fun SplashLogoAnimation.label(): String = when (this) {
     SplashLogoAnimation.ZOOM -> lx("تكبير", "Zoom")
     SplashLogoAnimation.PULSE -> lx("نبض", "Pulse")
     SplashLogoAnimation.NONE -> lx("بدون", "None")
+    SplashLogoAnimation.SLIDE_UP -> lx("صعود", "Slide up")
+    SplashLogoAnimation.DROP -> lx("سقوط وارتداد", "Drop")
+    SplashLogoAnimation.FLIP -> lx("قلب", "Flip")
+    SplashLogoAnimation.SPIN -> lx("دوران", "Spin")
+    SplashLogoAnimation.FLICKER -> lx("وميض العارض", "Flicker")
 }
 
 @Composable

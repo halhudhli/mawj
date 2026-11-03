@@ -134,6 +134,13 @@ private fun SplashAnimatedBackground(settings: SplashSettings) {
             SplashBackgroundStyle.FILM -> drawFilmStrip(t, accent)
             SplashBackgroundStyle.CURTAIN -> drawCurtain(t, accent)
             SplashBackgroundStyle.NEON -> drawNeonRings(t, accent)
+            SplashBackgroundStyle.PROJECTOR -> drawProjector(t, accent, particles)
+            SplashBackgroundStyle.SPOTLIGHTS -> drawSpotlights(t, accent)
+            SplashBackgroundStyle.FILM_LEADER -> drawFilmLeader(t, accent)
+            SplashBackgroundStyle.RAIN -> drawRain(stars, t, accent)
+            SplashBackgroundStyle.BOKEH -> drawBokeh(particles, t, accent)
+            SplashBackgroundStyle.WARP -> drawWarp(stars, t, accent)
+            SplashBackgroundStyle.OLD_FILM -> drawOldFilm(t, accent)
         }
         if (settings.glow) {
             val radius = size.minDimension * 0.42f
@@ -154,7 +161,17 @@ private fun SplashAnimatedBackground(settings: SplashSettings) {
 private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
     val alpha = remember(replayKey, settings.logoAnimation) { Animatable(if (settings.logoAnimation == SplashLogoAnimation.NONE) 1f else 0f) }
     val scale = remember(replayKey, settings.logoAnimation) {
-        Animatable(if (settings.logoAnimation == SplashLogoAnimation.ZOOM) 0.55f else 1f)
+        Animatable(
+            when (settings.logoAnimation) {
+                SplashLogoAnimation.ZOOM -> 0.55f
+                SplashLogoAnimation.SPIN -> 0.2f
+                else -> 1f
+            },
+        )
+    }
+    // 1 → 0: how far the logo still is from its place (slide / drop / flip / spin).
+    val travel = remember(replayKey, settings.logoAnimation) {
+        Animatable(if (settings.logoAnimation in setOf(SplashLogoAnimation.SLIDE_UP, SplashLogoAnimation.DROP, SplashLogoAnimation.FLIP, SplashLogoAnimation.SPIN)) 1f else 0f)
     }
 
     LaunchedEffect(replayKey, settings.logoAnimation) {
@@ -164,6 +181,29 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
             SplashLogoAnimation.ZOOM -> {
                 launch { alpha.animateTo(1f, tween(350, easing = FastOutSlowInEasing)) }
                 scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 120f))
+            }
+            SplashLogoAnimation.SLIDE_UP -> {
+                launch { alpha.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
+                travel.animateTo(0f, tween(900, easing = FastOutSlowInEasing))
+            }
+            SplashLogoAnimation.DROP -> {
+                launch { alpha.animateTo(1f, tween(250)) }
+                travel.animateTo(0f, spring(dampingRatio = 0.38f, stiffness = 140f))
+            }
+            SplashLogoAnimation.FLIP -> {
+                launch { alpha.animateTo(1f, tween(400)) }
+                travel.animateTo(0f, tween(1100, easing = FastOutSlowInEasing))
+            }
+            SplashLogoAnimation.SPIN -> {
+                launch { alpha.animateTo(1f, tween(400)) }
+                launch { scale.animateTo(1f, tween(1000, easing = FastOutSlowInEasing)) }
+                travel.animateTo(0f, tween(1000, easing = FastOutSlowInEasing))
+            }
+            SplashLogoAnimation.FLICKER -> {
+                // Like an old projector catching the frame.
+                listOf(0.7f, 0.1f, 0.9f, 0.3f, 1f, 0.6f, 1f).forEach { a ->
+                    alpha.animateTo(a, tween(90))
+                }
             }
             SplashLogoAnimation.PULSE -> {
                 alpha.animateTo(1f, tween(400, easing = FastOutSlowInEasing))
@@ -188,6 +228,17 @@ private fun SplashLogo(settings: SplashSettings, replayKey: Int) {
         this.alpha = alpha.value
         scaleX = scale.value
         scaleY = scale.value
+        val tr = travel.value
+        when (settings.logoAnimation) {
+            SplashLogoAnimation.SLIDE_UP -> translationY = 140.dp.toPx() * tr
+            SplashLogoAnimation.DROP -> translationY = -size.height * 4f * tr
+            SplashLogoAnimation.FLIP -> {
+                rotationY = 180f * tr
+                cameraDistance = 14f * density
+            }
+            SplashLogoAnimation.SPIN -> rotationZ = -360f * tr
+            else -> Unit
+        }
         if (settings.flowingLetters) compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
     }.then(
         if (settings.flowingLetters) {
@@ -449,4 +500,112 @@ private fun DrawScope.drawNeonRings(t: Float, accent: Int) {
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f * (1f - phase) + 1.5f),
         )
     }
+}
+
+
+// ---------------------------------------------------------------- Luxo: more backgrounds
+
+private fun DrawScope.drawProjector(t: Float, accent: Int, dust: List<Particle>) {
+    // A beam from the top corner with dust floating inside it.
+    val src = Offset(size.width * 0.5f, -size.height * 0.08f)
+    val flicker = 0.85f + 0.15f * sin(t * 23f) * sin(t * 7f)
+    val beam = androidx.compose.ui.graphics.Path().apply {
+        moveTo(src.x - 10f, src.y)
+        lineTo(src.x + 10f, src.y)
+        lineTo(size.width * 0.95f, size.height)
+        lineTo(size.width * 0.05f, size.height)
+        close()
+    }
+    drawPath(beam, Brush.verticalGradient(listOf(rgbColor(accent, 0.30f * flicker), rgbColor(accent, 0.04f))))
+    dust.forEach { p ->
+        val x = size.width * (0.2f + 0.6f * wrap(p.x + t * 0.01f * (p.rise * 15f)))
+        val y = size.height * wrap(p.y + t * 0.02f * (p.rise * 15f))
+        drawCircle(rgbColor(accent, 0.35f * flicker), radius = p.radius * 0.6f, center = Offset(x, y))
+    }
+}
+
+private fun DrawScope.drawSpotlights(t: Float, accent: Int) {
+    // Premiere searchlights sweeping the sky.
+    for (i in 0..1) {
+        val baseX = size.width * (if (i == 0) 0.25f else 0.75f)
+        val angle = (sin(t * 0.7f + i * 2.1f) * 0.45f).toDouble()
+        val len = size.height * 1.4f
+        val tipX = baseX + (kotlin.math.sin(angle) * len).toFloat()
+        val tipY = size.height - (kotlin.math.cos(angle) * len).toFloat()
+        val spread = size.width * 0.12f
+        val path = androidx.compose.ui.graphics.Path().apply {
+            moveTo(baseX - 8f, size.height)
+            lineTo(baseX + 8f, size.height)
+            lineTo(tipX + spread, tipY)
+            lineTo(tipX - spread, tipY)
+            close()
+        }
+        drawPath(path, Brush.verticalGradient(listOf(Color.Transparent, rgbColor(accent, 0.28f)), startY = tipY, endY = size.height))
+    }
+}
+
+private fun DrawScope.drawFilmLeader(t: Float, accent: Int) {
+    // The old "3 · 2 · 1" film leader: crosshair, rings and a sweeping hand.
+    val c = center
+    val r = size.minDimension * 0.34f
+    drawLine(rgbColor(accent, 0.25f), Offset(0f, c.y), Offset(size.width, c.y), strokeWidth = 2f)
+    drawLine(rgbColor(accent, 0.25f), Offset(c.x, 0f), Offset(c.x, size.height), strokeWidth = 2f)
+    drawCircle(rgbColor(accent, 0.35f), r, c, style = androidx.compose.ui.graphics.drawscope.Stroke(3f))
+    drawCircle(rgbColor(accent, 0.25f), r * 1.18f, c, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+    val sweep = (t % 1f) * 360f
+    drawArc(rgbColor(accent, 0.16f), startAngle = -90f, sweepAngle = sweep, useCenter = true, topLeft = Offset(c.x - r, c.y - r), size = androidx.compose.ui.geometry.Size(r * 2, r * 2))
+}
+
+private fun DrawScope.drawRain(drops: List<Star>, t: Float, accent: Int) {
+    drops.forEach { d ->
+        val x = size.width * d.x + sin(t) * 6f
+        val y = size.height * wrap(d.y + t * (0.5f + d.depth * 0.2f))
+        val len = 18f + d.depth * 10f
+        drawLine(rgbColor(accent, 0.18f + d.depth * 0.08f), Offset(x, y), Offset(x - len * 0.18f, y + len), strokeWidth = 1.4f)
+    }
+}
+
+private fun DrawScope.drawBokeh(lights: List<Particle>, t: Float, accent: Int) {
+    lights.forEachIndexed { i, p ->
+        val x = size.width * wrap(p.x + sin(t * 0.2f + i) * 0.03f)
+        val y = size.height * wrap(p.y - t * 0.01f * (p.rise * 15f))
+        val r = size.minDimension * (0.03f + p.radius * 0.012f)
+        val col = if (i % 3 == 0) Color(0xFFFF7EB6) else if (i % 3 == 1) Color(0xFF8C7BFF) else rgbColor(accent)
+        drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.32f), col.copy(alpha = 0.08f), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
+    }
+}
+
+private fun DrawScope.drawWarp(stars: List<Star>, t: Float, accent: Int) {
+    // Stars rushing out from the middle.
+    val c = center
+    val maxR = size.maxDimension * 0.75f
+    stars.forEach { s ->
+        val angle = s.x * 6.2832f
+        val phase = wrap(s.y + t * 0.35f)
+        val d1 = maxR * phase * phase
+        val d2 = maxR * (phase * phase + 0.04f * phase)
+        val p1 = Offset(c.x + kotlin.math.cos(angle) * d1, c.y + kotlin.math.sin(angle) * d1)
+        val p2 = Offset(c.x + kotlin.math.cos(angle) * d2, c.y + kotlin.math.sin(angle) * d2)
+        drawLine(rgbColor(accent, 0.15f + 0.7f * phase), p1, p2, strokeWidth = 1f + 2.5f * phase)
+    }
+}
+
+private fun DrawScope.drawOldFilm(t: Float, accent: Int) {
+    // Sepia flicker, grain and scratches of an old reel.
+    val flicker = 0.06f + 0.05f * kotlin.math.abs(sin(t * 31f))
+    drawRect(Color(0xFF3B2A18).copy(alpha = 0.55f))
+    drawRect(Color.White.copy(alpha = flicker))
+    val frame = (t * 24f).toInt()
+    val rnd = kotlin.random.Random(frame)
+    repeat(140) {
+        drawCircle(Color.Black.copy(alpha = 0.35f), radius = rnd.nextFloat() * 1.8f + 0.4f, center = Offset(rnd.nextFloat() * size.width, rnd.nextFloat() * size.height))
+    }
+    repeat(2) {
+        if (rnd.nextFloat() > 0.4f) {
+            val x = rnd.nextFloat() * size.width
+            drawLine(Color.White.copy(alpha = 0.18f), Offset(x, 0f), Offset(x + rnd.nextFloat() * 6f, size.height), strokeWidth = 1.2f)
+        }
+    }
+    drawRect(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)), center = center, radius = size.maxDimension * 0.7f))
+    drawRect(rgbColor(accent, 0.05f))
 }

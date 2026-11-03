@@ -10,10 +10,10 @@ import androidx.compose.runtime.setValue
 import kotlinx.serialization.json.Json
 
 @Serializable
-enum class SplashBackgroundStyle { STARS, WAVES, PARTICLES, GRADIENT, SOLID, AURORA_RIBBONS, FILM, CURTAIN, NEON }
+enum class SplashBackgroundStyle { STARS, WAVES, PARTICLES, GRADIENT, SOLID, AURORA_RIBBONS, FILM, CURTAIN, NEON, PROJECTOR, SPOTLIGHTS, FILM_LEADER, RAIN, BOKEH, WARP, OLD_FILM }
 
 @Serializable
-enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE }
+enum class SplashLogoAnimation { FADE, ZOOM, PULSE, NONE, SLIDE_UP, DROP, FLIP, SPIN, FLICKER }
 
 @Serializable
 enum class SplashLogoVariant { SILVER, ORIGINAL, GOLD, ROSE_GOLD, COPPER, EMERALD, ARCTIC_BLUE, GRAPHITE }
