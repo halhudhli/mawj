@@ -3,6 +3,8 @@ name: Build LUXO APK
 on:
   push:
     branches: [ "main" ]
+    # Instructions for coding assistants only: no new release for them.
+    paths-ignore: [ "AGENTS.md" ]
   workflow_dispatch:
 
 concurrency:
