@@ -117,10 +117,10 @@ private fun buildBento(items: List<WatchedItem>, facts: Map<String, LuxoTitleFac
     known.forEach { (f, _) -> f.cast.forEachIndexed { i, n -> if (actorPhotos[n] == null) actorPhotos[n] = f.castPhotos.getOrNull(i) } }
     // Mood of each of the last 6 months = the most watched genre that month.
     val byMonth = items.filter { it.markedAtEpochMs > 0 }.groupBy { localMonth(it.markedAtEpochMs) }
-    val monthKeys = byMonth.keys.filter { it.isNotBlank() }.sortedWith(compareBy({ it.substringBefore('-').toInt() }, { it.substringAfter('-').toInt() })).takeLast(6)
+    val monthKeys = byMonth.keys.filter { it.isNotBlank() }.sortedWith(compareBy({ it.substringBefore('-').toIntOrNull() ?: 0 }, { it.substringAfter('-').toIntOrNull() ?: 0 })).takeLast(6)
     val months = monthKeys.map { mk ->
         val g = byMonth[mk].orEmpty().mapNotNull { facts[LuxoTasteFacts.keyOf(it)] }.flatMap { it.genres }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
-        arMonths[(mk.substringAfter('-').toInt() - 1).coerceIn(0, 11)] to g
+        arMonths[((mk.substringAfter('-').toIntOrNull() ?: 1) - 1).coerceIn(0, 11)] to g
     }
     return LuxoBentoStats(
         titles = titleItems.size,

@@ -494,7 +494,7 @@ internal fun LuxoWorldCountdownContent(onOpen: (MetaPreview) -> Unit, modifier: 
                 if (list.isEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
-                            lx("ما قدرنا نجيب المواعيد الحين. تأكد من الإنترنت وجرب بعد شوي.", "Couldn't load schedules right now."),
+                            lx("تعذّر جلب المواعيد الآن. يُرجى التأكد من الاتصال بالإنترنت والمحاولة بعد قليل.", "Couldn't load schedules right now."),
                             color = tokens.colors.textMuted,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().padding(32.dp),

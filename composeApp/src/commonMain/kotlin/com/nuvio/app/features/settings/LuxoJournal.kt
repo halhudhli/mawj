@@ -466,7 +466,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
             WrappedBig(
                 lx("وأطول سلسلة أيام", "And your best streak"),
                 LuxoDateStyle.digits("${stats.streakDays}"),
-                if (stats.nightShare > 0.25f) lx("يوم ورا يوم… وأغلبها بالليل 🌙", "days in a row… mostly at night 🌙") else lx("يوم ورا يوم 🔥", "days in a row 🔥"),
+                if (stats.nightShare > 0.25f) lx("يوماً بعد يوم… وأغلبها ليلاً 🌙", "days in a row… mostly at night 🌙") else lx("يوماً بعد يوم 🔥", "days in a row 🔥"),
             )
         })
     }

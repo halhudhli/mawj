@@ -243,7 +243,7 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
                         items.isEmpty() -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("🎉", fontSize = 42.sp)
                             Text(
-                                lx("خلص الطابور! ارجع بعدين لأعمال جديدة.", "Queue finished! Come back later for more."),
+                                lx("انتهى الطابور! تظهر أعمال جديدة لاحقاً.", "Queue finished! Come back later for more."),
                                 color = Color.White,
                             )
                             Spacer(Modifier.height(12.dp))
@@ -369,7 +369,7 @@ private fun LuxoSwipeCard(item: MetaPreview, depth: Int, onDecide: (Boolean) -> 
         if (depth == 0 && abs(progress) > 0.15f) {
             val like = progress > 0
             Text(
-                text = if (like) lx("يعجبني ❤️", "KEEP ❤️") else lx("مو لي ✕", "SKIP ✕"),
+                text = if (like) lx("يعجبني ❤️", "KEEP ❤️") else lx("لا يناسبني ✕", "SKIP ✕"),
                 color = if (like) Color(0xFF4CE0A0) else Color(0xFFFF6B6B),
                 fontWeight = FontWeight.Black,
                 fontSize = 26.sp,

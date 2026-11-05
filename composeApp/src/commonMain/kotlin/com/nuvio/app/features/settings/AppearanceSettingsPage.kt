@@ -613,7 +613,7 @@ private fun LuxoLookControls(isTablet: Boolean) {
                     "A faint (20%) glow in the poster's own colours; the screen takes a dark, quiet tint of it.",
                 )
                 com.nuvio.app.features.luxo.LuxoPosterFocusStyle.SPOTLIGHT -> lx(
-                    "بدون توهج: البوستر يرتفع شوي ويطلع خط إضاءة صغير تحته.",
+                    "بدون توهج: يرتفع الملصق قليلاً ويظهر تحته خط إضاءة صغير.",
                     "No glow: the poster lifts a little and a small light line appears under it.",
                 )
             },
@@ -750,8 +750,8 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
             context = remember { com.nuvio.app.features.luxo.LuxoMonthRecap.context() },
             quickActions = listOf(
                 "ملخص شهري" to "اكتب الملخص الشهري الآن.",
-                "وش ذوقي؟" to "حلّل ذوقي من هذه المشاهدات في 5 نقاط قصيرة.",
-                "وش أشوف بعدها؟" to "اقترح 5 أعمال تناسب ذوقي مع سطر لكل عمل.",
+                "ما طبيعة ذوقي؟" to "حلّل ذوقي من هذه المشاهدات في 5 نقاط قصيرة.",
+                "ماذا يُشاهَد بعدها؟" to "اقترح 5 أعمال تناسب ذوقي مع سطر لكل عمل.",
             ),
             questionLabel = lx("سؤال عن المشاهدات", "Ask about your watching"),
             onDismiss = { recapOpen = false },

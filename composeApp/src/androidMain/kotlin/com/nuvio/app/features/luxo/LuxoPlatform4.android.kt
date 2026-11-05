@@ -186,8 +186,11 @@ actual object LuxoRemoteNet {
     private var lock: WifiManager.MulticastLock? = null
     private val main = Handler(Looper.getMainLooper())
 
+    private val starting = java.util.concurrent.atomic.AtomicBoolean(false)
+
     actual fun startServer(code: String, deviceName: String, onCommand: (String) -> Unit) {
-        if (server != null) return
+        // The sockets are opened on background threads, so a second quick call must not start a second pair.
+        if (server != null || !starting.compareAndSet(false, true)) return
         val context = LuxoPrefsStorage.appContext
         runCatching {
             lock = (context?.applicationContext?.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
@@ -197,7 +200,7 @@ actual object LuxoRemoteNet {
             runCatching {
                 val ss = ServerSocket()
                 ss.reuseAddress = true
-                ss.bind(InetSocketAddress(port))
+                runCatching { ss.bind(InetSocketAddress(port)) }.onFailure { runCatching { ss.close() }; starting.set(false); throw it }
                 server = ss
                 while (!ss.isClosed) {
                     val s = runCatching { ss.accept() }.getOrNull() ?: break
@@ -244,6 +247,7 @@ actual object LuxoRemoteNet {
         runCatching { lock?.release() }
         server = null
         discovery = null
+        starting.set(false)
     }
 
     actual fun localAddress(): String? = runCatching {

@@ -92,7 +92,7 @@ internal fun LuxoTonightCard(
     ) {
         Text("✨", style = MaterialTheme.typography.headlineSmall)
         Column(modifier = Modifier.weight(1f)) {
-            Text(lx("وش أشوف الليلة؟", "What should I watch tonight?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
+            Text(lx("ماذا يُشاهَد الليلة؟", "What should I watch tonight?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color.White)
             Text(
                 lx("اختيار المزاج يعطي اقتراحات من الكتالوج", "Pick a mood and get picks from your catalog"),
                 style = MaterialTheme.typography.bodySmall,
@@ -167,7 +167,7 @@ internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Un
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             LuxoAssistantHeader(
-                title = "وش أشوف الليلة؟",
+                title = "ماذا يُشاهَد الليلة؟",
                 subtitle = if (busy) "جاري البحث عن اقتراح مناسب…" else "اختيار مزاج أو كتابة وصف للمطلوب",
                 thinking = busy,
             )
@@ -192,7 +192,7 @@ internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Un
             LuxoAskBar(
                 value = wish,
                 onValueChange = { wish = it },
-                placeholder = "أو اكتب: «أبغى فيلم خفيف عن السفر»",
+                placeholder = "أو يُكتب الطلب: «فيلم خفيف عن السفر»",
                 enabled = !busy,
                 onSend = {
                     val w = wish.trim()
@@ -207,7 +207,7 @@ internal fun LuxoTonightSheet(onDismiss: () -> Unit, onOpen: (MetaPreview) -> Un
             }
             picks?.let { list ->
                 if (list.isEmpty()) {
-                    LuxoChatBubble("ما لقيت شي يناسب هالطلب في كتالوجك الحالي. جرّب مزاج ثاني أو اكتب طلبك بشكل مختلف.", fromUser = false)
+                    LuxoChatBubble("لم يُعثر على ما يناسب هذا الطلب في الفهرس الحالي. يمكن تجربة مزاج آخر أو كتابة الطلب بصيغة مختلفة.", fromUser = false)
                 }
                 list.forEach { pick ->
                     Row(

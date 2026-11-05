@@ -91,7 +91,7 @@ fun LuxoTraktDoctorDialog(onDismiss: () -> Unit) {
             lines += when {
                 device == null -> DoctorLine(null, "تسجيل الدخول بالرمز", "تعذّر الفحص.")
                 device.status in 200..299 -> DoctorLine(true, "تسجيل الدخول بالرمز", "يعمل: Trakt يعطي رمز تفعيل للتطبيق.")
-                else -> DoctorLine(false, "تسجيل الدخول بالرمز", "مرفوض (${device.status}). تأكد من تفعيل التطبيق في صفحة Trakt.")
+                else -> DoctorLine(false, "تسجيل الدخول بالرمز", "مرفوض (${device.status}). يُرجى التأكد من تفعيل التطبيق في صفحة Trakt.")
             }
         }
         if (id.isNotBlank() && secret.isNotBlank()) {

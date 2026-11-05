@@ -78,6 +78,7 @@ fun LuxoOverlayHost() {
     if (LuxoOverlays.remote) LuxoRemoteDialog(onDismiss = { LuxoOverlays.remote = false })
     if (LuxoOverlays.kids) LuxoKidsDialog(onDismiss = { LuxoOverlays.kids = false })
     if (LuxoOverlays.smartSource) LuxoSmartSourceDialog(onDismiss = { LuxoOverlays.smartSource = false })
+    if (LuxoOverlays.youtube) LuxoYoutubeDialog(onDismiss = { LuxoOverlays.youtube = false })
     LuxoRemoteServerHost()
     LuxoSeriesStatusSync()
     LuxoScreensaverHost()
@@ -273,7 +274,7 @@ private fun FranchiseDetail(key: String, onBack: () -> Unit) {
                     Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         next?.let { n ->
                             Text(
-                                (if (watchedCount == 0) "▶ ابدأ السلسلة: " else "▶ كمّل السلسلة: ") + n.title,
+                                (if (watchedCount == 0) "▶ ابدأ السلسلة: " else "▶ أكمل السلسلة: ") + n.title,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,

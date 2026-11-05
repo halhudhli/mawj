@@ -65,9 +65,9 @@ private fun LuxoFontsSettingsBody(isTablet: Boolean) {
 
     var message by remember { mutableStateOf<String?>(null) }
     val importedText = lx("تمت إضافة الخط", "Font added")
-    val notAFontText = lx("الملف هذا مو خط (ttf أو otf)", "That file isn't a font (ttf or otf)")
+    val notAFontText = lx("هذا الملف ليس خطاً (ttf أو otf)", "That file isn't a font (ttf or otf)")
     val tooLargeText = lx("الخط كبير مرة", "That font is too large")
-    val failedText = lx("ما قدرت أضيف الخط، جرّب مرة ثانية", "Couldn't add the font, try again")
+    val failedText = lx("تعذّرت إضافة الخط، تُرجى المحاولة مرة أخرى", "Couldn't add the font, try again")
     val launchImport = rememberSubtitleFontImporter(
         onPicked = { name, bytes ->
             message = when (val result = SubtitleFontRepository.import(name, bytes)) {

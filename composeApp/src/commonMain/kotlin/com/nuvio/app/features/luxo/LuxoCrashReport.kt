@@ -29,10 +29,10 @@ fun LuxoCrashReportDialog() {
     }
     AlertDialog(
         onDismissRequest = { close() },
-        title = { Text("صار خطأ وانقفل التطبيق") },
+        title = { Text("حدث خطأ وأُغلق التطبيق") },
         text = {
             Text(
-                "انسخ التفاصيل وأرسلها عشان ينصلح:\n\n$text",
+                "تُنسخ التفاصيل وتُرسل ليُصلَح الخطأ:\n\n$text",
                 fontSize = 11.sp,
                 modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
             )

@@ -114,7 +114,7 @@ internal fun LuxoShareCardDialog(title: LuxoSavedTitle, onDismiss: () -> Unit) {
                     }
                 }) { Text(lx("مشاركة", "Share")) }
             }
-            if (failed) Text(lx("ما قدرنا نجهّز الصورة، جرّب مرة ثانية", "Couldn't prepare the image, try again"), color = Color(0xFFFF6B6B))
+            if (failed) Text(lx("تعذّر تجهيز الصورة، تُرجى المحاولة مرة أخرى", "Couldn't prepare the image, try again"), color = Color(0xFFFF6B6B))
         }
     }
 }

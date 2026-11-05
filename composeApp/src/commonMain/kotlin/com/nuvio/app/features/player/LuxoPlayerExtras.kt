@@ -121,7 +121,7 @@ internal fun LuxoPlayerExtrasHost(
             scope.launch {
                 val frame = luxoCaptureVideoFrame(1280, 720)
                 if (frame == null) {
-                    LuxoPlayerBridge.toast = "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
+                    LuxoPlayerBridge.toast = "تعذّر تصوير هذا المشهد (بعض المصادر محمية)"
                     delay(2_500L)
                     LuxoPlayerBridge.toast = null
                 } else {
@@ -201,7 +201,7 @@ internal fun LuxoPlayerExtrasHost(
             {
                 scope.launch {
                     val saved = luxoSaveVideoScreenshot(title)
-                    LuxoPlayerBridge.toast = if (saved) "انحفظت اللقطة في الصور ← موج 📸" else "ما قدرنا نصوّر هالمشهد (بعض المصادر محمية)"
+                    LuxoPlayerBridge.toast = if (saved) "حُفظت اللقطة في الصور ← موج 📸" else "تعذّر تصوير هذا المشهد (بعض المصادر محمية)"
                     delay(2_500L)
                     LuxoPlayerBridge.toast = null
                 }
@@ -289,7 +289,7 @@ internal fun LuxoPlayerExtrasHost(
             ) {
                 Text("مؤقت النوم", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "يوقف التشغيل تلقائياً بعد المدة اللي تختارها (تُحسب وقت التشغيل فقط).",
+                    "يتوقف التشغيل تلقائياً بعد المدة المختارة (تُحسب مدة التشغيل فقط).",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -343,14 +343,14 @@ internal fun LuxoPlayerExtrasHost(
             subjectTitle = where,
             context = context,
             quickActions = buildList {
-                add("وش صار لين الحين؟" to "لخّص ما حدث في هذا العمل حتى اللحظة الحالية تقريباً، بدون أي حرق لما بعدها.")
+                add("ماذا حدث حتى الآن؟" to "لخّص ما حدث في هذا العمل حتى اللحظة الحالية تقريباً، بدون أي حرق لما بعدها.")
                 if (seasonNumber != null && episodeNumber != null && episodeNumber > 1) {
-                    add("ملخص الحلقات اللي قبل" to LuxoCompanionApi.recapPrompt(seasonNumber, episodeNumber - 1))
+                    add("ملخص الحلقات السابقة" to LuxoCompanionApi.recapPrompt(seasonNumber, episodeNumber - 1))
                 }
                 add("مين الأبطال؟" to "عرّف بأبطال العمل وشخصياتهم الرئيسية باختصار، بدون حرق.")
                 add("معلومة عن العمل" to "اذكر 3 معلومات ممتعة عن إنتاج هذا العمل، بدون حرق.")
             },
-            questionLabel = "اسأل عن اللي تشوفه (بدون حرق)",
+            questionLabel = "سؤال عمّا يُعرض الآن (بدون حرق)",
             onDismiss = { companionOpen = false },
         )
     }

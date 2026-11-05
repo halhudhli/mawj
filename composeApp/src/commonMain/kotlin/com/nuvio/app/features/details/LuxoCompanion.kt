@@ -67,11 +67,11 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
         context = LuxoCompanionApi.context(meta),
         quickActions = buildList {
             luxoLastWatchedEpisode(meta.id)?.let { (season, episode) ->
-                add("ملخص اللي فات" to LuxoCompanionApi.recapPrompt(season, episode))
+                add("ملخص ما سبق" to LuxoCompanionApi.recapPrompt(season, episode))
             }
             add("ملخص بدون حرق" to LuxoCompanionApi.SUMMARY)
             add("عن الممثلين" to LuxoCompanionApi.CAST)
-            add("ليش أشاهده؟" to LuxoCompanionApi.WHY)
+            add("لماذا يُشاهَد؟" to LuxoCompanionApi.WHY)
             add("أعمال تشبهه" to LuxoCompanionApi.SIMILAR)
         },
         questionLabel = "اسأل عن العمل (بدون حرق)",
@@ -408,7 +408,7 @@ internal object LuxoCompanionApi {
                         )
                     }
                     if (response == null) {
-                        lastError = "الرفيق تأخر في الرد"
+                        lastError = "تأخّر الرفيق في الرد"
                         break
                     }
                     val root = runCatching { json.parseToJsonElement(response.body).jsonObject }.getOrNull()
@@ -443,15 +443,15 @@ internal object LuxoCompanionApi {
                         // Unknown model on this key: next model.
                         404 -> break
                         // Bad key or permission: no point trying other models.
-                        else -> return "ما قدر الرفيق يرد: $lastError"
+                        else -> return "تعذّر رد الرفيق: $lastError"
                     }
                 }
                 kotlinx.coroutines.delay(400L)
             }
-            "Gemini مشغول الحين على كل الموديلات المتاحة (${lastError ?: "بدون تفاصيل"}). جرّب بعد دقيقة."
+            "Gemini مشغول الآن على كل النماذج المتاحة (${lastError ?: "بدون تفاصيل"}). تُرجى المحاولة بعد دقيقة."
         } catch (error: Exception) {
             if (error is CancellationException) throw error
-            "تعذّر الاتصال بـ Gemini. تأكد من الإنترنت ومن صحة المفتاح."
+            "تعذّر الاتصال بـ Gemini. يُرجى التأكد من الإنترنت ومن صحة المفتاح."
         }
 }
 

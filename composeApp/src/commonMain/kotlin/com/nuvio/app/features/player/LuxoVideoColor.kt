@@ -48,12 +48,12 @@ import kotlin.math.roundToInt
 enum class LuxoColorPreset(val ar: String, val en: String, val hint: String) {
     ORIGINAL("الأصلي", "Original", "بدون أي تعديل"),
     SMART("ذكي ✨", "Smart ✨", "يكتشف الفيديو: لو HDR يرجّع له الإضاءة والألوان، وغيره لمسة طبيعية"),
-    NATURAL("طبيعي", "Natural", "أوضح شوي وألوان حقيقية"),
+    NATURAL("طبيعي", "Natural", "أوضح قليلاً بألوان حقيقية"),
     VIVID("زاهي", "Vivid", "ألوان قوية وتباين عالي"),
     CINEMA("سينما", "Cinema", "دافي وعميق مثل صالة السينما"),
     BRIGHT("ساطع", "Bright", "للغرف المضيئة والنهار"),
-    HDR_RESCUE("إنقاذ HDR", "HDR rescue", "لأفلام HDR اللي تطلع باهتة وخافتة على الشاشات العادية"),
-    NIGHT("ليلي", "Night", "أدفى وأهدى على العين بالليل"),
+    HDR_RESCUE("إنقاذ HDR", "HDR rescue", "لأفلام HDR التي تظهر باهتة وخافتة على الشاشات العادية"),
+    NIGHT("ليلي", "Night", "أدفأ وأريح للعين ليلاً"),
     ANIME("أنمي", "Anime", "ألوان مشبعة وخطوط واضحة للأنمي"),
 }
 

@@ -65,14 +65,14 @@ internal object AppUpdaterRepository {
         if (response.status in setOf(401, 403, 404)) {
             val tokenSet = LuxoUpdateConfig.TOKEN.isNotBlank()
             if (response.status == 403 && tokenSet && response.body.contains("rate limit", ignoreCase = true)) {
-                error("GitHub طلب الانتظار شوي (حد الطلبات). جرّب بعد دقائق.")
+                error("طلب GitHub الانتظار قليلاً (حد الطلبات). تُرجى المحاولة بعد دقائق.")
             }
             error(
                 if (!tokenSet) {
-                    "ما قدر موج يشوف الإصدارات: المستودع خاص وهالنسخة انبنت بدون رمز التحديث (LUXO_UPDATE_TOKEN). " +
-                        "نزّل آخر إصدار من صفحة الإصدارات مرة وحدة، وبعدها التحديث يشتغل من داخل التطبيق."
+                    "تعذّر على موج الاطلاع على الإصدارات: المستودع خاص وهذه النسخة بُنيت بدون رمز التحديث (LUXO_UPDATE_TOKEN). " +
+                        "يُنزَّل آخر إصدار من صفحة الإصدارات مرة واحدة، وبعدها يعمل التحديث من داخل التطبيق."
                 } else {
-                    "رمز التحديث موجود بس GitHub رفضه (${response.status}). تأكد إن الرمز ما انتهى وإن له صلاحية Contents: Read على المستودع."
+                    "رمز التحديث موجود لكن GitHub رفضه (${response.status}). يُرجى التأكد من أن الرمز لم تنتهِ صلاحيته وأن له صلاحية Contents: Read على المستودع."
                 },
             )
         }

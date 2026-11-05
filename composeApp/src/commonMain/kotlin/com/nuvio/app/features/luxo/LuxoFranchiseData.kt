@@ -35,6 +35,7 @@ object LuxoOverlays {
     var remote by mutableStateOf(false)
     var kids by mutableStateOf(false)
     var smartSource by mutableStateOf(false)
+    var youtube by mutableStateOf(false)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null

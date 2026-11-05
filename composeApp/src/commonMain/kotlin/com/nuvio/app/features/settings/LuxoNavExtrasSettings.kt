@@ -152,7 +152,7 @@ internal fun LuxoNavExtrasControls(isTablet: Boolean) {
     SettingsGroupDivider(isTablet = isTablet)
     SettingsSwitchRow(
         title = lx("شارة حلقات اليوم", "Today's episodes badge"),
-        description = lx("رقم على «المكتبة» بعدد الحلقات اللي تنزل اليوم من الأعمال المتابعة", "A count on Library for followed episodes airing today"),
+        description = lx("رقم على «المكتبة» بعدد الحلقات التي تُعرض اليوم من الأعمال المتابعة", "A count on Library for followed episodes airing today"),
         checked = nav.badges,
         isTablet = isTablet,
         onCheckedChange = { v -> LuxoNavSettingsRepository.update { it.copy(badges = v) } },
@@ -161,7 +161,7 @@ internal fun LuxoNavExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("اختصارات الضغط المطوّل", "Long-press shortcuts"),
         description = lx(
-            "الرئيسية: «وش أشوف الليلة؟» · بحث: يفتح الكيبورد · المكتبة: التنزيلات. والضغط على القسم المفتوح يرجع لأول الصفحة",
+            "الرئيسية: «ماذا يُشاهَد الليلة؟» · البحث: تُفتح لوحة المفاتيح · المكتبة: التنزيلات. والضغط على القسم المفتوح يعود إلى أعلى الصفحة",
             "Home: tonight's pick · Search: opens the keyboard · Library: downloads. Tapping the open tab scrolls to top",
         ),
         checked = nav.quickActions,

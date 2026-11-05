@@ -401,7 +401,7 @@ private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(lx("مسلسلات الشريط في الرئيسية", "Shows on the Home strip"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text(
-                        if (picks.isEmpty()) lx("الحين تلقائي: المتابَعات الأقرب موعداً", "Automatic: your followed shows") else lx("${picks.size} مختار", "${picks.size} chosen"),
+                        if (picks.isEmpty()) lx("تلقائي الآن: المتابَعات الأقرب موعداً", "Automatic: your followed shows") else lx("${picks.size} مختار", "${picks.size} chosen"),
                         fontSize = 12.sp,
                         color = tokens.colors.textMuted,
                     )
@@ -793,7 +793,7 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
         AlertDialog(
             onDismissRequest = { deleting = null },
             title = { Text(lx("حذف قسم «${section.name}»؟", "Delete \"${section.name}\"?")) },
-            text = { Text(lx("الأعمال اللي فيه ترجع لأقسامها التلقائية.", "Its shows go back to their automatic sections.")) },
+            text = { Text(lx("تعود الأعمال التي فيه إلى أقسامها التلقائية.", "Its shows go back to their automatic sections.")) },
             confirmButton = {
                 TextButton(onClick = {
                     LuxoCountdownStore.deleteSection(section.id)

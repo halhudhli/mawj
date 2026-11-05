@@ -115,6 +115,8 @@ data class LuxoFeatures(
     val choiceWheel: Boolean = true,
     /** Kids profile (age-rating gate). */
     val kidsProfile: Boolean = true,
+    /** «يوتيوب» hall: the official site inside the app (the official app on TV). */
+    val youtube: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

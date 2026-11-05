@@ -33,7 +33,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(
             lx("السلاسل 🎞️", "Franchises 🎞️"),
-            lx("كتالوج الأعمال اللي لها أكثر من جزء: أفلام ومسلسلات وأنمي، بترتيب المشاهدة وعلامة على اللي تمت مشاهدته", "Multi-part works: movies, series and anime, in watch order with what's been watched"),
+            lx("فهرس الأعمال ذات الأجزاء المتعددة: أفلام ومسلسلات وأنمي، بترتيب المشاهدة مع علامة على ما تمت مشاهدته", "Multi-part works: movies, series and anime, in watch order with what's been watched"),
             { it.franchises }, { f, v -> f.copy(franchises = v) },
         ),
         LuxoFeatureSwitch(
@@ -100,6 +100,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             lx("الوضع الخاص 🕶️", "Private mode 🕶️"),
             lx("زر في «حسابي»: عند تشغيله لا يُسجَّل التقدم ولا السجل ولا يُرسل شيء إلى Trakt", "A button in the profile: while on, no progress, history or Trakt is recorded"),
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("يوتيوب ▶️", "YouTube ▶️"),
+            lx("قاعة في «حسابي» تفتح موقع يوتيوب الرسمي داخل التطبيق، وعلى الشاشة يُفتح تطبيق يوتيوب الرسمي", "A profile hall that opens the official YouTube site in the app; on TV the official YouTube app opens"),
+            { it.youtube }, { f, v -> f.copy(youtube = v) },
         ),
         LuxoFeatureSwitch(
             lx("لعبة «خمّن العمل» 🎯", "«Guess the title» 🎯"),
@@ -188,7 +193,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("ألوان الصورة في المشغل 🎨", "Picture colours in the player 🎨"),
-            lx("تعديلات جاهزة (ذكي، زاهي، طبيعي، سينما، إنقاذ HDR…) وتعديل يدوي للإضاءة والتباين والتشبع، للشاشات اللي ما تدعم HDR", "Ready looks (smart, vivid, natural, cinema, HDR rescue…) plus manual brightness, contrast and saturation for screens without HDR"),
+            lx("تعديلات جاهزة (ذكي، زاهي، طبيعي، سينما، إنقاذ HDR…) وتعديل يدوي للإضاءة والتباين والتشبع، للشاشات التي لا تدعم HDR", "Ready looks (smart, vivid, natural, cinema, HDR rescue…) plus manual brightness, contrast and saturation for screens without HDR"),
             { it.videoColors }, { f, v -> f.copy(videoColors = v) },
         ),
         LuxoFeatureSwitch(
@@ -208,7 +213,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("ترجمة للعربي 🌐", "Arabic translation 🌐"),
-            lx("يترجم القصص والسير اللي مو بالعربي، ويكتب أسماء الممثلين بالحروف العربية (مرة وحدة وتنحفظ)", "Translates stories and biographies that aren't in Arabic and writes people's names in Arabic letters (once, then cached)"),
+            lx("تُترجم القصص والسير غير العربية، وتُكتب أسماء الممثلين بالحروف العربية (مرة واحدة ثم تُحفظ)", "Translates stories and biographies that aren't in Arabic and writes people's names in Arabic letters (once, then cached)"),
             { it.arabicTranslate }, { f, v -> f.copy(arabicTranslate = v) },
         ),
         LuxoFeatureSwitch(
@@ -258,7 +263,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("خريطة المشاهدة", "Watch map"),
-            lx("مربعات آخر 6 شهور، كل ما زادت المشاهدة صار المربع أغمق", "The last 6 months as squares, darker on busier days"),
+            lx("مربعات آخر ستة أشهر، وكلما زادت المشاهدة صار المربع أغمق", "The last 6 months as squares, darker on busier days"),
             { it.heatmap }, { f, v -> f.copy(heatmap = v) },
         ),
         LuxoFeatureSwitch(
@@ -318,12 +323,12 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
         LuxoFeatureSwitch(
             lx("خلفية الرئيسية تتحرك مع الميلان", "Home artwork follows tilt"),
-            lx("صورة الفيلم الكبيرة فوق تتحرك شوي مع ميلان الجهاز", "The big artwork drifts slightly as the device tilts"),
+            lx("تتحرك الصورة الكبيرة في الأعلى قليلاً مع ميلان الجهاز", "The big artwork drifts slightly as the device tilts"),
             { it.heroTilt }, { f, v -> f.copy(heroTilt = v) },
         ),
         LuxoFeatureSwitch(
             lx("ألوان حسب الوقت 🌅", "Time-of-day colours 🌅"),
-            lx("الإضاءة أعلى الشاشات تدفى وقت المغرب وتهدى بالليل", "The glow warms at sunset and cools at night"),
+            lx("تدفأ الإضاءة أعلى الشاشات وقت الغروب وتهدأ ليلاً", "The glow warms at sunset and cools at night"),
             { it.timeTint }, { f, v -> f.copy(timeTint = v) },
         ),
         LuxoFeatureSwitch(

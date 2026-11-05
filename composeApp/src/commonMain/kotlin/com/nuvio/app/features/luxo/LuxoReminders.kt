@@ -70,7 +70,7 @@ object LuxoReminders {
                 notify(
                     "luxo-movie-$id",
                     "${reminder.title} نزل 🎬",
-                    "صار متوفر للمشاهدة الآن",
+                    "أصبح متاحاً للمشاهدة الآن",
                     com.nuvio.app.core.deeplink.buildMetaDeepLinkUrl("movie", "tmdb:$id"),
                     reminder.backdrop,
                 )
