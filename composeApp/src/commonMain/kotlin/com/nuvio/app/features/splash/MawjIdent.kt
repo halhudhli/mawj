@@ -112,7 +112,7 @@ fun MawjIdent(modifier: Modifier = Modifier, replayKey: Int = 0) {
         val h = size.height
         val cx = w / 2f
         val cy = h / 2f
-        val markW = minOf(w, h) * 0.30f
+        val markW = minOf(w, h) * 0.34f
         val unit = markW / 200f
         val markOrigin = Offset(cx - markW / 2f, cy - h * 0.20f - 80f * unit)
         fun mark(o: Offset) = markOrigin + o * unit
