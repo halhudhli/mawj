@@ -165,15 +165,11 @@ internal fun AppGate(
     var gateScreen by rememberSaveable { mutableStateOf(AppGateScreen.Loading.name) }
     var introHoldElapsed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        // Luxo: the chosen duration (2–10 s), skippable with a tap, and shorter when the app is ready.
-        val total = com.nuvio.app.features.splash.SplashSettingsRepository.introDurationMs()
-        val settings = com.nuvio.app.features.splash.SplashSettingsRepository.state.value
-        // «موج» tells a story: it may end early only once the word is full and mirrored.
-        val shortenAfter = if (settings.style == com.nuvio.app.features.splash.SplashBackgroundStyle.MAWJ) (total * 0.72).toLong() else 1500L
+        // «موج» ident: a fixed length, skippable with a tap.
+        val total = com.nuvio.app.features.splash.MAWJ_IDENT_MS
         var elapsed = 0L
         while (elapsed < total) {
             if (com.nuvio.app.features.splash.SplashSkip.requested) break
-            if (settings.shortenWhenReady && elapsed >= shortenAfter && authState !is AuthState.Loading) break
             kotlinx.coroutines.delay(100L)
             elapsed += 100L
         }

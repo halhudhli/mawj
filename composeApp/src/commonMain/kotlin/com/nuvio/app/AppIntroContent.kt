@@ -18,28 +18,19 @@ internal const val AppIntroMinDurationMs = 1300L
 
 @Composable
 internal fun AppIntroContent(modifier: Modifier = Modifier) {
-    val settings by remember {
-        SplashSettingsRepository.ensureLoaded()
-        SplashSettingsRepository.state
-    }.collectAsStateWithLifecycle()
-
     LaunchedEffect(Unit) {
         withContext(Dispatchers.Default) {
             runCatching { installBundledFontsForSubtitles() }
         }
     }
 
-    LuxoSplashScreen(
-        settings = settings,
-        modifier = if (settings.tapToSkip) {
-            modifier.then(
-                androidx.compose.ui.Modifier.clickable(
-                    interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                    indication = null,
-                ) { com.nuvio.app.features.splash.SplashSkip.requested = true },
-            )
-        } else {
-            modifier
-        },
+    // «موج» ident (the old customisable splash and its settings are gone). A tap skips it.
+    com.nuvio.app.features.splash.MawjIdent(
+        modifier = modifier.then(
+            androidx.compose.ui.Modifier.clickable(
+                interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null,
+            ) { com.nuvio.app.features.splash.SplashSkip.requested = true },
+        ),
     )
 }

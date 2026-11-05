@@ -118,16 +118,6 @@ internal fun LazyListScope.appearanceSettingsContent(
         ) {
             SettingsGroup(isTablet = isTablet) {
                 SettingsNavigationRow(
-                    title = stringResource(Res.string.luxo_settings_page_splash),
-                    description = lx(
-                        "الخلفية المتحركة والألوان والشعار وحركته ومدة الظهور",
-                        "Animated background, colours, logo, motion and duration",
-                    ),
-                    isTablet = isTablet,
-                    onClick = onSplashClick,
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsNavigationRow(
                     title = stringResource(Res.string.luxo_settings_page_fonts),
                     description = lx(
                         "خط التطبيق بالعربي والإنجليزي، وإضافة خطوطك الخاصة",
