@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,6 +98,31 @@ object LuxoDescribeSearch {
         Result.success(hits)
     }
 
+    /** «🖼️ البحث بصورة»: Gemini looks at the picture and names the title(s); TMDB finds them. */
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+    suspend fun findFromImage(bytes: ByteArray, mime: String): Result<List<LuxoDescribeHit>> = withContext(Dispatchers.Default) {
+        val key = LuxoCompanionApi.loadKey() ?: return@withContext Result.failure(IllegalStateException("يلزم ضبط مفتاح «رفيق موج»"))
+        val prompt = "هذه صورة أو لقطة من فيلم أو مسلسل أو أنمي، أو ملصق له. ما العمل؟ " +
+            "اقترح حتى 4 أعمال حقيقية مرتبة من الأرجح، مع العنوان الإنجليزي الرسمي كما في TMDB وسنة الإصدار والنوع movie أو tv، " +
+            "وسببًا قصيرًا جدًا بالعربية الفصحى وبصيغة المجهول (مثل: «يظهر فيها…»). " +
+            "أعد JSON فقط: {\"items\":[{\"title\":\"\",\"year\":2010,\"type\":\"tv\",\"why\":\"\"}]}"
+        val answer = LuxoCompanionApi.ask(key, prompt, image = mime to kotlin.io.encoding.Base64.encode(bytes))
+        val obj = LuxoTmdbLite.jsonBlock(answer) ?: return@withContext Result.failure(IllegalStateException(answer.take(160)))
+        val items = (obj["items"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
+        val hits = coroutineScope {
+            items.take(4).map { item ->
+                async {
+                    val title = (item["title"] as? JsonPrimitive)?.contentOrNull ?: return@async null
+                    val year = (item["year"] as? JsonPrimitive)?.contentOrNull?.take(4)
+                    val type = if ((item["type"] as? JsonPrimitive)?.contentOrNull == "movie") "movie" else "tv"
+                    val why = (item["why"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+                    resolve(title, year, type)?.let { LuxoDescribeHit(it.first, it.second ?: year, why) }
+                }
+            }.awaitAll().filterNotNull().distinctBy { it.preview.id }
+        }
+        Result.success(hits)
+    }
+
     /** TMDB lookup by title (+ year when it helps), trying the other type when nothing matches. */
     private suspend fun resolve(title: String, year: String?, type: String): Pair<MetaPreview, String?>? {
         for (t in listOf(type, if (type == "movie") "tv" else "movie")) {
@@ -126,11 +152,15 @@ fun LuxoSearchExtrasRow(onVoiceText: (String) -> Unit, onOpen: (MetaPreview) -> 
     if (!features.describeSearch) return
     var open by remember { mutableStateOf(false) }
     val voice = rememberLuxoVoiceInput(onVoiceText)
+    var picked by remember { mutableStateOf<Pair<ByteArray, String>?>(null) }
+    val picker = if (features.imageSearch) rememberLuxoImagePicker { b, m -> picked = b to m } else null
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ExtraChip("🔮 البحث بالوصف") { open = true }
         if (voice != null) ExtraChip("🎙️ البحث بالصوت", voice)
+        if (picker != null) ExtraChip("🖼️ البحث بصورة", picker)
     }
     if (open) LuxoDescribeSearchDialog(onOpen = { open = false; onOpen(it) }, onDismiss = { open = false })
+    picked?.let { (b, m) -> LuxoImageSearchDialog(b, m, onOpen = { picked = null; onOpen(it) }, onDismiss = { picked = null }) }
 }
 
 @Composable
@@ -240,3 +270,41 @@ private fun HitCard(hit: LuxoDescribeHit, onClick: () -> Unit) {
     }
 }
 
+
+
+@Composable
+fun LuxoImageSearchDialog(bytes: ByteArray, mime: String, onOpen: (MetaPreview) -> Unit, onDismiss: () -> Unit) {
+    var hits by remember(bytes) { mutableStateOf<List<LuxoDescribeHit>?>(null) }
+    var error by remember(bytes) { mutableStateOf<String?>(null) }
+    LaunchedEffect(bytes) {
+        LuxoDescribeSearch.findFromImage(bytes, mime)
+            .onSuccess { hits = it; if (it.isEmpty()) error = "لم يُتعرّف على العمل من هذه الصورة" }
+            .onFailure { error = it.message ?: "تعذّر التعرّف على الصورة" }
+    }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        com.nuvio.app.features.luxo.LuxoIdleBusy()
+        Column(
+            Modifier.widthIn(max = 760.dp).fillMaxWidth().heightIn(max = 720.dp).padding(16.dp)
+                .clip(RoundedCornerShape(26.dp)).background(Color(0xFF14121C)).padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🖼️ البحث بصورة", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, null, tint = Color.White) }
+            }
+            val list = hits
+            when {
+                error != null -> Text(error!!, color = Color(0xFFFFB4A9), fontSize = 13.sp)
+                list == null -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = DAccent1) }
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Adaptive(118.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                ) {
+                    items(list, key = { it.preview.id }) { hit -> HitCard(hit) { onOpen(hit.preview) } }
+                }
+            }
+        }
+    }
+}

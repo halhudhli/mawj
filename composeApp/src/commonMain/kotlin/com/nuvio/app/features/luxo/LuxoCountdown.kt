@@ -698,6 +698,19 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
                                         color = tokens.colors.accent,
                                     )
                                 }
+                                if (rememberLuxoFeatures().calendarAdd) {
+                                    Text(
+                                        "📅",
+                                        fontSize = 22.sp,
+                                        modifier = Modifier.clip(CircleShape).clickable {
+                                            luxoAddToCalendar(
+                                                ep.item.name + listOfNotNull(ep.seasonNumber?.let { " · الموسم $it" }, ep.episodeNumber?.let { " الحلقة $it" }).joinToString(""),
+                                                ep.dateIso,
+                                                "موعد حلقة جديدة · موج",
+                                            )
+                                        }.padding(8.dp),
+                                    )
+                                }
                                 Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
                                     CountdownRing(days, Modifier.size(70.dp))
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

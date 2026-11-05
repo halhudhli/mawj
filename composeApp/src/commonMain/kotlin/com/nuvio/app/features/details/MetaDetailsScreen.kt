@@ -2043,6 +2043,8 @@ fun MetaDetailsScreen(
                 modifier = Modifier.align(Alignment.BottomStart),
             )
         }
+            // Mawj «ملف الأطفال»: covers titles that aren't kid-rated.
+        displayedMeta?.let { LuxoKidsGateFor(it) }
     }
 }
 

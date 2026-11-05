@@ -179,10 +179,12 @@ object StreamAutoPlaySelector {
             }
         }
         if (matchingStreams.isEmpty() && preferredStream == null) return StreamAutoPlayEvaluation()
+        // Mawj «المصدر الذكي»: best match first by the user's rules (no-op when it's off).
+        val rankedStreams = com.nuvio.app.features.luxo.LuxoSmartSource.rank(matchingStreams)
 
         val readyStreams = buildList {
             preferredStream?.let(::add)
-            matchingStreams
+            rankedStreams
                 .filter { it.isAutoPlayable(debridEnabled, activeResolverProviderId) }
                 .filterNot { it == preferredStream }
                 .forEach(::add)
@@ -197,7 +199,7 @@ object StreamAutoPlaySelector {
 
         return StreamAutoPlayEvaluation(
             readyStreams = readyStreams,
-            hasPendingDebridCandidate = matchingStreams.any {
+            hasPendingDebridCandidate = rankedStreams.any {
                 it.isPendingDebridAutoPlay(debridEnabled, activeResolverProviderId)
             },
         )

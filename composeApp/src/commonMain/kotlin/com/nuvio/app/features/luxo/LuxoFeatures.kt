@@ -93,6 +93,28 @@ data class LuxoFeatures(
     val becauseWatched: Boolean = true,
     /** Spoiler-free character guide. */
     val characterGuide: Boolean = true,
+    /** «سابقًا في…» before an episode after a long break. */
+    val previouslyOn: Boolean = true,
+    /** «أين قيلت هذه العبارة؟». */
+    val quoteFinder: Boolean = true,
+    /** Saved subtitle lines. */
+    val quotes: Boolean = true,
+    /** Animated clip (GIF) from the player. */
+    val gifClip: Boolean = true,
+    /** Smart source choice. */
+    val smartSource: Boolean = true,
+    /** Phone/tablet as a remote for the TV, and «أكمل على الشاشة». */
+    val remote: Boolean = true,
+    /** Series status alerts (renewed, cancelled, finale). */
+    val seriesStatus: Boolean = true,
+    /** Add episode dates to the device calendar. */
+    val calendarAdd: Boolean = true,
+    /** Identify a title from an image. */
+    val imageSearch: Boolean = true,
+    /** Family choice wheel. */
+    val choiceWheel: Boolean = true,
+    /** Kids profile (age-rating gate). */
+    val kidsProfile: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

@@ -122,6 +122,61 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.characterGuide }, { f, v -> f.copy(characterGuide = v) },
         ),
         LuxoFeatureSwitch(
+            lx("سابقًا في… 📺", "Previously on… 📺"),
+            lx("عند العودة إلى مسلسل بعد انقطاع، يُعرض قبل الحلقة ملخص قصير للحلقة السابقة دون كشف للأحداث", "After a break, a short spoiler-free recap of the previous episode"),
+            { it.previouslyOn }, { f, v -> f.copy(previouslyOn = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("أين قيلت هذه العبارة؟ 🔎", "Where was this said? 🔎"),
+            lx("تُكتب عبارة من عمل، فيُحدَّد الموسم والحلقة والدقيقة التي قيلت فيها تقريبًا", "Type a line and find the season, episode and minute"),
+            { it.quoteFinder }, { f, v -> f.copy(quoteFinder = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("العبارات المحفوظة 💬", "Saved quotes 💬"),
+            lx("من قائمة المشغّل تُحفظ عبارة الترجمة الظاهرة، وتُجمع في صفحة العمل وتُشارك كبطاقة", "Save the subtitle line on screen; collected on the title page and shareable"),
+            { it.quotes }, { f, v -> f.copy(quotes = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("مقطع متحرك 🎞️", "Animated clip 🎞️"),
+            lx("من قائمة المشغّل يُسجَّل مقطع متحرك (GIF) مدته أربع ثوانٍ ويُحفظ في الصور", "Record a 4-second GIF from the player into Photos"),
+            { it.gifClip }, { f, v -> f.copy(gifClip = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("المصدر الذكي 🎯", "Smart source 🎯"),
+            lx("تُحدَّد الجودة والحجم والكلمات المفضلة مرة واحدة، فيُختار أفضل مصدر ويبدأ التشغيل مباشرة", "Set quality, size and preferred words once; the best source plays directly"),
+            { it.smartSource }, { f, v -> f.copy(smartSource = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("التحكم بالشاشة 📱", "Remote control 📱"),
+            lx("يصبح الجوال أو التابلت جهاز تحكم للشاشة على الشبكة نفسها، مع زر «أكمل على الشاشة»", "Use the phone/tablet as a TV remote on the same network, plus «Continue on TV»"),
+            { it.remote }, { f, v -> f.copy(remote = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حالة المسلسلات 📣", "Series status 📣"),
+            lx("يصل إشعار عند تجديد مسلسل في المكتبة لموسم جديد أو إلغائه، أو حين تكون الحلقة القادمة ختام الموسم", "A notification when a library series is renewed, cancelled or its finale is next"),
+            { it.seriesStatus }, { f, v -> f.copy(seriesStatus = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الإضافة إلى التقويم 📅", "Add to calendar 📅"),
+            lx("في صفحة العد التنازلي: زر يضيف موعد الحلقة إلى تقويم الجهاز", "On the countdown page: add the episode date to the device calendar"),
+            { it.calendarAdd }, { f, v -> f.copy(calendarAdd = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("البحث بصورة 🖼️", "Search by image 🖼️"),
+            lx("تُختار صورة أو لقطة شاشة، فيتعرّف رفيق موج على العمل ويعرضه", "Pick an image or screenshot; Mawj Companion names the title"),
+            { it.imageSearch }, { f, v -> f.copy(imageSearch = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("عجلة الاختيار 🎡", "Choice wheel 🎡"),
+            lx("يختار كل فرد من العائلة عملًا، ثم تدور العجلة وتحسم ما يُشاهَد", "Everyone adds a title, the wheel decides"),
+            { it.choiceWheel }, { f, v -> f.copy(choiceWheel = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ملف الأطفال 🧸", "Kids profile 🧸"),
+            lx("عند تفعيله للملف الحالي لا تُفتح إلا الأعمال المناسبة للأطفال حسب التصنيف العمري، ويُطلب رمز لغيرها", "When on for this profile, only kid-rated titles open; others need a code"),
+            { it.kidsProfile }, { f, v -> f.copy(kidsProfile = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("بكرة الفيلم 🎞️", "Film reel 🎞️"),
             lx("عند سحب شريط الوقت: ٥ لقطات مثل بكرة فيلم مع الوقت والفرق واسم الفصل، والرفع فوق الشريط يبطّئ السحب للدقة، واهتزاز خفيف كل ١٠ ثواني. الإيقاف يرجّع تصميم نوفيو", "While scrubbing: five frames like a film strip with time, difference and chapter; lifting the finger slows the scrub; a light tick every 10 s. Off returns Nuvio's preview"),
             { it.filmReel }, { f, v -> f.copy(filmReel = v) },
@@ -296,6 +351,13 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
                 onClick = { com.nuvio.app.features.luxo.LuxoOverlays.traktDoctor = true },
                 label = { androidx.compose.material3.Text(lx("🩺 فاحص Trakt", "🩺 Trakt doctor")) },
             )
+            if (features.smartSource) {
+                androidx.compose.material3.FilterChip(
+                    selected = com.nuvio.app.features.luxo.LuxoSmartSource.rules.enabled,
+                    onClick = { com.nuvio.app.features.luxo.LuxoOverlays.smartSource = true },
+                    label = { androidx.compose.material3.Text(lx("🎯 المصدر الذكي", "🎯 Smart source")) },
+                )
+            }
             if (features.franchises) {
                 androidx.compose.material3.FilterChip(
                     selected = false,

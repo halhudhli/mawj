@@ -20,6 +20,9 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.FormatQuote
+import androidx.compose.material.icons.rounded.Gif
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.CastConnected
@@ -251,7 +254,16 @@ internal fun PlayerControlActions(
             PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.night) "صوت ليلي · مفعّل" else "صوت ليلي", it, icon = Icons.Rounded.NightsStay)
         },
         LuxoPlayerBridge.onShareSceneClick?.let {
-            PlayerControlAction("شارك المشهد", it, icon = Icons.Rounded.Share)
+            PlayerControlAction("مشاركة المشهد", it, icon = Icons.Rounded.Share)
+        },
+        LuxoPlayerBridge.onSaveQuoteClick?.let {
+            PlayerControlAction("حفظ العبارة", it, icon = Icons.Rounded.FormatQuote)
+        },
+        LuxoPlayerBridge.onGifClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif)
+        },
+        LuxoPlayerBridge.onContinueOnTvClick?.let {
+            PlayerControlAction("أكمل على الشاشة", it, icon = Icons.Rounded.Tv)
         },
         LuxoPlayerBridge.onScreenshotClick?.let {
             PlayerControlAction("لقطة شاشة", it, icon = Icons.Rounded.PhotoCamera)

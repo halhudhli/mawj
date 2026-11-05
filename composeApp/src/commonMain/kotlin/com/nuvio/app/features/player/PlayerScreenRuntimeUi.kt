@@ -470,6 +470,8 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
             positionMs = playbackSnapshot.positionMs,
             durationMs = playbackSnapshot.durationMs,
             isPlaying = playbackSnapshot.isPlaying,
+            metaId = parentMetaId,
+            metaType = parentMetaType,
         )
         }
     }

@@ -36,6 +36,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material.icons.rounded.SportsEsports
+import androidx.compose.material.icons.rounded.Casino
+import androidx.compose.material.icons.rounded.SettingsRemote
+import androidx.compose.material.icons.rounded.ChildCare
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Extension
@@ -217,6 +220,16 @@ internal fun LazyListScope.luxoProfileHubContent(
                 val luxoF = com.nuvio.app.features.luxo.LuxoFeaturesRepository.current()
                 if (luxoF.guessGame) {
                     add(LuxoHall(lx("خمّن العمل", "Guess the title"), lx("لقطة مموّهة وأربعة خيارات", "A blurred frame, four choices"), Icons.Rounded.SportsEsports, Color(0xFF5ED6C9), { com.nuvio.app.features.luxo.LuxoOverlays.guessGame = true }))
+                }
+                if (luxoF.choiceWheel) {
+                    add(LuxoHall(lx("عجلة الاختيار", "Choice wheel"), lx("كل فرد يختار، والعجلة تحسم", "Everyone picks, the wheel decides"), Icons.Rounded.Casino, Color(0xFF8FB0DA), { com.nuvio.app.features.luxo.LuxoOverlays.choiceWheel = true }))
+                }
+                if (luxoF.remote) {
+                    add(LuxoHall(lx("التحكم بالشاشة", "Remote control"), lx(if (com.nuvio.app.features.luxo.luxoIsTv()) "الرمز وعنوان هذا الجهاز" else "الجوال جهاز تحكم للشاشة", if (com.nuvio.app.features.luxo.luxoIsTv()) "This device's code" else "Control the TV"), Icons.Rounded.SettingsRemote, Color(0xFF6F8FBF), { com.nuvio.app.features.luxo.LuxoOverlays.remote = true }))
+                }
+                if (luxoF.kidsProfile) {
+                    val kidsOn = com.nuvio.app.features.luxo.LuxoKids.isOn()
+                    add(LuxoHall(lx(if (kidsOn) "ملف الأطفال: مفعّل" else "ملف الأطفال", "Kids profile"), lx("الأعمال المناسبة للأطفال فقط", "Kid-rated titles only"), Icons.Rounded.ChildCare, if (kidsOn) Color(0xFF7BE0A3) else Color(0xFF9AA3AD), { com.nuvio.app.features.luxo.LuxoOverlays.kids = true }))
                 }
                 if (luxoF.privateMode) {
                     val on = com.nuvio.app.features.luxo.LuxoPrivateMode.active

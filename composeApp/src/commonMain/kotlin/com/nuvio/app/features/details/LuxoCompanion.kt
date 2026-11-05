@@ -371,7 +371,7 @@ internal object LuxoCompanionApi {
      * model, so "high demand" on one model doesn't leave the companion silent. With [search] the
      * answer can use Google Search for fresh facts.
      */
-    suspend fun ask(key: String, prompt: String, search: Boolean = false): String =
+    suspend fun ask(key: String, prompt: String, search: Boolean = false, image: Pair<String, String>? = null): String =
         try {
             var lastError: String? = null
             for (model in models(key)) {
@@ -385,7 +385,13 @@ internal object LuxoCompanionApi {
                     val body = buildJsonObject {
                         put("contents", buildJsonArray {
                             add(buildJsonObject {
-                                put("parts", buildJsonArray { add(buildJsonObject { put("text", prompt) }) })
+                                put("parts", buildJsonArray {
+                                    // [image] = (mime type, base64 data) for questions about a picture.
+                                    image?.let { (mime, data) ->
+                                        add(buildJsonObject { put("inline_data", buildJsonObject { put("mime_type", mime); put("data", data) }) })
+                                    }
+                                    add(buildJsonObject { put("text", prompt) })
+                                })
                             })
                         })
                         if (withSearch) {

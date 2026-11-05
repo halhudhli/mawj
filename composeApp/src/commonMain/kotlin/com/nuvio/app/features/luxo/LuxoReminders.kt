@@ -102,6 +102,10 @@ object LuxoReminders {
             }
             LuxoPrefsStorage.save(seenKey, ids.joinToString(","))
         }
+        // «حالة المسلسلات»: renewed, cancelled, ended, finale next.
+        if (LuxoFeaturesRepository.current().seriesStatus) {
+            LuxoSeriesStatus.check({ id -> tmdb("tv/$id") }) { id, title, body, link -> notify(id, title, body, link, null) }
+        }
     }
 }
 

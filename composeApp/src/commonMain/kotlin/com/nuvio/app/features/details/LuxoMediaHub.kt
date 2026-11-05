@@ -122,8 +122,10 @@ internal fun LuxoMediaHub(
             com.nuvio.app.features.luxo.LuxoTimeLeftChip(meta.id, data.tmdbId, data.mediaType)
             com.nuvio.app.features.luxo.LuxoCharacterGuideChip(meta.id, meta.name, data.tmdbId, data.mediaType, data.englishTitle, data.year)
             com.nuvio.app.features.luxo.LuxoCompareChip(meta.name, data.tmdbId, data.mediaType)
+            com.nuvio.app.features.luxo.LuxoQuoteFinderChip(meta.id, meta.name, data.englishTitle, data.year, data.mediaType)
         }
         LuxoBookmarksBlock(meta)
+        com.nuvio.app.features.luxo.LuxoQuotesBlock(meta.name)
         LazyRow(
             modifier = Modifier.nuvioHorizontalScrollBleed(horizontalScrollPadding).fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = horizontalScrollPadding),

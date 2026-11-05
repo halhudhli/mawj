@@ -51,6 +51,13 @@ internal object LuxoPlayerBridge {
     var onDialogueClick by mutableStateOf<(() -> Unit)?>(null)
     var onNightAudioClick by mutableStateOf<(() -> Unit)?>(null)
     var onShareSceneClick by mutableStateOf<(() -> Unit)?>(null)
+    var onSaveQuoteClick by mutableStateOf<(() -> Unit)?>(null)
+    var onGifClick by mutableStateOf<(() -> Unit)?>(null)
+    var gifLabel by mutableStateOf("مقطع متحرك (4 ثوانٍ)")
+    var onContinueOnTvClick by mutableStateOf<(() -> Unit)?>(null)
+    /** The player the TV remote controls. */
+    var remoteController: PlayerEngineController? = null
+    var remoteIsPlaying: Boolean = false
     var toast by mutableStateOf<String?>(null)
 }
 
@@ -67,7 +74,14 @@ internal fun LuxoPlayerExtrasHost(
     positionMs: Long,
     durationMs: Long,
     isPlaying: Boolean,
+    metaId: String = "",
+    metaType: String = "",
 ) {
+    LuxoPlayerBridge.remoteController = controller
+    LuxoPlayerBridge.remoteIsPlaying = isPlaying
+    DisposableEffect(Unit) { onDispose { LuxoPlayerBridge.remoteController = null } }
+    com.nuvio.app.features.luxo.LuxoPreviouslyOn(metaId, title, seasonNumber, episodeNumber) { controller?.pause() }
+    LuxoIdeas4PlayerHooks(title, seasonNumber, episodeNumber, positionMs, metaId, metaType)
     val currentController by rememberUpdatedState(controller)
     val currentPosition by rememberUpdatedState(positionMs)
     val currentDuration by rememberUpdatedState(durationMs)

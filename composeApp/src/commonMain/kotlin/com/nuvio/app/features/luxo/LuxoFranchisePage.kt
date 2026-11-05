@@ -74,6 +74,12 @@ fun LuxoOverlayHost() {
     LuxoOverlays.franchise?.let { key -> LuxoFranchiseDialog(startKey = key) }
     if (LuxoOverlays.traktDoctor) LuxoTraktDoctorDialog(onDismiss = { LuxoOverlays.traktDoctor = false })
     if (LuxoOverlays.guessGame) LuxoGuessGameDialog(onDismiss = { LuxoOverlays.guessGame = false })
+    if (LuxoOverlays.choiceWheel) LuxoChoiceWheelDialog(onDismiss = { LuxoOverlays.choiceWheel = false })
+    if (LuxoOverlays.remote) LuxoRemoteDialog(onDismiss = { LuxoOverlays.remote = false })
+    if (LuxoOverlays.kids) LuxoKidsDialog(onDismiss = { LuxoOverlays.kids = false })
+    if (LuxoOverlays.smartSource) LuxoSmartSourceDialog(onDismiss = { LuxoOverlays.smartSource = false })
+    LuxoRemoteServerHost()
+    LuxoSeriesStatusSync()
     LuxoScreensaverHost()
 }
 

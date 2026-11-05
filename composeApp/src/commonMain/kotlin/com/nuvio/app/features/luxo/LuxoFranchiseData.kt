@@ -31,6 +31,10 @@ object LuxoOverlays {
     var franchise by mutableStateOf<String?>(null)
     var traktDoctor by mutableStateOf(false)
     var guessGame by mutableStateOf(false)
+    var choiceWheel by mutableStateOf(false)
+    var remote by mutableStateOf(false)
+    var kids by mutableStateOf(false)
+    var smartSource by mutableStateOf(false)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null
