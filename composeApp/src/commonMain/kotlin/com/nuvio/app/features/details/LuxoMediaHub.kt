@@ -120,6 +120,7 @@ internal fun LuxoMediaHub(
         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             LuxoReleaseReminderChip(meta, data)
             com.nuvio.app.features.luxo.LuxoTimeLeftChip(meta.id, data.tmdbId, data.mediaType)
+            com.nuvio.app.features.luxo.LuxoEpisodeMapChip(meta.name, data.tmdbId, data.mediaType)
             com.nuvio.app.features.luxo.LuxoCharacterGuideChip(meta.id, meta.name, data.tmdbId, data.mediaType, data.englishTitle, data.year)
             com.nuvio.app.features.luxo.LuxoCompareChip(meta.name, data.tmdbId, data.mediaType)
             com.nuvio.app.features.luxo.LuxoQuoteFinderChip(meta.id, meta.name, data.englishTitle, data.year, data.mediaType)

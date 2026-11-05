@@ -79,6 +79,7 @@ fun LuxoOverlayHost() {
     if (LuxoOverlays.kids) LuxoKidsDialog(onDismiss = { LuxoOverlays.kids = false })
     if (LuxoOverlays.smartSource) LuxoSmartSourceDialog(onDismiss = { LuxoOverlays.smartSource = false })
     if (LuxoOverlays.youtube) LuxoYoutubeDialog(onDismiss = { LuxoOverlays.youtube = false })
+    if (LuxoOverlays.unfinished) LuxoUnfinishedDialog(onDismiss = { LuxoOverlays.unfinished = false })
     LuxoRemoteServerHost()
     LuxoSeriesStatusSync()
     LuxoScreensaverHost()

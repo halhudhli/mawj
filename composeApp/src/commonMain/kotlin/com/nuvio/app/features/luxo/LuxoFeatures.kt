@@ -117,6 +117,18 @@ data class LuxoFeatures(
     val kidsProfile: Boolean = true,
     /** «يوتيوب» hall: the official site inside the app (the official app on TV). */
     val youtube: Boolean = true,
+    /** «شرح النهاية» in the companion (asks before the spoiler). */
+    val endingExplained: Boolean = true,
+    /** «خريطة تقييم الحلقات» on series pages. */
+    val episodeMap: Boolean = true,
+    /** «ما بدأته ولم يكتمل» hall. */
+    val unfinished: Boolean = true,
+    /** «من في المشهد؟» in the player menu. */
+    val whoInScene: Boolean = true,
+    /** Daily watch-time limit for the kids profile. */
+    val kidsTimeLimit: Boolean = true,
+    /** Voice questions in the companion, with the answer read aloud. */
+    val companionVoice: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

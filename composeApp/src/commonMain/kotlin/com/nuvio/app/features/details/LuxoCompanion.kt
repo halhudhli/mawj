@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.items
 import com.nuvio.app.features.updater.LuxoGeminiConfig
 
@@ -73,11 +74,15 @@ internal fun LuxoCompanion(meta: MetaDetails, modifier: Modifier = Modifier) {
             add("عن الممثلين" to LuxoCompanionApi.CAST)
             add("لماذا يُشاهَد؟" to LuxoCompanionApi.WHY)
             add("أعمال تشبهه" to LuxoCompanionApi.SIMILAR)
+            if (com.nuvio.app.features.luxo.rememberLuxoFeatures().endingExplained) add(ENDING_LABEL to LuxoCompanionApi.ENDING)
         },
         questionLabel = "اسأل عن العمل (بدون حرق)",
         modifier = modifier,
     )
 }
+
+/** Quick actions that reveal the plot; the sheet asks before sending them. */
+internal const val ENDING_LABEL = "شرح النهاية ⚠️"
 
 /** «رفيق Luxo» on an actor's page: ask about the person, their career and best work. */
 @Composable
@@ -147,6 +152,12 @@ internal fun LuxoCompanionSheet(
     val messages = remember(subjectKey) { LuxoCompanionApi.conversation(subjectKey) }
     var busy by remember { mutableStateOf(false) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    // A quick action that reveals the plot waits here until it is confirmed.
+    var spoilerAsk by remember { mutableStateOf<Pair<String, String>?>(null) }
+    // When the question was spoken, the answer is read aloud.
+    var speakReplies by remember { mutableStateOf(false) }
+    val voiceOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().companionVoice
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { com.nuvio.app.features.luxo.luxoStopSpeaking() } }
 
     fun send(label: String, prompt: String, freeForm: Boolean) {
         val k = key ?: return
@@ -167,6 +178,7 @@ internal fun LuxoCompanionSheet(
             // Web search only for free questions (it's slower); quick actions answer from the model directly.
             val reply = LuxoCompanionApi.ask(k, fullPrompt, search = freeForm)
             messages.add(false to reply)
+            if (speakReplies && voiceOn) com.nuvio.app.features.luxo.luxoSpeak(reply)
             busy = false
             listState.animateScrollToItem(messages.size)
         }
@@ -242,9 +254,51 @@ internal fun LuxoCompanionSheet(
             }
 
             com.nuvio.app.features.luxo.LuxoSuggestionChips(
-                quickActions.map { (label, prompt) -> label to { send(label, prompt, freeForm = false) } },
+                quickActions.map { (label, prompt) ->
+                    label to { if (label == ENDING_LABEL) spoilerAsk = label to prompt else { speakReplies = false; send(label, prompt, freeForm = false) } }
+                },
                 enabled = !busy,
             )
+            spoilerAsk?.let { (label, prompt) ->
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { spoilerAsk = null },
+                    title = { Text("تنبيه: حرق للأحداث") },
+                    text = { Text("يكشف شرح النهاية أحداث العمل كاملة. هل يُعرض الشرح؟") },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = { spoilerAsk = null; speakReplies = false; send(label, prompt, freeForm = false) }) { Text("عرض الشرح") }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { spoilerAsk = null }) { Text("إلغاء") } },
+                )
+            }
+            val voice = com.nuvio.app.features.luxo.rememberLuxoVoiceInput { spoken ->
+                val q = spoken.trim()
+                if (q.isNotEmpty()) {
+                    speakReplies = true
+                    send(q, "سؤال المشاهد: $q", freeForm = true)
+                }
+            }
+            if (voiceOn && voice != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "🎙️ سؤال بالصوت",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .clickable(enabled = !busy) { com.nuvio.app.features.luxo.luxoStopSpeaking(); voice() }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                    )
+                    if (speakReplies) {
+                        Text(
+                            "⏹ إيقاف القراءة",
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 13.sp,
+                            modifier = Modifier.clickable { com.nuvio.app.features.luxo.luxoStopSpeaking(); speakReplies = false }.padding(6.dp),
+                        )
+                    }
+                }
+            }
             com.nuvio.app.features.luxo.LuxoAskBar(
                 value = question,
                 onValueChange = { question = it },
@@ -253,6 +307,7 @@ internal fun LuxoCompanionSheet(
                 onSend = {
                     val q = question.trim()
                     question = ""
+                    speakReplies = false
                     send(q, "سؤال المشاهد: $q", freeForm = true)
                 },
             )
@@ -276,6 +331,7 @@ internal object LuxoCompanionApi {
     private val json = Json { ignoreUnknownKeys = true }
 
     const val SUMMARY = "اكتب ملخصاً قصيراً وممتعاً للقصة بدون أي حرق للأحداث، في 4 إلى 6 أسطر."
+    const val ENDING = "اشرح نهاية هذا العمل بوضوح: ماذا حدث في الختام، ومعناه، وما الرموز أو الأسئلة المفتوحة التي تركها، وأبرز تفسيرات المشاهدين إن وُجدت. هذا الطلب يقبل الحرق صراحةً. إن كان العمل مسلسلاً مستمراً فاشرح نهاية آخر موسم معروض."
     const val CAST = "عرّف بأبرز الممثلين وصنّاع العمل: نبذة قصيرة عن كل واحد وأشهر أعماله، بدون حرق."
     const val WHY = "لماذا قد يستمتع المشاهد بهذا العمل؟ اذكر نقاط قوته وأجواءه ولمن يناسب، بدون حرق."
     const val SIMILAR = "اقترح 5 أعمال مشابهة مع سطر واحد لكل عمل يوضح وجه الشبه."

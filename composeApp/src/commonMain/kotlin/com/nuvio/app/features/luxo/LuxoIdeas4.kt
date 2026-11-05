@@ -643,6 +643,7 @@ fun LuxoKidsDialog(onDismiss: () -> Unit) {
         )
         OutlinedTextField(value = pin, onValueChange = { pin = it.filter(Char::isDigit).take(6); error = null }, singleLine = true, placeholder = { Text(if (on) "الرمز" else "رمز جديد (4 أرقام أو أكثر)") })
         error?.let { Text(it, color = Color(0xFFFFB4A9), fontSize = 12.sp) }
+        if (on) LuxoKidsTimeLimitRow(pin) { error = "الرمز غير صحيح" }
         IButton(if (on) "إيقاف ملف الأطفال" else "تفعيل") {
             if (on) { if (LuxoKids.disable(pin)) onDismiss() else error = "الرمز غير صحيح" }
             else { if (pin.length < 4) error = "يلزم رمز من 4 أرقام على الأقل" else { LuxoKids.enable(pin); onDismiss() } }

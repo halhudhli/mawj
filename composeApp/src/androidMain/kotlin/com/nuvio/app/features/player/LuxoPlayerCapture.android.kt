@@ -12,6 +12,7 @@ import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.nuvio.app.features.luxo.LuxoPrefsStorage
 import com.nuvio.app.features.profiles.ProfileBiometricAuth
@@ -78,3 +79,14 @@ internal actual suspend fun luxoSaveVideoScreenshot(name: String): Boolean = run
         context.contentResolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } != null
     }
 }.getOrDefault(false)
+
+internal actual suspend fun luxoCaptureVideoJpeg(width: Int, height: Int): ByteArray? {
+    val frame = luxoCaptureVideoFrame(width, height) ?: return null
+    return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        runCatching {
+            val out = java.io.ByteArrayOutputStream()
+            frame.asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+            out.toByteArray()
+        }.getOrNull()
+    }
+}

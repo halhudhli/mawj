@@ -102,6 +102,36 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
         ),
         LuxoFeatureSwitch(
+            lx("شرح النهاية 🎬", "Ending explained 🎬"),
+            lx("زر في رفيق موج يشرح نهاية العمل ومعناها، ويُطلب تأكيد قبل عرض الحرق", "A companion button that explains the ending, after a spoiler confirmation"),
+            { it.endingExplained }, { f, v -> f.copy(endingExplained = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("خريطة تقييم الحلقات 🟩", "Episode ratings map 🟩"),
+            lx("في صفحة المسلسل: مربع لكل حلقة ملوّن بحسب تقييمها، موسماً بموسم", "On series pages: a square per episode coloured by its rating"),
+            { it.episodeMap }, { f, v -> f.copy(episodeMap = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ما بدأته ولم يكتمل ⏸️", "Started, not finished ⏸️"),
+            lx("قاعة في «حسابي» تجمع الأعمال المتوقفة منذ أكثر من ثلاثة أسابيع، مع الإكمال أو الإخفاء", "A profile hall with titles paused for over three weeks"),
+            { it.unfinished }, { f, v -> f.copy(unfinished = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("من في المشهد؟ 👤", "Who's in this scene? 👤"),
+            lx("من قائمة المشغّل: تُلتقط الصورة الحالية ويُتعرَّف على الممثلين الظاهرين فيها وشخصياتهم (عبر Gemini)", "From the player menu: identifies the actors in the current frame (via Gemini)"),
+            { it.whoInScene }, { f, v -> f.copy(whoInScene = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حد يومي لملف الأطفال ⏱️", "Kids daily limit ⏱️"),
+            lx("مدة مشاهدة يومية لملف الأطفال، يتوقف بعدها التشغيل ويُطلب الرمز للزيادة", "A daily watch time for the kids profile; the PIN adds more"),
+            { it.kidsTimeLimit }, { f, v -> f.copy(kidsTimeLimit = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("التحدث مع الرفيق 🎙️", "Talk to the companion 🎙️"),
+            lx("سؤال الرفيق بالصوت، وتُقرأ الإجابة بصوت مسموع", "Ask the companion by voice; the answer is read aloud"),
+            { it.companionVoice }, { f, v -> f.copy(companionVoice = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("يوتيوب ▶️", "YouTube ▶️"),
             lx("قاعة في «حسابي» تفتح موقع يوتيوب الرسمي داخل التطبيق، وعلى الشاشة يُفتح تطبيق يوتيوب الرسمي", "A profile hall that opens the official YouTube site in the app; on TV the official YouTube app opens"),
             { it.youtube }, { f, v -> f.copy(youtube = v) },

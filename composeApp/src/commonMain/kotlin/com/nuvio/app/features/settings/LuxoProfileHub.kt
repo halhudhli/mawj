@@ -218,6 +218,9 @@ internal fun LazyListScope.luxoProfileHubContent(
                     add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
                 }
                 val luxoF = com.nuvio.app.features.luxo.LuxoFeaturesRepository.current()
+                if (luxoF.unfinished) {
+                    add(LuxoHall(lx("ما بدأته ولم يكتمل", "Unfinished"), lx("أعمال متوقفة منذ مدة", "Paused for a while"), Icons.Rounded.PlayArrow, Color(0xFFB39DDB), { com.nuvio.app.features.luxo.LuxoOverlays.unfinished = true }))
+                }
                 if (luxoF.youtube && !com.nuvio.app.features.luxo.LuxoKids.isOn()) {
                     add(LuxoHall(lx("يوتيوب", "YouTube"), lx(if (com.nuvio.app.features.luxo.luxoIsTv()) "يُفتح تطبيق يوتيوب الرسمي" else "يوتيوب الرسمي داخل التطبيق", "Official YouTube"), Icons.Rounded.PlayArrow, Color(0xFFFF4E45), { com.nuvio.app.features.luxo.LuxoOverlays.youtube = true }))
                 }

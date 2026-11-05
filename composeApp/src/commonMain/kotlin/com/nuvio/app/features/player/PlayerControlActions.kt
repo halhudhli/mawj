@@ -262,6 +262,9 @@ internal fun PlayerControlActions(
         LuxoPlayerBridge.onGifClick?.let {
             PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif)
         },
+        LuxoPlayerBridge.onWhoInSceneClick?.let {
+            PlayerControlAction("من في المشهد؟", it, icon = Icons.Rounded.Groups)
+        },
         LuxoPlayerBridge.onContinueOnTvClick?.let {
             PlayerControlAction("أكمل على الشاشة", it, icon = Icons.Rounded.Tv)
         },

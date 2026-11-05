@@ -5,3 +5,5 @@ import androidx.compose.ui.graphics.ImageBitmap
 internal actual suspend fun luxoCaptureVideoFrame(width: Int, height: Int): ImageBitmap? = null
 
 internal actual suspend fun luxoSaveVideoScreenshot(name: String): Boolean = false
+
+internal actual suspend fun luxoCaptureVideoJpeg(width: Int, height: Int): ByteArray? = null

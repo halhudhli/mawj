@@ -74,3 +74,6 @@ internal fun LuxoAmbientGlow(isPlaying: Boolean, modifier: Modifier = Modifier) 
         drawCircle(Color.Transparent, radius = 0f, center = Offset.Zero)
     }
 }
+
+/** The current frame as JPEG bytes (for questions about the scene); null when the platform can't. */
+internal expect suspend fun luxoCaptureVideoJpeg(width: Int, height: Int): ByteArray?
