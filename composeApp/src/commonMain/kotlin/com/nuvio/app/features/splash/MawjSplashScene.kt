@@ -85,12 +85,14 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
                 constraints = Constraints(maxWidth = w.toInt().coerceAtLeast(1)),
             )
         }
-        // The real outline of the letters, placed so their lowest point stays clearly above the water.
-        val glyphs = pathCache.getOrPut("p${wordSize.toInt()}_${swash.hashCode()}") { word.getPathForRange(0, word.layoutInput.text.length) }
-        val ink = glyphs.getBounds()
-        val origin = Offset(cx - (ink.left + ink.width / 2f), horizon - h * 0.07f - ink.bottom)
-        val wordPath = Path().apply { addPath(glyphs, origin) }
-        val inkTop = origin.y + ink.top
+        // Everything is drawn as real (shaped) text: some devices can't turn Arabic letters into
+        // outlines, which showed a plain box. The baseline sits so the tails of «و» and «ج» stay
+        // clearly above the water line.
+        val baseline = horizon - h * 0.07f - wordSize * 0.42f
+        val wordTop = Offset(cx - word.size.width / 2f, baseline - word.firstBaseline)
+        val inkTop = baseline - wordSize * 0.80f
+        val boxTop = wordTop.y
+        val boxH = word.size.height.toFloat().coerceAtLeast(1f)
 
         // Horizon line.
         val hz = seg(p, 0.08f, 0.11f)
@@ -101,7 +103,7 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
 
         // Empty letters (the glass).
         val vessel = (seg(p, 0.10f, 0.14f) - seg(p, 0.50f, 0.58f)).coerceIn(0f, 1f)
-        if (vessel > 0f) drawPath(wordPath, Color(0xFF4A505B).copy(alpha = vessel), style = Stroke(width = 1.6f))
+        if (vessel > 0f) drawText(word, color = Color(0xFF4A505B), topLeft = wordTop, alpha = vessel, drawStyle = Stroke(width = 1.6f))
 
         // Water level: from the horizon to just over the top of the word.
         val rise = easeInOut(seg(p, 0.13f, 0.46f))
@@ -115,13 +117,13 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
         // Filled letters + reflection.
         val shine = seg(p, 0.47f, 0.58f)
         if (rise > 0f) {
-            drawFilledWord(wordPath, ink.width, inkTop, ink.height, origin.x + ink.left, level, drift, w, h, shine, 1f)
+            drawWaterWord(word, wordTop, boxTop, boxH, level, shine, 1f)
             val refl = seg(p, 0.44f, 0.56f) * 0.22f
             if (refl > 0f && !lite) {
                 val wobble = sin(t * 2.6f) * 4f
                 translate(left = wobble) {
                     scale(scaleX = 1f, scaleY = -1f, pivot = Offset(cx, horizon)) {
-                        drawFilledWord(wordPath, ink.width, inkTop, ink.height, origin.x + ink.left, level, drift, w, h, 0f, refl)
+                        drawWaterWord(word, wordTop, boxTop, boxH, level, 0f, refl)
                     }
                 }
                 // Fade the reflection into the background.
@@ -229,34 +231,35 @@ private fun wavePath(w: Float, level: Float, drift: Float, closed: Boolean, h: F
     }
 }
 
-/** Water inside the letters only: everything is clipped to the letters' outline (works on every GPU). */
-private fun DrawScope.drawFilledWord(
-    wordPath: Path,
-    inkWidth: Float,
-    inkTop: Float,
-    inkHeight: Float,
-    inkLeft: Float,
-    level: Float,
-    drift: Float,
-    w: Float,
-    h: Float,
-    shine: Float,
-    alpha: Float,
-) {
-    clipPath(wordPath) {
-        drawPath(
-            wavePath(w, level, drift, closed = true, h = h),
-            Brush.verticalGradient(MwChrome, startY = level - h * 0.02f, endY = level + h * 0.42f),
+/**
+ * Water inside the letters: the word is painted with a gradient that is empty above the water
+ * level, a bright line of foam at the level, and silver below it. Works on every device.
+ */
+private fun DrawScope.drawWaterWord(word: TextLayoutResult, topLeft: Offset, boxTop: Float, boxH: Float, level: Float, shine: Float, alpha: Float) {
+    val f = ((level - boxTop) / boxH).coerceIn(0f, 1f)
+    if (f >= 1f) return
+    fun at(x: Float) = (f + (1f - f) * x).coerceIn(0f, 1f)
+    val foam = minOf(f + 0.012f, 1f)
+    val water = Brush.verticalGradient(
+        0f to Color.Transparent,
+        f to Color.Transparent,
+        f to Color.White,
+        foam to Color(0xFFD9DEE6),
+        at(0.35f) to Color(0xFF8A919D),
+        at(0.65f) to Color(0xFFC9CED6),
+        1f to Color(0xFF6E7480),
+        startY = boxTop,
+        endY = boxTop + boxH,
+    )
+    drawText(word, brush = water, topLeft = topLeft, alpha = alpha)
+    if (shine in 0.001f..0.999f) {
+        val wW = word.size.width.toFloat()
+        val x = topLeft.x - wW * 0.3f + wW * 1.6f * shine
+        drawText(
+            word,
+            brush = Brush.horizontalGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.85f), Color.Transparent), startX = x - boxH * 0.12f, endX = x + boxH * 0.12f),
+            topLeft = topLeft,
             alpha = alpha,
         )
-        drawPath(wavePath(w, level + h * 0.035f, -drift * 0.7f, closed = false, h = h), Color.White.copy(alpha = 0.5f * alpha), style = Stroke(2f))
-        if (shine in 0.001f..0.999f) {
-            val x = inkLeft - inkWidth * 0.3f + inkWidth * 1.6f * shine
-            drawRect(
-                Brush.horizontalGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.8f * alpha), Color.Transparent), startX = x - h * 0.06f, endX = x + h * 0.06f),
-                topLeft = Offset(x - h * 0.06f, inkTop),
-                size = Size(h * 0.12f, inkHeight),
-            )
-        }
     }
 }
