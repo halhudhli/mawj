@@ -2,9 +2,6 @@ package com.nuvio.app.features.luxo
 
 import androidx.compose.runtime.Composable
 
-/** Opens the device calendar with a new event on [dateIso] (yyyy-MM-dd). */
-expect fun luxoAddToCalendar(title: String, dateIso: String, description: String): Boolean
-
 /** A starter that opens the photo picker; the picked image comes back as (bytes, mime type). */
 @Composable
 expect fun rememberLuxoImagePicker(onPicked: (ByteArray, String) -> Unit): (() -> Unit)?

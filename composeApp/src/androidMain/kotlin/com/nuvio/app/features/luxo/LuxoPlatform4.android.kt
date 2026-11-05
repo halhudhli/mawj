@@ -37,27 +37,6 @@ import java.net.SocketTimeoutException
 import java.util.Calendar
 import java.util.TimeZone
 
-// ---------------------------------------------------------------- calendar
-
-actual fun luxoAddToCalendar(title: String, dateIso: String, description: String): Boolean = runCatching {
-    val context = LuxoPrefsStorage.appContext ?: return false
-    val parts = dateIso.take(10).split('-').map { it.toInt() }
-    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-        clear()
-        set(parts[0], parts[1] - 1, parts[2])
-    }
-    val intent = Intent(Intent.ACTION_INSERT)
-        .setData(CalendarContract.Events.CONTENT_URI)
-        .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, cal.timeInMillis)
-        .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, cal.timeInMillis + 24 * 3_600_000L)
-        .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
-        .putExtra(CalendarContract.Events.TITLE, title)
-        .putExtra(CalendarContract.Events.DESCRIPTION, description)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.startActivity(intent)
-    true
-}.getOrDefault(false)
-
 // ---------------------------------------------------------------- image picker
 
 @Composable

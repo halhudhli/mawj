@@ -2,8 +2,6 @@ package com.nuvio.app.features.luxo
 
 import androidx.compose.runtime.Composable
 
-actual fun luxoAddToCalendar(title: String, dateIso: String, description: String): Boolean = false
-
 @Composable
 actual fun rememberLuxoImagePicker(onPicked: (ByteArray, String) -> Unit): (() -> Unit)? = null
 
