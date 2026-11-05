@@ -49,6 +49,10 @@ data class SplashSettings(
     val shortenWhenReady: Boolean = true,
     /** Luxo: the colours flow inside the letters of the written logo. */
     val flowingLetters: Boolean = true,
+    /** «موج»: the word mirrored on the water. */
+    val mawjReflection: Boolean = true,
+    /** «موج»: MAWJ and the line under the word. */
+    val mawjTagline: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_DURATION_MS = 5000

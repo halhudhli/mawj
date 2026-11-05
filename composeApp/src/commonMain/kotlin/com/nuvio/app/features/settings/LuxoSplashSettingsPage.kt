@@ -64,6 +64,14 @@ private val accentSwatches = listOf(
     0xC9CDD4, 0xFFFFFF, 0xE7C27D, 0xF2A7B5, 0xD98E5F, 0x4FD1A5, 0x6EC8FF, 0xB78CFF,
 )
 
+/** Which settings each look actually uses, so only those are shown. */
+private fun SplashBackgroundStyle.usesDensity() = this in setOf(
+    SplashBackgroundStyle.STARS, SplashBackgroundStyle.WAVES, SplashBackgroundStyle.PARTICLES, SplashBackgroundStyle.PROJECTOR,
+    SplashBackgroundStyle.RAIN, SplashBackgroundStyle.BOKEH, SplashBackgroundStyle.WARP,
+)
+
+private fun SplashBackgroundStyle.usesAccent() = this != SplashBackgroundStyle.SOLID && this != SplashBackgroundStyle.CURTAIN
+
 @Composable
 private fun LuxoSplashSettingsBody(isTablet: Boolean) {
     val settings by remember {
@@ -72,6 +80,8 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
     }.collectAsStateWithLifecycle()
     var replayKey by remember { mutableIntStateOf(0) }
     val update: ((SplashSettings) -> SplashSettings) -> Unit = { SplashSettingsRepository.update(it) }
+    val mawj = settings.style == SplashBackgroundStyle.MAWJ
+    var lastCustom by remember { mutableStateOf(if (mawj) SplashBackgroundStyle.WAVES else settings.style) }
 
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         // ------------------------------------------------ live preview
@@ -83,228 +93,271 @@ private fun LuxoSplashSettingsBody(isTablet: Boolean) {
                     .clip(RoundedCornerShape(22.dp))
                     .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(22.dp)),
             ) {
-                LuxoSplashScreen(
-                    settings = settings.copy(enabled = true),
-                    replayKey = replayKey,
-                )
+                LuxoSplashScreen(settings = settings.copy(enabled = true), replayKey = replayKey)
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = lx("معاينة مباشرة", "Live preview"),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                TextButton(onClick = { replayKey++ }) {
-                    Text(lx("إعادة تشغيل الحركة", "Replay animation"))
-                }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(lx("معاينة مباشرة", "Live preview"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(onClick = { replayKey++ }) { Text(lx("إعادة الحركة", "Replay")) }
             }
         }
 
-        // ------------------------------------------------ general
-        SettingsSection(title = lx("عام", "General"), isTablet = isTablet) {
+        // ------------------------------------------------ on / off + type
+        SettingsSection(title = lx("شاشة البداية", "Launch screen"), isTablet = isTablet) {
             SettingsGroup(isTablet = isTablet) {
                 SettingsSwitchRow(
-                    title = lx("إظهار شاشة الدخول", "Show launch screen"),
-                    description = lx(
-                        "عند الإيقاف يفتح التطبيق على طول بدون الشاشة المتحركة",
-                        "When off, the app opens straight away without the animated screen",
-                    ),
+                    title = lx("إظهار شاشة البداية", "Show launch screen"),
+                    description = lx("عند الإيقاف يُفتح التطبيق مباشرة دون شاشة متحركة", "When off, the app opens straight away"),
                     checked = settings.enabled,
                     isTablet = isTablet,
                     onCheckedChange = { checked -> update { it.copy(enabled = checked) } },
                 )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = lx("توهّج خلف الشعار", "Glow behind logo"),
-                    checked = settings.glow,
-                    isTablet = isTablet,
-                    onCheckedChange = { checked -> update { it.copy(glow = checked) } },
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = lx("ألوان تتموج داخل الحروف 🌊", "Colours flowing inside the letters 🌊"),
-                    description = lx("مثل أمواج «سمت»: الألوان تتحرك داخل كلمة موج", "Like Samt's waves: colours move inside the word"),
-                    checked = settings.flowingLetters,
-                    isTablet = isTablet,
-                    onCheckedChange = { checked -> update { it.copy(flowingLetters = checked) } },
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = lx("التخطي بضغطة", "Tap to skip"),
-                    description = lx("الضغط على الشاشة ينهيها مباشرة", "A tap ends it straight away"),
-                    checked = settings.tapToSkip,
-                    isTablet = isTablet,
-                    onCheckedChange = { checked -> update { it.copy(tapToSkip = checked) } },
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = lx("الاختصار لو جهز التطبيق", "End early when ready"),
-                    description = lx("تنتهي بعد ثانية ونص إذا كان التطبيق جاهز قبل المدة المختارة", "Ends after 1.5 s if the app is ready before the chosen time"),
-                    checked = settings.shortenWhenReady,
-                    isTablet = isTablet,
-                    onCheckedChange = { checked -> update { it.copy(shortenWhenReady = checked) } },
-                )
-            }
-        }
-
-        // ------------------------------------------------ background
-        SettingsSection(title = lx("الخلفية", "Background"), isTablet = isTablet) {
-            SettingsGroup(isTablet = isTablet) {
-                LuxoBlock(isTablet) {
-                    LuxoLabel(lx("نوع الحركة", "Animation style"))
-                    LuxoChips(
-                        options = SplashBackgroundStyle.entries,
-                        selected = settings.style,
-                        label = { it.label() },
-                        onSelect = { style -> update { it.copy(style = style) } },
-                    )
-                }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoColorChooser(
-                        title = lx("لون الخلفية", "Background colour"),
-                        color = settings.backgroundColor,
-                        swatches = backgroundSwatches,
-                        pickerIndex = 0,
-                        onColor = { color -> update { it.copy(backgroundColor = color) } },
-                    )
-                }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoColorChooser(
-                        title = lx("لون النجوم / الموجات / الجزيئات", "Stars / waves / particles colour"),
-                        color = settings.accentColor,
-                        swatches = accentSwatches,
-                        pickerIndex = 1,
-                        onColor = { color -> update { it.copy(accentColor = color) } },
-                    )
-                }
-            }
-        }
-
-        // ------------------------------------------------ logo
-        SettingsSection(title = lx("الشعار", "Logo"), isTablet = isTablet) {
-            SettingsGroup(isTablet = isTablet) {
-                LuxoBlock(isTablet) {
-                    LuxoLabel(lx("لون الشعار", "Logo finish"))
-                    LuxoChips(
-                        options = SplashLogoVariant.entries,
-                        selected = settings.logoVariant,
-                        label = { it.label() },
-                        onSelect = { variant -> update { it.copy(logoVariant = variant) } },
-                    )
-                }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoLabel(lx("كلمة LUXO", "The LUXO word"))
-                    Text(
-                        text = lx(
-                            "اختر «الشعار» لصورة الشعار، أو خط تنكتب فيه كلمة LUXO.",
-                            "Pick “Logo” for the logo image, or a font to write LUXO in.",
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    LuxoChips(
-                        options = SplashLogoFont.entries,
-                        selected = settings.logoFont,
-                        label = { it.label() },
-                        onSelect = { font ->
-                            update { it.copy(logoFont = font) }
-                            replayKey++
-                        },
-                    )
-                }
-                if (settings.logoFont != SplashLogoFont.DEFAULT) {
+                if (settings.enabled) {
                     SettingsGroupDivider(isTablet = isTablet)
                     LuxoBlock(isTablet) {
-                        LuxoColorChooser(
-                            title = lx("لون كلمة LUXO", "LUXO colour"),
-                            color = settings.logoTextColor,
-                            swatches = accentSwatches,
-                            pickerIndex = 2,
-                            onColor = { color -> update { it.copy(logoTextColor = color) } },
+                        LuxoLabel(lx("نوع الشاشة", "Type"))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            SplashTypeCard(lx("موج 🌊", "Mawj 🌊"), lx("المشهد الخاص بالتطبيق: قطرة، فموج يملأ الكلمة", "The app's own scene"), mawj, Modifier.weight(1f)) {
+                                update { it.copy(style = SplashBackgroundStyle.MAWJ) }; replayKey++
+                            }
+                            SplashTypeCard(lx("تصميم مخصّص 🎨", "Custom 🎨"), lx("خلفية متحركة وشعار يُختاران بحرّية", "Pick a background and a logo"), !mawj, Modifier.weight(1f)) {
+                                update { it.copy(style = lastCustom) }; replayKey++
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (settings.enabled && mawj) {
+            // ------------------------------------------------ Mawj scene
+            SettingsSection(title = lx("مشهد موج", "Mawj scene"), isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    LuxoBlock(isTablet) {
+                        LuxoLabel(lx("لون الماء", "Water colour"))
+                        LuxoChips(
+                            options = SplashLogoVariant.entries.filter { it != SplashLogoVariant.ORIGINAL },
+                            selected = settings.logoVariant,
+                            label = { it.label() },
+                            onSelect = { v -> update { it.copy(logoVariant = v) } },
+                        )
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("انعكاس الكلمة على الماء", "Reflection on the water"),
+                        checked = settings.mawjReflection,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(mawjReflection = c) } },
+                    )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("MAWJ والعبارة تحت الكلمة", "MAWJ and the line below"),
+                        checked = settings.mawjTagline,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(mawjTagline = c) } },
+                    )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    LuxoBlock(isTablet) {
+                        LuxoSlider(
+                            title = lx("حجم الكلمة", "Word size"),
+                            valueLabel = "${(settings.logoScale * 100).roundToInt()}%",
+                            value = settings.logoScale,
+                            range = 0.6f..1.4f,
+                            onChange = { value -> update { it.copy(logoScale = value) } },
                         )
                     }
                 }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoLabel(lx("حركة ظهور الشعار", "Logo entrance"))
-                    LuxoChips(
-                        options = SplashLogoAnimation.entries,
-                        selected = settings.logoAnimation,
-                        label = { it.label() },
-                        onSelect = { animation ->
-                            update { it.copy(logoAnimation = animation) }
-                            replayKey++
-                        },
+            }
+        }
+
+        if (settings.enabled && !mawj) {
+            // ------------------------------------------------ custom background
+            SettingsSection(title = lx("الخلفية", "Background"), isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    LuxoBlock(isTablet) {
+                        LuxoLabel(lx("نوع الحركة", "Animation"))
+                        LuxoChips(
+                            options = SplashBackgroundStyle.entries.filter { it != SplashBackgroundStyle.MAWJ },
+                            selected = settings.style,
+                            label = { it.label() },
+                            onSelect = { style -> lastCustom = style; update { it.copy(style = style) } },
+                        )
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    LuxoBlock(isTablet) {
+                        LuxoColorChooser(
+                            title = lx("لون الخلفية", "Background colour"),
+                            color = settings.backgroundColor,
+                            swatches = backgroundSwatches,
+                            pickerIndex = 0,
+                            onColor = { color -> update { it.copy(backgroundColor = color) } },
+                        )
+                    }
+                    if (settings.style.usesAccent()) {
+                        SettingsGroupDivider(isTablet = isTablet)
+                        LuxoBlock(isTablet) {
+                            LuxoColorChooser(
+                                title = lx("لون الحركة", "Animation colour"),
+                                color = settings.accentColor,
+                                swatches = accentSwatches,
+                                pickerIndex = 1,
+                                onColor = { color -> update { it.copy(accentColor = color) } },
+                            )
+                        }
+                    }
+                    if (settings.style.usesDensity()) {
+                        SettingsGroupDivider(isTablet = isTablet)
+                        LuxoBlock(isTablet) {
+                            LuxoSlider(
+                                title = lx("الكثافة", "Density"),
+                                valueLabel = "${(settings.density * 100).roundToInt()}%",
+                                value = settings.density,
+                                range = 0.2f..2.5f,
+                                onChange = { value -> update { it.copy(density = value) } },
+                            )
+                        }
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("هالة ضوء خلف الشعار", "Halo behind the logo"),
+                        checked = settings.glow,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(glow = c) } },
                     )
                 }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoSlider(
-                        title = lx("حجم الشعار", "Logo size"),
-                        valueLabel = "${(settings.logoScale * 100).roundToInt()}%",
-                        value = settings.logoScale,
-                        range = 0.5f..1.8f,
-                        onChange = { value -> update { it.copy(logoScale = value) } },
+            }
+
+            // ------------------------------------------------ custom logo
+            SettingsSection(title = lx("الشعار", "Logo"), isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    LuxoBlock(isTablet) {
+                        LuxoLabel(lx("الشكل", "Form"))
+                        LuxoChips(
+                            options = SplashLogoFont.entries,
+                            selected = settings.logoFont,
+                            label = { it.label() },
+                            onSelect = { font -> update { it.copy(logoFont = font) }; replayKey++ },
+                        )
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    if (settings.logoFont == SplashLogoFont.DEFAULT) {
+                        LuxoBlock(isTablet) {
+                            LuxoLabel(lx("لون الشعار", "Logo finish"))
+                            LuxoChips(
+                                options = SplashLogoVariant.entries,
+                                selected = settings.logoVariant,
+                                label = { it.label() },
+                                onSelect = { v -> update { it.copy(logoVariant = v) } },
+                            )
+                        }
+                    } else {
+                        LuxoBlock(isTablet) {
+                            LuxoColorChooser(
+                                title = lx("لون الكلمة", "Word colour"),
+                                color = settings.logoTextColor,
+                                swatches = accentSwatches,
+                                pickerIndex = 2,
+                                onColor = { color -> update { it.copy(logoTextColor = color) } },
+                            )
+                        }
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("ألوان تنساب داخل الشعار", "Colours flowing inside the logo"),
+                        checked = settings.flowingLetters,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(flowingLetters = c) } },
+                    )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    LuxoBlock(isTablet) {
+                        LuxoLabel(lx("حركة ظهور الشعار", "Logo entrance"))
+                        LuxoChips(
+                            options = SplashLogoAnimation.entries,
+                            selected = settings.logoAnimation,
+                            label = { it.label() },
+                            onSelect = { a -> update { it.copy(logoAnimation = a) }; replayKey++ },
+                        )
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    LuxoBlock(isTablet) {
+                        LuxoSlider(
+                            title = lx("حجم الشعار", "Logo size"),
+                            valueLabel = "${(settings.logoScale * 100).roundToInt()}%",
+                            value = settings.logoScale,
+                            range = 0.5f..1.8f,
+                            onChange = { value -> update { it.copy(logoScale = value) } },
+                        )
+                    }
+                }
+            }
+        }
+
+        if (settings.enabled) {
+            // ------------------------------------------------ timing (both types)
+            SettingsSection(title = lx("الوقت", "Timing"), isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    LuxoBlock(isTablet) {
+                        LuxoSlider(
+                            title = lx("المدة", "Duration"),
+                            valueLabel = lx("${(settings.durationMs / 100) / 10f} ث", "${(settings.durationMs / 100) / 10f}s"),
+                            value = settings.durationMs.toFloat(),
+                            range = SplashSettings.MIN_DURATION_MS.toFloat()..SplashSettings.MAX_DURATION_MS.toFloat(),
+                            onChange = { value -> update { it.copy(durationMs = ((value / 100f).roundToInt() * 100)) } },
+                        )
+                    }
+                    if (!mawj) {
+                        SettingsGroupDivider(isTablet = isTablet)
+                        LuxoBlock(isTablet) {
+                            LuxoSlider(
+                                title = lx("سرعة الحركة", "Speed"),
+                                valueLabel = "×${(settings.speed * 10).roundToInt() / 10f}",
+                                value = settings.speed,
+                                range = 0.25f..3f,
+                                onChange = { value -> update { it.copy(speed = value) } },
+                            )
+                        }
+                    }
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("التخطي بلمسة", "Tap to skip"),
+                        description = lx("لمسة على الشاشة تُنهيها فورًا", "A tap ends it"),
+                        checked = settings.tapToSkip,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(tapToSkip = c) } },
+                    )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsSwitchRow(
+                        title = lx("الإنهاء المبكر عند جاهزية التطبيق", "End early when ready"),
+                        description = if (mawj) lx("تنتهي بعد امتلاء الكلمة إذا كان التطبيق جاهزًا", "Ends once the word is full if the app is ready")
+                        else lx("تنتهي بعد ثانية ونصف إذا كان التطبيق جاهزًا", "Ends after 1.5 s if the app is ready"),
+                        checked = settings.shortenWhenReady,
+                        isTablet = isTablet,
+                        onCheckedChange = { c -> update { it.copy(shortenWhenReady = c) } },
                     )
                 }
             }
         }
 
-        // ------------------------------------------------ motion & timing
-        SettingsSection(title = lx("الحركة والمدة", "Motion & timing"), isTablet = isTablet) {
-            SettingsGroup(isTablet = isTablet) {
-                LuxoBlock(isTablet) {
-                    LuxoSlider(
-                        title = lx("سرعة الحركة", "Animation speed"),
-                        valueLabel = "×${(settings.speed * 10).roundToInt() / 10f}",
-                        value = settings.speed,
-                        range = 0.25f..3f,
-                        onChange = { value -> update { it.copy(speed = value) } },
-                    )
-                }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoSlider(
-                        title = lx("الكثافة (عدد النجوم والجزيئات)", "Density (stars & particles)"),
-                        valueLabel = "${(settings.density * 100).roundToInt()}%",
-                        value = settings.density,
-                        range = 0.2f..2.5f,
-                        onChange = { value -> update { it.copy(density = value) } },
-                    )
-                }
-                SettingsGroupDivider(isTablet = isTablet)
-                LuxoBlock(isTablet) {
-                    LuxoSlider(
-                        title = lx("مدة ظهور الشاشة", "How long it stays"),
-                        valueLabel = lx(
-                            "${(settings.durationMs / 100) / 10f} ث",
-                            "${(settings.durationMs / 100) / 10f}s",
-                        ),
-                        value = settings.durationMs.toFloat(),
-                        range = SplashSettings.MIN_DURATION_MS.toFloat()..SplashSettings.MAX_DURATION_MS.toFloat(),
-                        onChange = { value -> update { it.copy(durationMs = ((value / 100f).roundToInt() * 100)) } },
-                    )
-                }
-            }
-        }
-
-        OutlinedButton(
-            onClick = {
-                SplashSettingsRepository.reset()
-                replayKey++
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(lx("استرجاع الإعدادات الافتراضية", "Restore defaults"))
+        OutlinedButton(onClick = { SplashSettingsRepository.reset(); replayKey++ }, modifier = Modifier.fillMaxWidth()) {
+            Text(lx("استعادة الإعدادات الافتراضية", "Restore defaults"))
         }
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun SplashTypeCard(title: String, desc: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val accent = MaterialTheme.colorScheme.primary
+    Column(
+        modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (selected) accent.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
+            .border(if (selected) 2.dp else 1.dp, if (selected) accent else Color.White.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

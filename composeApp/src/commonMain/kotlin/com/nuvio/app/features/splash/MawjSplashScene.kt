@@ -40,7 +40,16 @@ import org.jetbrains.compose.resources.Font
 import kotlin.math.PI
 import kotlin.math.sin
 
-private val MwChrome = listOf(Color(0xFFFFFFFF), Color(0xFFD9DEE6), Color(0xFF8A919D), Color(0xFFC9CED6), Color(0xFF6E7480))
+/** Water colours per finish: (foam, light, deep, mid, bottom). */
+internal fun mawjPalette(v: SplashLogoVariant): List<Color> = when (v) {
+    SplashLogoVariant.GOLD -> listOf(Color(0xFFFFF6DC), Color(0xFFF2D58C), Color(0xFF9C6F22), Color(0xFFE8C26A), Color(0xFF7A5418))
+    SplashLogoVariant.ROSE_GOLD -> listOf(Color(0xFFFFEEE8), Color(0xFFEFC1B6), Color(0xFF9A5A63), Color(0xFFE3A79C), Color(0xFF7A4249))
+    SplashLogoVariant.COPPER -> listOf(Color(0xFFFFEADB), Color(0xFFF0B98F), Color(0xFF8A4320), Color(0xFFDB915E), Color(0xFF6A3216))
+    SplashLogoVariant.EMERALD -> listOf(Color(0xFFEFFFF7), Color(0xFFB9F0D5), Color(0xFF1E7350), Color(0xFF7FD9AE), Color(0xFF15543A))
+    SplashLogoVariant.ARCTIC_BLUE -> listOf(Color(0xFFF5FAFF), Color(0xFFD9EBFF), Color(0xFF4F7FB3), Color(0xFFA9CDF2), Color(0xFF365C86))
+    SplashLogoVariant.GRAPHITE -> listOf(Color(0xFFE4E7EC), Color(0xFFAEB4BE), Color(0xFF3A3F49), Color(0xFF8A919D), Color(0xFF2A2E36))
+    else -> listOf(Color(0xFFFFFFFF), Color(0xFFD9DEE6), Color(0xFF8A919D), Color(0xFFC9CED6), Color(0xFF6E7480))
+}
 
 /** 0..1 inside [a, b], clamped. */
 private fun seg(p: Float, a: Float, b: Float): Float = ((p - a) / (b - a)).coerceIn(0f, 1f)
@@ -117,13 +126,13 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
         // Filled letters + reflection.
         val shine = seg(p, 0.47f, 0.58f)
         if (rise > 0f) {
-            drawWaterWord(word, wordTop, boxTop, boxH, level, shine, 1f)
+            drawWaterWord(word, wordTop, boxTop, boxH, level, shine, 1f, mawjPalette(settings.logoVariant))
             val refl = seg(p, 0.44f, 0.56f) * 0.22f
-            if (refl > 0f && !lite) {
+            if (refl > 0f && !lite && settings.mawjReflection) {
                 val wobble = sin(t * 2.6f) * 4f
                 translate(left = wobble) {
                     scale(scaleX = 1f, scaleY = -1f, pivot = Offset(cx, horizon)) {
-                        drawWaterWord(word, wordTop, boxTop, boxH, level, 0f, refl)
+                        drawWaterWord(word, wordTop, boxTop, boxH, level, 0f, refl, mawjPalette(settings.logoVariant))
                     }
                 }
                 // Fade the reflection into the background.
@@ -176,7 +185,7 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
         }
 
         // MAWJ gathers letter by letter, then the line under it.
-        val latin = seg(p, 0.60f, 0.70f)
+        val latin = if (settings.mawjTagline) seg(p, 0.60f, 0.70f) else 0f
         if (latin > 0f) {
             val spacing = 1.4f - 0.85f * easeOut(latin)
             val l = measurer.measure(
@@ -185,7 +194,7 @@ internal fun MawjSplashScene(settings: SplashSettings, replayKey: Int) {
             )
             drawText(l, topLeft = Offset(cx - l.size.width / 2f + h * 0.03f * spacing / 2f, horizon + h * 0.10f), alpha = latin)
         }
-        val tag = seg(p, 0.66f, 0.74f)
+        val tag = if (settings.mawjTagline) seg(p, 0.66f, 0.74f) else 0f
         if (tag > 0f) {
             val l = cache.getOrPut("t${h.toInt()}") {
                 measurer.measure("عالمٌ من الحكايات، بلا حدود", TextStyle(fontSize = (h * 0.022f / density).sp, color = Color(0xFF9AA1AD)))
@@ -235,7 +244,7 @@ private fun wavePath(w: Float, level: Float, drift: Float, closed: Boolean, h: F
  * Water inside the letters: the word is painted with a gradient that is empty above the water
  * level, a bright line of foam at the level, and silver below it. Works on every device.
  */
-private fun DrawScope.drawWaterWord(word: TextLayoutResult, topLeft: Offset, boxTop: Float, boxH: Float, level: Float, shine: Float, alpha: Float) {
+private fun DrawScope.drawWaterWord(word: TextLayoutResult, topLeft: Offset, boxTop: Float, boxH: Float, level: Float, shine: Float, alpha: Float, pal: List<Color>) {
     val f = ((level - boxTop) / boxH).coerceIn(0f, 1f)
     if (f >= 1f) return
     fun at(x: Float) = (f + (1f - f) * x).coerceIn(0f, 1f)
@@ -243,11 +252,11 @@ private fun DrawScope.drawWaterWord(word: TextLayoutResult, topLeft: Offset, box
     val water = Brush.verticalGradient(
         0f to Color.Transparent,
         f to Color.Transparent,
-        f to Color.White,
-        foam to Color(0xFFD9DEE6),
-        at(0.35f) to Color(0xFF8A919D),
-        at(0.65f) to Color(0xFFC9CED6),
-        1f to Color(0xFF6E7480),
+        f to pal[0],
+        foam to pal[1],
+        at(0.35f) to pal[2],
+        at(0.65f) to pal[3],
+        1f to pal[4],
         startY = boxTop,
         endY = boxTop + boxH,
     )
