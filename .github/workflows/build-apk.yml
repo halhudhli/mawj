@@ -112,12 +112,14 @@ jobs:
           [ -s wrong.txt ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' wrong.txt)" || true
 
       - name: Upload APK
+        # The release below is what the app updates from; a full artifact store must not block it.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: LUXO-Stream-APK
           path: luxo-out/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 2
 
       # ينشر كل بناء ناجح كإصدار، والتطبيق يشيك عليه ويحدّث نفسه
       - name: Publish release for in-app updates
