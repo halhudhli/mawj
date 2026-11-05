@@ -108,7 +108,7 @@ private fun LuxoEpisodeMapDialog(title: String, tmdbId: String, onDismiss: () ->
                     )
                 }
                 Column(
-                    Modifier.weight(1f, fill = false).heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
+                    Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     data.forEach { season ->
