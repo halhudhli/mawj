@@ -129,6 +129,10 @@ data class LuxoFeatures(
     val kidsTimeLimit: Boolean = true,
     /** Voice questions in the companion, with the answer read aloud. */
     val companionVoice: Boolean = true,
+    /** «حشو» badges on anime episodes. */
+    val fillerGuide: Boolean = true,
+    /** Autoplay passes over filler episodes. */
+    val fillerSkip: Boolean = false,
 )
 
 object LuxoFeaturesRepository {

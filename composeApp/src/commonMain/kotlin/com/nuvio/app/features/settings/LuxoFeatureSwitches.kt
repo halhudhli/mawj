@@ -102,6 +102,16 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
         ),
         LuxoFeatureSwitch(
+            lx("دليل الحلقات الحشو 🏷️", "Filler guide 🏷️"),
+            lx("في الأنمي الطويل (كونان، ون بيس، ناروتو…) تظهر شارة «حشو» أو «مختلط» بجانب رقم الحلقة", "Filler/mixed badges next to anime episode numbers"),
+            { it.fillerGuide }, { f, v -> f.copy(fillerGuide = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تخطّي الحشو تلقائياً ⏭️", "Skip filler ⏭️"),
+            lx("عند الانتقال إلى الحلقة التالية تُتخطّى حلقات الحشو وتُشغَّل أول حلقة من القصة الأصلية", "Autoplay jumps over filler episodes"),
+            { it.fillerSkip }, { f, v -> f.copy(fillerSkip = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("شرح النهاية 🎬", "Ending explained 🎬"),
             lx("زر في رفيق موج يشرح نهاية العمل ومعناها، ويُطلب تأكيد قبل عرض الحرق", "A companion button that explains the ending, after a spoiler confirmation"),
             { it.endingExplained }, { f, v -> f.copy(endingExplained = v) },

@@ -22,7 +22,10 @@ object PlayerNextEpisodeRules {
             it.season == currentSeason && it.episode == currentEpisode
         }
         if (currentIndex < 0) return null
-        return sortedEpisodes.getOrNull(currentIndex + 1)
+        // «تخطّي الحشو»: pass over filler episodes when the option is on.
+        var next = currentIndex + 1
+        while (next < sortedEpisodes.size && com.nuvio.app.features.luxo.LuxoFiller.shouldSkip(sortedEpisodes[next])) next++
+        return sortedEpisodes.getOrNull(next) ?: sortedEpisodes.getOrNull(currentIndex + 1)
     }
 
     fun shouldShowNextEpisodeCard(

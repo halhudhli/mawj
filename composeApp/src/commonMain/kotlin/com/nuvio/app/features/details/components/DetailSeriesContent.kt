@@ -129,6 +129,7 @@ fun DetailSeriesContent(
 ) {
     val hasVideos = meta.videos.isNotEmpty()
     if (meta.type != "series" && !hasVideos) return
+    com.nuvio.app.features.luxo.LuxoFillerLoader(meta)
 
     if (meta.videos.isEmpty()) {
         DetailSection(
@@ -1032,14 +1033,17 @@ private fun EpisodeHorizontalCard(
                 ),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            EpisodeCodeBadge(
-                text = video.episodeBadge(),
-                textSize = metrics.badgeTextSize,
-                radius = metrics.badgeRadius,
-                horizontalPadding = metrics.badgeHorizontalPadding,
-                verticalPadding = metrics.badgeVerticalPadding,
-                backgroundAlpha = 0.42f,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                EpisodeCodeBadge(
+                    text = video.episodeBadge(),
+                    textSize = metrics.badgeTextSize,
+                    radius = metrics.badgeRadius,
+                    horizontalPadding = metrics.badgeHorizontalPadding,
+                    verticalPadding = metrics.badgeVerticalPadding,
+                    backgroundAlpha = 0.42f,
+                )
+                com.nuvio.app.features.luxo.LuxoFillerBadge(video.id, metrics.badgeTextSize)
+            }
 
             Text(
                 text = video.title,
@@ -1471,17 +1475,23 @@ private fun EpisodeListCard(
                     )
                 }
 
-                EpisodeCodeBadge(
-                    text = video.episodeBadge(),
-                    textSize = sizing.badgeTextSize,
-                    radius = sizing.badgeRadius,
-                    horizontalPadding = sizing.badgeHorizontalPadding,
-                    verticalPadding = sizing.badgeVerticalPadding,
-                    backgroundAlpha = 0.85f,
+                Row(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 8.dp, top = 8.dp),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    EpisodeCodeBadge(
+                        text = video.episodeBadge(),
+                        textSize = sizing.badgeTextSize,
+                        radius = sizing.badgeRadius,
+                        horizontalPadding = sizing.badgeHorizontalPadding,
+                        verticalPadding = sizing.badgeVerticalPadding,
+                        backgroundAlpha = 0.85f,
+                    )
+                    com.nuvio.app.features.luxo.LuxoFillerBadge(video.id, sizing.badgeTextSize)
+                }
 
                 NuvioAnimatedWatchedBadge(
                     isVisible = isWatched,
