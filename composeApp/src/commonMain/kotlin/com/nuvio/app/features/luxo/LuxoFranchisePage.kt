@@ -85,6 +85,14 @@ fun LuxoOverlayHost() {
     if (LuxoOverlays.watchTogether) LuxoWatchTogetherDialog(onDismiss = { LuxoOverlays.watchTogether = false })
     if (LuxoOverlays.tierList) LuxoTierListDialog(onDismiss = { LuxoOverlays.tierList = false })
     if (LuxoOverlays.secondScreen) LuxoSecondScreenDialog(onDismiss = { LuxoOverlays.secondScreen = false })
+    LuxoOverlays.person?.let { pd ->
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { LuxoOverlays.person = null },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        ) {
+            com.nuvio.app.features.details.LuxoPersonPage(initial = pd, onOpenMeta = { m -> LuxoOverlays.person = null; LuxoOverlays.openMeta(m) })
+        }
+    }
     LuxoRateAfterHost()
     LuxoDeviceSync()
     LuxoEveningPreparer()

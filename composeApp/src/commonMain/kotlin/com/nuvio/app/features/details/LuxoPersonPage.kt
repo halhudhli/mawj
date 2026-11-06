@@ -226,6 +226,22 @@ internal fun LuxoPersonPage(
                 }
             }
 
+            full {
+                LuxoPersonPlus(
+                    person = person,
+                    extras = extras,
+                    displayName = arabicName ?: person.name,
+                    isWatched = isWatched,
+                    onOpen = ::open,
+                    onOpenPerson = { id ->
+                        if (!opening) {
+                            opening = true
+                            scope.launch { TmdbMetadataService.fetchPersonDetail(id)?.let { stack.add(it) }; opening = false }
+                        }
+                    },
+                )
+            }
+
             // Hidden gems: high rating, not widely seen.
             val gems = credits.filter { it.rating >= 7.3 && it.votes in 40..1500 && it.poster != null }
                 .sortedByDescending { it.rating }.take(12)

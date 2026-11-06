@@ -105,6 +105,76 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
         ),
         LuxoFeatureSwitch(
+            lx("تقدّمك في أعمال الممثل 📊", "تقدّمك في أعمال الممثل 📊"),
+            lx("في صفحة الممثل: دائرة بعدد ما شوهد من أعماله، وبالضغط تظهر قائمتا ما شوهد وما لم يُشاهَد", "في صفحة الممثل: دائرة بعدد ما شوهد من أعماله، وبالضغط تظهر قائمتا ما شوهد وما لم يُشاهَد"),
+            { it.actorProgress }, { f, v -> f.copy(actorProgress = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("من أين أبدأ؟ 🧭", "من أين أبدأ؟ 🧭"),
+            lx("ثلاثة اختيارات من أعمال الممثل غير المشاهَدة: الأعلى تقييماً، والأشهر، وجوهرة مخفية", "ثلاثة اختيارات من أعمال الممثل غير المشاهَدة: الأعلى تقييماً، والأشهر، وجوهرة مخفية"),
+            { it.actorStartHere }, { f, v -> f.copy(actorStartHere = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ماراثون الممثل 🍿", "ماراثون الممثل 🍿"),
+            lx("أفضل أعماله غير المشاهَدة مرتبة زمنياً، مع إضافتها كلها إلى المكتبة بضغطة", "أفضل أعماله غير المشاهَدة مرتبة زمنياً، مع إضافتها كلها إلى المكتبة بضغطة"),
+            { it.actorMarathon }, { f, v -> f.copy(actorMarathon = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("صوره عبر السنين 📸", "صوره عبر السنين 📸"),
+            lx("صور الممثل من أعماله مرتبة بالسنة من بداياته إلى اليوم", "صور الممثل من أعماله مرتبة بالسنة من بداياته إلى اليوم"),
+            { it.actorPhotosYears }, { f, v -> f.copy(actorPhotosYears = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الأدوار الصوتية 🎙️", "الأدوار الصوتية 🎙️"),
+            lx("قسم للأعمال التي أدّى فيها الممثل بصوته", "قسم للأعمال التي أدّى فيها الممثل بصوته"),
+            { it.actorVoiceRoles }, { f, v -> f.copy(actorVoiceRoles = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("قارن ممثلين ⚖️", "قارن ممثلين ⚖️"),
+            lx("مقارنة الممثل بآخر: عدد الأعمال والتقييم وسنوات المسيرة والأعمال التي جمعتهما", "مقارنة الممثل بآخر: عدد الأعمال والتقييم وسنوات المسيرة والأعمال التي جمعتهما"),
+            { it.actorCompare }, { f, v -> f.copy(actorCompare = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("لعبة الدرجات الست 🔗", "لعبة الدرجات الست 🔗"),
+            lx("أقصر طريق بين ممثلَين عبر الأعمال المشتركة", "أقصر طريق بين ممثلَين عبر الأعمال المشتركة"),
+            { it.actorSixDegrees }, { f, v -> f.copy(actorSixDegrees = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("من أي عمل هذه اللقطة؟ 🎯", "من أي عمل هذه اللقطة؟ 🎯"),
+            lx("لعبة: تظهر لقطة من أعمال الممثل ويُخمَّن العمل من ثلاثة خيارات", "لعبة: تظهر لقطة من أعمال الممثل ويُخمَّن العمل من ثلاثة خيارات"),
+            { it.actorStillQuiz }, { f, v -> f.copy(actorStillQuiz = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("مسيرته حول العالم 🌍", "مسيرته حول العالم 🌍"),
+            lx("الدول التي صُنعت فيها أشهر أعمال الممثل", "الدول التي صُنعت فيها أشهر أعمال الممثل"),
+            { it.actorWorldMap }, { f, v -> f.copy(actorWorldMap = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حقائق سريعة عن الممثل 💡", "حقائق سريعة عن الممثل 💡"),
+            lx("معلومات موثوقة عن مسيرته (عبر Gemini)", "معلومات موثوقة عن مسيرته (عبر Gemini)"),
+            { it.actorFacts }, { f, v -> f.copy(actorFacts = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تذكير بعيد ميلاد الممثل 🎂", "تذكير بعيد ميلاد الممثل 🎂"),
+            lx("تنبيه في يوم ميلاده مع اقتراح عمل من أعماله", "تنبيه في يوم ميلاده مع اقتراح عمل من أعماله"),
+            { it.actorBirthday }, { f, v -> f.copy(actorBirthday = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تفاصيل الممثل في «ذوقي» 🎭", "تفاصيل الممثل في «ذوقي» 🎭"),
+            lx("بالضغط على ممثل في «الممثلون الأكثر حضوراً» تظهر الأعمال التي شوهدت له", "بالضغط على ممثل في «الممثلون الأكثر حضوراً» تظهر الأعمال التي شوهدت له"),
+            { it.tasteActorDetail }, { f, v -> f.copy(tasteActorDetail = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("قاعة العرض لصفحة الشركة 🎭", "قاعة العرض لصفحة الشركة 🎭"),
+            lx("صفحة شركة الإنتاج كقاعة سينما: شاشة وستائر وشريط فيلم للعصور والأعمال الأيقونية والجوائز", "صفحة شركة الإنتاج كقاعة سينما: شاشة وستائر وشريط فيلم للعصور والأعمال الأيقونية والجوائز"),
+            { it.companyHall }, { f, v -> f.copy(companyHall = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الكتالوج المتحرك 🎞️", "الكتالوج المتحرك 🎞️"),
+            lx("بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار", "بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار"),
+            { it.animatedCatalog }, { f, v -> f.copy(animatedCatalog = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("بطاقة عضوية موج 💳", "Mawj membership card 💳"),
             lx("أعلى صفحة الملف: بطاقة عضوية تلمع وتميل مع الجهاز، ودرجتها ترتقي بساعات المشاهدة (برونزية، فضية، ذهبية، ماسية)", "A tilting membership card that levels up with watch time"),
             { it.membershipCard }, { f, v -> f.copy(membershipCard = v) },
@@ -260,13 +330,8 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.youtubeAdBlock }, { f, v -> f.copy(youtubeAdBlock = v) },
         ),
         LuxoFeatureSwitch(
-            lx("يوتيوب بلا إعلانات (ReVanced) 📲", "Ad-free YouTube app 📲"),
-            lx("إن كان YouTube ReVanced أو RVX مثبّتاً على التابلت، أو SmartTube على الشاشة، تفتحه قاعة «يوتيوب» بدل الصفحة الداخلية", "Opens ReVanced/RVX (tablet) or SmartTube (TV) when installed"),
-            { it.youtubeAdFreeApp }, { f, v -> f.copy(youtubeAdFreeApp = v) },
-        ),
-        LuxoFeatureSwitch(
             lx("يوتيوب ▶️", "YouTube ▶️"),
-            lx("قاعة في «حسابي» تفتح موقع يوتيوب الرسمي داخل التطبيق، وعلى الشاشة يُفتح تطبيق يوتيوب الرسمي", "A profile hall that opens the official YouTube site in the app; on TV the official YouTube app opens"),
+            lx("قاعة في «حسابي» تفتح يوتيوب الرسمي داخل التطبيق، على التابلت والشاشة", "A profile hall that opens the official YouTube site in the app; on TV the official YouTube app opens"),
             { it.youtube }, { f, v -> f.copy(youtube = v) },
         ),
         LuxoFeatureSwitch(

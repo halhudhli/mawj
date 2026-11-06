@@ -42,6 +42,7 @@ object LuxoOverlays {
     var watchTogether by mutableStateOf(false)
     var tierList by mutableStateOf(false)
     var secondScreen by mutableStateOf(false)
+    var person by mutableStateOf<com.nuvio.app.features.details.PersonDetail?>(null)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null

@@ -405,10 +405,13 @@ private fun DecadesTile(s: LuxoBentoStats, modifier: Modifier) {
 @Composable
 private fun ActorsTile(s: LuxoBentoStats, modifier: Modifier) {
     if (s.actors.isEmpty()) return
+    val detail = rememberLuxoFeatures().tasteActorDetail
+    var open by remember { mutableStateOf<Pair<String, String?>?>(null) }
+    open?.let { (n, p) -> com.nuvio.app.features.luxo.LuxoTasteActorDialog(n, p) { open = null } }
     Tile(modifier, "الممثلون الأكثر حضوراً") {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             s.actors.forEach { (name, photo, n) ->
-                Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.width(72.dp).clickable(enabled = detail) { open = name to photo }, horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.size(60.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.08f)).border(2.dp, Brush.linearGradient(listOf(B1, B2)), CircleShape)) {
                         if (photo != null) AsyncImage(photo, name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     }

@@ -237,7 +237,7 @@ internal fun LazyListScope.luxoProfileHubContent(
                     add(LuxoHall(lx("ما بدأته ولم يكتمل", "Unfinished"), lx("أعمال متوقفة منذ مدة", "Paused for a while"), Icons.Rounded.PlayArrow, Color(0xFFB39DDB), { com.nuvio.app.features.luxo.LuxoOverlays.unfinished = true }))
                 }
                 if (luxoF.youtube && !com.nuvio.app.features.luxo.LuxoKids.isOn()) {
-                    add(LuxoHall(lx("يوتيوب", "YouTube"), lx(if (com.nuvio.app.features.luxo.luxoIsTv()) "يُفتح تطبيق يوتيوب الرسمي" else "يوتيوب الرسمي داخل التطبيق", "Official YouTube"), Icons.Rounded.PlayArrow, Color(0xFFFF4E45), { com.nuvio.app.features.luxo.LuxoOverlays.youtube = true }))
+                    add(LuxoHall(lx("يوتيوب", "YouTube"), lx("يوتيوب داخل موج بلا إعلانات", "YouTube, ad-free"), Icons.Rounded.PlayArrow, Color(0xFFFF4E45), { com.nuvio.app.features.luxo.LuxoOverlays.youtube = true }))
                 }
                 if (luxoF.guessGame) {
                     add(LuxoHall(lx("خمّن العمل", "Guess the title"), lx("لقطة مموّهة وأربعة خيارات", "A blurred frame, four choices"), Icons.Rounded.SportsEsports, Color(0xFF5ED6C9), { com.nuvio.app.features.luxo.LuxoOverlays.guessGame = true }))

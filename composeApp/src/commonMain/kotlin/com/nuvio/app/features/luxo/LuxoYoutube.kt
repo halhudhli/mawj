@@ -38,23 +38,7 @@ expect fun LuxoYoutubeWeb(modifier: Modifier, onBackHandler: ((() -> Boolean)) -
 /** «يوتيوب»: the official site inside Mawj on tablets; the official app on TV. No key is needed. */
 @Composable
 fun LuxoYoutubeDialog(onDismiss: () -> Unit) {
-    val tv = luxoIsTv()
-    val features = rememberLuxoFeatures()
-    var appMissing by remember { mutableStateOf(false) }
-    // An installed ad-free app (ReVanced, SmartTube…) is preferred when the option is on.
-    var triedAdFree by remember { mutableStateOf(false) }
-    if (!triedAdFree) {
-        LaunchedEffect(Unit) {
-            if (features.youtubeAdFreeApp && luxoOpenYoutubeAdFree()) onDismiss() else triedAdFree = true
-        }
-        return
-    }
-    if (tv) {
-        LaunchedEffect(Unit) {
-            if (luxoOpenYoutubeApp()) onDismiss() else appMissing = true
-        }
-        if (!appMissing) return
-    }
+    // Always the official site inside Mawj (tablet and TV), with its own ad blocking.
     var webBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
     Dialog(
         onDismissRequest = { if (webBack?.invoke() != true) onDismiss() },

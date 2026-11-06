@@ -41,11 +41,12 @@ object LuxoEvening {
         return "${d.year}-$md" to md
     }
 
-    fun reschedule() {
+    fun reschedule(force: Boolean = false) {
         val f = LuxoFeaturesRepository.current()
-        val want = if (f.eveningPick || f.watchMemories) hour() else null
+        val birthdays = f.actorBirthday && com.nuvio.app.features.details.LuxoBirthdays.all().isNotEmpty()
+        val want = if (f.eveningPick || f.watchMemories || birthdays) hour() else null
         val key = want?.toString() ?: "off"
-        if (LuxoPrefsStorage.load(SCHEDULED) == key) return
+        if (!force && LuxoPrefsStorage.load(SCHEDULED) == key) return
         runCatching { luxoScheduleEvening(want) }
         LuxoPrefsStorage.save(SCHEDULED, key)
     }
@@ -121,6 +122,16 @@ object LuxoEvening {
                     out += listOf("memory_$day", "ذكريات المشاهدة 🎞️", "$ago بالضبط بدأت مشاهدة «${m[4]}»",
                         buildMetaDeepLinkUrl(if (m[2] == "movie") "movie" else "series", m[3]), null)
                 }
+        }
+        if (f.actorBirthday) {
+            com.nuvio.app.features.details.LuxoBirthdays.all().filter { it[1] == md }.forEach { b ->
+                val pick = b[3].takeIf { it.isNotBlank() }
+                out += listOf(
+                    "birthday_${b[0]}_$day", "🎂 عيد ميلاد ${b[2]}",
+                    if (pick != null) "اليوم عيد ميلاده، ويُقترح للاحتفال: «$pick»" else "اليوم عيد ميلاده",
+                    if (b[5].isNotBlank()) buildMetaDeepLinkUrl(if (b[4] == "movie") "movie" else "series", b[5]) else "", null,
+                )
+            }
         }
         LuxoPrefsStorage.save(NOTIFIED, day)
         return out

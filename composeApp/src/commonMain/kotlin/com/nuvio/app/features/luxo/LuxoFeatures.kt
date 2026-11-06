@@ -181,6 +181,34 @@ data class LuxoFeatures(
     val youtubeAdBlock: Boolean = true,
     /** «يوتيوب» opens ReVanced / SmartTube when installed. */
     val youtubeAdFreeApp: Boolean = true,
+    /** «تقدّمك في أعماله» */
+    val actorProgress: Boolean = true,
+    /** «من أين أبدأ؟» */
+    val actorStartHere: Boolean = true,
+    /** «ماراثون الممثل» */
+    val actorMarathon: Boolean = true,
+    /** «صوره عبر السنين» */
+    val actorPhotosYears: Boolean = true,
+    /** «الأدوار الصوتية» */
+    val actorVoiceRoles: Boolean = true,
+    /** «قارن ممثلين» */
+    val actorCompare: Boolean = true,
+    /** «الدرجات الست» */
+    val actorSixDegrees: Boolean = true,
+    /** «من أي عمل هذه اللقطة؟» */
+    val actorStillQuiz: Boolean = true,
+    /** «مسيرته حول العالم» */
+    val actorWorldMap: Boolean = true,
+    /** «حقائق سريعة» */
+    val actorFacts: Boolean = true,
+    /** «تذكير بعيد ميلاده» */
+    val actorBirthday: Boolean = true,
+    /** Actor details from the taste board */
+    val tasteActorDetail: Boolean = true,
+    /** «قاعة العرض» company page */
+    val companyHall: Boolean = true,
+    /** Animated catalog cards */
+    val animatedCatalog: Boolean = true,
 )
 
 object LuxoFeaturesRepository {
