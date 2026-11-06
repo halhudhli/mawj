@@ -102,6 +102,46 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
         ),
         LuxoFeatureSwitch(
+            lx("الموسيقى التصويرية 🎵", "الموسيقى التصويرية 🎵"),
+            lx("أغاني العمل ومتى تُسمع، مع فتحها في أنغامي أو سبوتيفاي أو يوتيوب (عبر Gemini)", "أغاني العمل ومتى تُسمع، مع فتحها في أنغامي أو سبوتيفاي أو يوتيوب (عبر Gemini)"),
+            { it.soundtrack }, { f, v -> f.copy(soundtrack = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("مواقع التصوير 📍", "مواقع التصوير 📍"),
+            lx("الأماكن الحقيقية التي صُوّر فيها العمل، وكل موقع يُفتح على الخريطة (عبر Gemini)", "الأماكن الحقيقية التي صُوّر فيها العمل، وكل موقع يُفتح على الخريطة (عبر Gemini)"),
+            { it.filmingLocations }, { f, v -> f.copy(filmingLocations = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("هل تعلم؟ 💡", "هل تعلم؟ 💡"),
+            lx("معلومات من خلف الكواليس عن العمل بلا حرق (عبر Gemini)", "معلومات من خلف الكواليس عن العمل بلا حرق (عبر Gemini)"),
+            { it.trivia }, { f, v -> f.copy(trivia = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("بين الرواية والشاشة 📖", "بين الرواية والشاشة 📖"),
+            lx("إن كان العمل مقتبساً من كتاب: أهم الفروق بينهما، بعد تنبيه الحرق (عبر Gemini)", "إن كان العمل مقتبساً من كتاب: أهم الفروق بينهما، بعد تنبيه الحرق (عبر Gemini)"),
+            { it.bookVsScreen }, { f, v -> f.copy(bookVsScreen = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("أين يُعرض رسمياً؟ 📺", "أين يُعرض رسمياً؟ 📺"),
+            lx("المنصات الرسمية التي يتوفر فيها العمل في السعودية (من TMDB)", "المنصات الرسمية التي يتوفر فيها العمل في السعودية (من TMDB)"),
+            { it.whereToWatch }, { f, v -> f.copy(whereToWatch = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("دليل المحتوى للأهل 👪", "دليل المحتوى للأهل 👪"),
+            lx("التصنيف العمري ومستوى العنف والألفاظ والمشاهد غير اللائقة قبل المشاهدة", "التصنيف العمري ومستوى العنف والألفاظ والمشاهد غير اللائقة قبل المشاهدة"),
+            { it.parentsGuide }, { f, v -> f.copy(parentsGuide = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ملاحظاتي 📝", "ملاحظاتي 📝"),
+            lx("ملاحظة خاصة لكل عمل لا يراها غيرك", "ملاحظة خاصة لكل عمل لا يراها غيرك"),
+            { it.personalNotes }, { f, v -> f.copy(personalNotes = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("شاهدته خارج موج 🎟️", "شاهدته خارج موج 🎟️"),
+            lx("تسجيل ما شوهد في السينما أو على منصة أخرى ليكتمل السجل و«ذوقي»", "تسجيل ما شوهد في السينما أو على منصة أخرى ليكتمل السجل و«ذوقي»"),
+            { it.watchedOutside }, { f, v -> f.copy(watchedOutside = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("دليل الحلقات الحشو 🏷️", "Filler guide 🏷️"),
             lx("في الأنمي الطويل (كونان، ون بيس، ناروتو…) تظهر شارة «حشو» أو «مختلط» بجانب رقم الحلقة", "Filler/mixed badges next to anime episode numbers"),
             { it.fillerGuide }, { f, v -> f.copy(fillerGuide = v) },
@@ -377,6 +417,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.themeStudio }, { f, v -> f.copy(themeStudio = v) },
         ),
     )
+    LuxoBlock(isTablet) { com.nuvio.app.features.luxo.LuxoGeminiKeyBlock() }
     LuxoBlock(isTablet) {
         LuxoLabel(lx("شدة التوهج", "Glow strength"))
         androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {

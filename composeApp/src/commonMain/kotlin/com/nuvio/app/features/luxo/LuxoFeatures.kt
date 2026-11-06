@@ -133,6 +133,22 @@ data class LuxoFeatures(
     val fillerGuide: Boolean = true,
     /** Autoplay passes over filler episodes. */
     val fillerSkip: Boolean = false,
+    /** «الموسيقى التصويرية» في «المزيد عن العمل» */
+    val soundtrack: Boolean = true,
+    /** «مواقع التصوير» */
+    val filmingLocations: Boolean = true,
+    /** «هل تعلم؟» */
+    val trivia: Boolean = true,
+    /** «بين الرواية والشاشة» */
+    val bookVsScreen: Boolean = true,
+    /** «أين يُعرض رسمياً؟» (TMDB) */
+    val whereToWatch: Boolean = true,
+    /** «دليل المحتوى للأهل» */
+    val parentsGuide: Boolean = true,
+    /** «ملاحظاتي» */
+    val personalNotes: Boolean = true,
+    /** «شاهدته خارج موج» */
+    val watchedOutside: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

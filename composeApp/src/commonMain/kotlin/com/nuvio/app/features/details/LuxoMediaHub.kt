@@ -124,6 +124,9 @@ internal fun LuxoMediaHub(
             com.nuvio.app.features.luxo.LuxoCharacterGuideChip(meta.id, meta.name, data.tmdbId, data.mediaType, data.englishTitle, data.year)
             com.nuvio.app.features.luxo.LuxoCompareChip(meta.name, data.tmdbId, data.mediaType)
             com.nuvio.app.features.luxo.LuxoQuoteFinderChip(meta.id, meta.name, data.englishTitle, data.year, data.mediaType)
+            com.nuvio.app.features.luxo.LuxoAboutWorkChip(
+                com.nuvio.app.features.luxo.LuxoWork(meta.id, meta.type, meta.name, data.englishTitle, data.year, data.tmdbId, data.mediaType, meta.poster),
+            )
         }
         LuxoBookmarksBlock(meta)
         com.nuvio.app.features.luxo.LuxoQuotesBlock(meta.name)
