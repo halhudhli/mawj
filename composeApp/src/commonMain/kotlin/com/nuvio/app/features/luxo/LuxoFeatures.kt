@@ -149,6 +149,22 @@ data class LuxoFeatures(
     val personalNotes: Boolean = true,
     /** «شاهدته خارج موج» */
     val watchedOutside: Boolean = true,
+    /** «كم عندي وقت؟» */
+    val timeBudget: Boolean = true,
+    /** Rating prompt after a movie or a series finale */
+    val rateAfter: Boolean = true,
+    /** Seasonal anime calendar (AniList) */
+    val animeSeason: Boolean = true,
+    /** «ماذا نشاهد معاً؟» */
+    val watchTogether: Boolean = true,
+    /** «اختبار الحلقة» in the player menu */
+    val episodeQuiz: Boolean = true,
+    /** «ذكريات المشاهدة» notifications */
+    val watchMemories: Boolean = true,
+    /** «ترتيبي الخاص» */
+    val tierList: Boolean = true,
+    /** «اقتراح المساء» notification */
+    val eveningPick: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

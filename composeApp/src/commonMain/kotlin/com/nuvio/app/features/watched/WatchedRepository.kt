@@ -768,6 +768,7 @@ object WatchedRepository {
             trackerHistorySync = WatchedTrackerHistorySync.Skip,
             syncRemote = syncRemote,
         )
+        runCatching { com.nuvio.app.features.luxo.LuxoRateAfter.onCompleted(item) }
     }
 
     internal fun markWatchedLocally(items: Collection<WatchedItem>) {

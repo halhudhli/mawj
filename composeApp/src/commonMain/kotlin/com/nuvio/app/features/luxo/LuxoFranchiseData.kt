@@ -37,6 +37,10 @@ object LuxoOverlays {
     var smartSource by mutableStateOf(false)
     var youtube by mutableStateOf(false)
     var unfinished by mutableStateOf(false)
+    var timeBudget by mutableStateOf(false)
+    var animeSeason by mutableStateOf(false)
+    var watchTogether by mutableStateOf(false)
+    var tierList by mutableStateOf(false)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null

@@ -98,6 +98,14 @@ internal fun LuxoIdeas5PlayerHooks(
         )
     }
 
+    // ---- «اختبار الحلقة»
+    var quizOpen by remember { mutableStateOf(false) }
+    DisposableEffect(features.episodeQuiz, metaId) {
+        LuxoPlayerBridge.onQuizClick = if (features.episodeQuiz) ({ currentController?.pause(); quizOpen = true }) else null
+        onDispose { LuxoPlayerBridge.onQuizClick = null }
+    }
+    if (quizOpen) com.nuvio.app.features.luxo.LuxoQuizDialog(title, season, episode) { quizOpen = false }
+
     // ---- Kids daily limit: counts playing time, stops when today's time is used up.
     var timeUp by remember { mutableStateOf(false) }
     LaunchedEffect(isPlaying, features.kidsTimeLimit) {

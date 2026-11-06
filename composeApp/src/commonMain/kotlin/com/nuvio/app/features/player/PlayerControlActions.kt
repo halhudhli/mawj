@@ -262,6 +262,9 @@ internal fun PlayerControlActions(
         LuxoPlayerBridge.onGifClick?.let {
             PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif)
         },
+        LuxoPlayerBridge.onQuizClick?.let {
+            PlayerControlAction("اختبار الحلقة", it, icon = Icons.Rounded.AutoAwesome)
+        },
         LuxoPlayerBridge.onWhoInSceneClick?.let {
             PlayerControlAction("من في المشهد؟", it, icon = Icons.Rounded.Groups)
         },

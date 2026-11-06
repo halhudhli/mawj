@@ -218,6 +218,18 @@ internal fun LazyListScope.luxoProfileHubContent(
                     add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
                 }
                 val luxoF = com.nuvio.app.features.luxo.LuxoFeaturesRepository.current()
+                if (luxoF.timeBudget) {
+                    add(LuxoHall(lx("كم عندي وقت؟", "Time budget"), lx("ما ينتهي في الوقت المتاح", "What fits your time"), Icons.Rounded.PlayArrow, Color(0xFF7FC8A9), { com.nuvio.app.features.luxo.LuxoOverlays.timeBudget = true }))
+                }
+                if (luxoF.animeSeason) {
+                    add(LuxoHall(lx("تقويم الأنمي", "Anime season"), lx("أنميات الموسم بأيام العرض", "This season by air day"), Icons.Rounded.PlayArrow, Color(0xFFE08AA8), { com.nuvio.app.features.luxo.LuxoOverlays.animeSeason = true }))
+                }
+                if (luxoF.watchTogether) {
+                    add(LuxoHall(lx("ماذا نشاهد معاً؟", "Watch together"), lx("المشترك بين الملفات", "Shared between profiles"), Icons.Rounded.PlayArrow, Color(0xFF8FB0DA), { com.nuvio.app.features.luxo.LuxoOverlays.watchTogether = true }))
+                }
+                if (luxoF.tierList) {
+                    add(LuxoHall(lx("ترتيبي الخاص", "My tiers"), lx("مراتب لما شوهد", "Rank what you watched"), Icons.Rounded.AutoAwesome, Color(0xFFF08C3A), { com.nuvio.app.features.luxo.LuxoOverlays.tierList = true }))
+                }
                 if (luxoF.unfinished) {
                     add(LuxoHall(lx("ما بدأته ولم يكتمل", "Unfinished"), lx("أعمال متوقفة منذ مدة", "Paused for a while"), Icons.Rounded.PlayArrow, Color(0xFFB39DDB), { com.nuvio.app.features.luxo.LuxoOverlays.unfinished = true }))
                 }

@@ -56,6 +56,7 @@ internal object LuxoPlayerBridge {
     var gifLabel by mutableStateOf("مقطع متحرك (4 ثوانٍ)")
     var onContinueOnTvClick by mutableStateOf<(() -> Unit)?>(null)
     var onWhoInSceneClick by mutableStateOf<(() -> Unit)?>(null)
+    var onQuizClick by mutableStateOf<(() -> Unit)?>(null)
     /** The player the TV remote controls. */
     var remoteController: PlayerEngineController? = null
     var remoteIsPlaying: Boolean = false

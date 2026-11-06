@@ -1,6 +1,8 @@
 package com.nuvio.app.features.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.features.luxo.LuxoFeatures
 import com.nuvio.app.features.luxo.LuxoFeaturesRepository
@@ -15,6 +17,7 @@ private class LuxoFeatureSwitch(
 )
 
 /** One switch per Luxo extra, so each can be turned off on its own. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     val features = rememberLuxoFeatures()
@@ -100,6 +103,46 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             lx("الوضع الخاص 🕶️", "Private mode 🕶️"),
             lx("زر في «حسابي»: عند تشغيله لا يُسجَّل التقدم ولا السجل ولا يُرسل شيء إلى Trakt", "A button in the profile: while on, no progress, history or Trakt is recorded"),
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("اقتراح المساء 🌙", "اقتراح المساء 🌙"),
+            lx("تنبيه واحد كل مساء باقتراح مبني على الذوق: أعمال تشبه ما شوهد مؤخراً ولم تُشاهَد بعد", "تنبيه واحد كل مساء باقتراح مبني على الذوق: أعمال تشبه ما شوهد مؤخراً ولم تُشاهَد بعد"),
+            { it.eveningPick }, { f, v -> f.copy(eveningPick = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ذكريات المشاهدة 🎞️", "ذكريات المشاهدة 🎞️"),
+            lx("تنبيه لطيف عندما يوافق اليوم تاريخ بدء مشاهدة عمل في سنة سابقة", "تنبيه لطيف عندما يوافق اليوم تاريخ بدء مشاهدة عمل في سنة سابقة"),
+            { it.watchMemories }, { f, v -> f.copy(watchMemories = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("كم عندي وقت؟ ⏳", "كم عندي وقت؟ ⏳"),
+            lx("قاعة في «حسابي»: يُختار الوقت المتاح فتظهر أعمال تنتهي خلاله", "قاعة في «حسابي»: يُختار الوقت المتاح فتظهر أعمال تنتهي خلاله"),
+            { it.timeBudget }, { f, v -> f.copy(timeBudget = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("التقييم بعد المشاهدة ⭐", "التقييم بعد المشاهدة ⭐"),
+            lx("بعد انتهاء فيلم أو آخر حلقة من مسلسل يُسأل عن رأيك بالإيموجي، ويُرسل إلى Trakt إن كان مربوطاً", "بعد انتهاء فيلم أو آخر حلقة من مسلسل يُسأل عن رأيك بالإيموجي، ويُرسل إلى Trakt إن كان مربوطاً"),
+            { it.rateAfter }, { f, v -> f.copy(rateAfter = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تقويم الأنمي الموسمي 🌸", "تقويم الأنمي الموسمي 🌸"),
+            lx("أنميات الموسم الحالي مرتبة بأيام العرض وأوقاتها بتوقيت جهازك (من AniList)", "أنميات الموسم الحالي مرتبة بأيام العرض وأوقاتها بتوقيت جهازك (من AniList)"),
+            { it.animeSeason }, { f, v -> f.copy(animeSeason = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ماذا نشاهد معاً؟ 👨‍👩‍👧", "ماذا نشاهد معاً؟ 👨‍👩‍👧"),
+            lx("تُختار الملفات الحاضرة فتظهر الأعمال المشتركة في قوائمهم ولم يشاهدها أحد", "تُختار الملفات الحاضرة فتظهر الأعمال المشتركة في قوائمهم ولم يشاهدها أحد"),
+            { it.watchTogether }, { f, v -> f.copy(watchTogether = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("اختبار الحلقة 🧠", "اختبار الحلقة 🧠"),
+            lx("من قائمة المشغّل: ثلاثة أسئلة خفيفة عن الحلقة التي انتهت (عبر Gemini)", "من قائمة المشغّل: ثلاثة أسئلة خفيفة عن الحلقة التي انتهت (عبر Gemini)"),
+            { it.episodeQuiz }, { f, v -> f.copy(episodeQuiz = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ترتيبي الخاص 🏆", "ترتيبي الخاص 🏆"),
+            lx("قاعة في «حسابي» لترتيب ما شوهد في مراتب S وA وB وC وD", "قاعة في «حسابي» لترتيب ما شوهد في مراتب S وA وB وC وD"),
+            { it.tierList }, { f, v -> f.copy(tierList = v) },
         ),
         LuxoFeatureSwitch(
             lx("الموسيقى التصويرية 🎵", "الموسيقى التصويرية 🎵"),
@@ -418,6 +461,21 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
         ),
     )
     LuxoBlock(isTablet) { com.nuvio.app.features.luxo.LuxoGeminiKeyBlock() }
+    if (features.eveningPick || features.watchMemories) {
+        LuxoBlock(isTablet) {
+            LuxoLabel(lx("موعد تنبيه المساء", "Evening notification time"))
+            var hour by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(com.nuvio.app.features.luxo.LuxoEvening.hour()) }
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                listOf(18, 19, 20, 21, 22, 23).forEach { h ->
+                    androidx.compose.material3.FilterChip(
+                        selected = hour == h,
+                        onClick = { hour = h; com.nuvio.app.features.luxo.LuxoEvening.setHour(h) },
+                        label = { androidx.compose.material3.Text("${h - 12} م") },
+                    )
+                }
+            }
+        }
+    }
     LuxoBlock(isTablet) {
         LuxoLabel(lx("شدة التوهج", "Glow strength"))
         androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
