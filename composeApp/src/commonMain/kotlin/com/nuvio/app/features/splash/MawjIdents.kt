@@ -291,12 +291,15 @@ private fun MoonriseIdent(modifier: Modifier, replayKey: Int) {
             val steps = if (lite) 40 else 90
             drawRect(Brush.verticalGradient(listOf(SeaDeep, SeaNight), startY = horizon, endY = h), topLeft = Offset(0f, horizon), size = Size(w, h - horizon), alpha = scene)
             val refl = rise * scene
-            val bands = if (lite) 9 else 16
+            // A shimmering column of broken light strokes, like moonlight on real water.
+            val bands = if (lite) 12 else 26
             for (i in 0 until bands) {
                 val y = horizon + (h - horizon) * (i + 0.5f) / bands
                 val k = 1f - i / bands.toFloat()
-                val half = r * (0.5f + 0.9f * (1f - k)) * (0.75f + 0.25f * sin(t * 3f + i))
-                drawLine(MoonMid.copy(alpha = 0.55f * k * refl), Offset(cx - half, y), Offset(cx + half, y), strokeWidth = (h - horizon) / bands * 0.35f, cap = StrokeCap.Round)
+                val half = r * (0.35f + 0.9f * (1f - k)) * (0.6f + 0.4f * sin(t * 3.1f + i * 1.7f))
+                val shift = r * 0.12f * sin(t * 1.9f + i * 2.3f)
+                drawLine(MoonLight.copy(alpha = 0.6f * k * refl), Offset(cx - half + shift, y), Offset(cx + half * 0.55f + shift, y), strokeWidth = (h - horizon) / bands * 0.22f, cap = StrokeCap.Round)
+                drawLine(MoonMid.copy(alpha = 0.45f * k * refl), Offset(cx + half * 0.7f + shift, y), Offset(cx + half + shift, y), strokeWidth = (h - horizon) / bands * 0.22f, cap = StrokeCap.Round)
             }
             for (layer in 0..2) {
                 val base = horizon + (h - horizon) * (0.12f + layer * 0.3f)
