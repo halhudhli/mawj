@@ -225,6 +225,8 @@ private data class StripEntry(
     val epochDay: Long,
     val preview: MetaPreview?,
     val followed: Boolean,
+    /** Shown instead of the days when no date is announced. */
+    val note: String? = null,
 )
 
 internal object LuxoHomeStripPicks {
@@ -280,15 +282,17 @@ private fun rememberStripEntries(): List<StripEntry> {
         }
         val knownNames = (followed + others).map { it.title.lowercase() }.toSet()
         // Shows picked from the TMDB search (anime, Turkish, Korean… anything with an announced episode).
-        val searched = tmdbPicked.values.filter { it.nextDate != null && it.title.lowercase() !in knownNames }.map { sh ->
+        // Picked shows without an announced date stay at the end, marked «لم يُعلن».
+        val searched = tmdbPicked.values.filter { it.title.lowercase() !in knownNames && (it.nextDate != null || (it.status != null && !it.status.startsWith("انتهى") && !it.status.startsWith("أُلغي"))) }.map { sh ->
             StripEntry(
                 key = sh.key,
                 title = sh.title,
                 poster = sh.poster,
                 airMs = null,
-                epochDay = luxoEpochDay(sh.nextDate!!),
+                epochDay = sh.nextDate?.let { luxoEpochDay(it) } ?: (today + 100_000L),
                 preview = MetaPreview(id = sh.key, type = "series", name = sh.title, poster = sh.poster),
                 followed = false,
+                note = if (sh.nextDate == null) lx("لم يُعلن الموعد", "Date TBA") else null,
             )
         }
         (followed + others + searched).sortedBy { it.airMs ?: (it.epochDay * 86_400_000L) }.filter { it.epochDay >= today }
@@ -370,7 +374,7 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
                                 modifier = Modifier.size(82.dp).clip(CircleShape),
                             )
                         }
-                        Text(daysLabel(days), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tokens.colors.textPrimary, maxLines = 1)
+                        Text(entry.note ?: daysLabel(days), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tokens.colors.textPrimary, maxLines = 1)
                         Text(entry.title, fontSize = 11.sp, color = tokens.colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -465,7 +469,7 @@ private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
                                 Text(sh.title + (sh.year?.let { " ($it)" } ?: ""), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(
                                     sh.nextDate?.let { d -> listOfNotNull(sh.nextLabel, daysLabel(luxoEpochDay(d) - luxoTodayEpochDay())).joinToString(" · ") }
-                                        ?: lx("لا توجد حلقة قادمة معلنة", "No upcoming episode announced"),
+                                        ?: sh.status ?: lx("لا توجد حلقة قادمة معلنة", "No upcoming episode announced"),
                                     fontSize = 12.sp,
                                     color = tokens.colors.textMuted,
                                 )
@@ -495,7 +499,7 @@ private fun LuxoStripPicker(entries: List<StripEntry>, onDismiss: () -> Unit) {
                         Column(Modifier.weight(1f)) {
                             Text(entry.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
-                                (if (entry.followed) lx("⭐ متابَع · ", "⭐ Following · ") else "") + daysLabel(entry.epochDay - luxoTodayEpochDay()),
+                                (if (entry.followed) lx("⭐ متابَع · ", "⭐ Following · ") else "") + (entry.note ?: daysLabel(entry.epochDay - luxoTodayEpochDay())),
                                 fontSize = 12.sp,
                                 color = tokens.colors.textMuted,
                             )
