@@ -292,7 +292,7 @@ private fun rememberStripEntries(): List<StripEntry> {
                 epochDay = sh.nextDate?.let { luxoEpochDay(it) } ?: (today + 100_000L),
                 preview = MetaPreview(id = sh.key, type = "series", name = sh.title, poster = sh.poster),
                 followed = false,
-                note = if (sh.nextDate == null) lx("لم يُعلن الموعد", "Date TBA") else null,
+                note = if (sh.nextDate == null) "لم يُعلن الموعد" else null,
             )
         }
         (followed + others + searched).sortedBy { it.airMs ?: (it.epochDay * 86_400_000L) }.filter { it.epochDay >= today }
