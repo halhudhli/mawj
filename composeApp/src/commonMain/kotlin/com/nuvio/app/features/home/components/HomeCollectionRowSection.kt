@@ -85,6 +85,7 @@ private fun HomeCollectionRowSectionContent(
     ) { folder ->
         CollectionFolderCard(
             folder = folder,
+            sectionTitle = collection.title,
             animateGifs = animateGifs,
             onClick = onFolderClick?.let { { it(collection.id, folder.id) } },
         )
@@ -94,6 +95,7 @@ private fun HomeCollectionRowSectionContent(
 @Composable
 private fun CollectionFolderCard(
     folder: CollectionFolder,
+    sectionTitle: String = "",
     modifier: Modifier = Modifier,
     animateGifs: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -147,15 +149,18 @@ private fun CollectionFolderCard(
             ) {
                 when {
                     !imageUrl.isNullOrBlank() -> {
-                        NuvioAsyncImage(
-                            imageUrl = imageUrl,
-                            contentDescription = folder.title,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            animateIfPossible = animateGifs &&
-                                isAnimatedCollectionFolderImage(folder, imageUrl) &&
-                                LocalScreenActive.current,
-                        )
+                        val animateGif = animateGifs &&
+                            isAnimatedCollectionFolderImage(folder, imageUrl) &&
+                            LocalScreenActive.current
+                        com.nuvio.app.features.luxo.LuxoFolderMotion(folder, sectionTitle) { imageModifier ->
+                            NuvioAsyncImage(
+                                imageUrl = imageUrl,
+                                contentDescription = folder.title,
+                                modifier = imageModifier,
+                                contentScale = ContentScale.Crop,
+                                animateIfPossible = animateGif,
+                            )
+                        }
                     }
                     !folder.coverEmoji.isNullOrBlank() -> {
                         Text(

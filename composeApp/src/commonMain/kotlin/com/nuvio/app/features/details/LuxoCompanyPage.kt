@@ -154,6 +154,10 @@ internal fun LuxoCompanyPage(
     onBack: () -> Unit,
     onOpenMeta: (MetaPreview) -> Unit,
 ) {
+    if (com.nuvio.app.features.luxo.rememberLuxoFeatures().companyHall) {
+        LuxoCompanyHall(kind, id, fallbackName, onBack, onOpenMeta)
+        return
+    }
     var header by remember(id) { mutableStateOf<CompanyHeader?>(null) }
     var tab by remember(id) { mutableStateOf(if (kind == "network") CompanyTab.SERIES else CompanyTab.MOVIES) }
     var sort by remember { mutableStateOf(CompanySort.POPULAR) }

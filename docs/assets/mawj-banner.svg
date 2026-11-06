@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05070F"/>
+      <stop offset="0.6" stop-color="#0B1430"/>
+      <stop offset="1" stop-color="#0E2142"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#F6E7B8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F6E7B8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E9AB0"/>
+      <stop offset="1" stop-color="#0E3B5C"/>
+    </linearGradient>
+    <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1D6F92"/>
+      <stop offset="1" stop-color="#0A2742"/>
+    </linearGradient>
+    <linearGradient id="w3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#103E62"/>
+      <stop offset="1" stop-color="#060F1F"/>
+    </linearGradient>
+    <linearGradient id="path" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6E7B8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F6E7B8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="420" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="120" cy="60" r="1.4" opacity="0.7"><animate attributeName="opacity" values="0.2;0.9;0.2" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="300" cy="110" r="1.1" opacity="0.6"><animate attributeName="opacity" values="0.9;0.2;0.9" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="470" cy="40" r="1.6" opacity="0.8"><animate attributeName="opacity" values="0.3;1;0.3" dur="5s" repeatCount="indefinite"/></circle>
+    <circle cx="880" cy="70" r="1.2" opacity="0.6"><animate attributeName="opacity" values="1;0.3;1" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="1040" cy="130" r="1.5" opacity="0.7"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="4.5s" repeatCount="indefinite"/></circle>
+    <circle cx="1190" cy="50" r="1.1" opacity="0.6"><animate attributeName="opacity" values="0.8;0.2;0.8" dur="3.2s" repeatCount="indefinite"/></circle>
+    <circle cx="700" cy="30" r="1" opacity="0.5"/>
+    <circle cx="210" cy="170" r="1" opacity="0.4"/>
+    <circle cx="1120" cy="200" r="1" opacity="0.4"/>
+  </g>
+  <circle cx="640" cy="150" r="150" fill="url(#moonGlow)"/>
+  <circle cx="640" cy="150" r="58" fill="#F6E7B8"/>
+  <circle cx="664" cy="136" r="54" fill="#0A1229"/>
+  <rect x="600" y="250" width="80" height="170" fill="url(#path)" opacity="0.6"/>
+  <g>
+    <path fill="url(#w1)" opacity="0.95" d="M0 270 Q80 245 160 270 T320 270 T480 270 T640 270 T800 270 T960 270 T1120 270 T1280 270 T1440 270 T1600 270 V420 H0 Z">
+      <animateTransform attributeName="transform" type="translate" values="0 0;-320 0" dur="9s" repeatCount="indefinite"/>
+    </path>
+    <path fill="url(#w2)" opacity="0.95" d="M0 305 Q100 280 200 305 T400 305 T600 305 T800 305 T1000 305 T1200 305 T1400 305 T1600 305 V420 H0 Z">
+      <animateTransform attributeName="transform" type="translate" values="-400 0;0 0" dur="12s" repeatCount="indefinite"/>
+    </path>
+    <path fill="url(#w3)" d="M0 345 Q70 325 140 345 T280 345 T420 345 T560 345 T700 345 T840 345 T980 345 T1120 345 T1260 345 T1400 345 T1540 345 V420 H0 Z">
+      <animateTransform attributeName="transform" type="translate" values="0 0;-280 0" dur="7s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  <text x="640" y="392" text-anchor="middle" font-family="Tahoma, Arial, sans-serif" font-size="30" font-weight="700" fill="#F6E7B8" letter-spacing="14">MAWJ</text>
+</svg>

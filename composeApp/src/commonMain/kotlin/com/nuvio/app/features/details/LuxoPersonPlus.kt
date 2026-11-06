@@ -281,7 +281,7 @@ private fun MarathonDialog(name: String, credits: List<LuxoCredit>, isWatched: (
         IButton(if (saved) "أُضيفت إلى المكتبة ✓" else "إضافة الكل إلى المكتبة") {
             if (!saved) {
                 list.forEach { c ->
-                    runCatching { LibraryRepository.save(LibraryItem(id = c.metaId, type = c.metaType, name = c.title, poster = c.poster, banner = c.backdrop, releaseInfo = c.year)) }
+                    runCatching { LibraryRepository.save(LibraryItem(id = c.metaId, type = c.metaType, name = c.title, poster = c.poster, banner = c.backdrop, releaseInfo = c.year, savedAtEpochMs = luxoNowMs())) }
                 }
                 saved = true
             }

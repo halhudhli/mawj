@@ -316,11 +316,12 @@ private fun NuvioShelfSectionHeader(
             horizontalArrangement = Arrangement.spacedBy(tokens.spacing.controlGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val luxoTitleStyle = com.nuvio.app.features.luxo.luxoShimmerTitleStyle(title, MaterialTheme.typography.titleLarge, tokens.colors.textPrimary)
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-                color = tokens.colors.textPrimary,
+                style = luxoTitleStyle,
+                color = if (luxoTitleStyle.brush != null) androidx.compose.ui.graphics.Color.Unspecified else tokens.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
