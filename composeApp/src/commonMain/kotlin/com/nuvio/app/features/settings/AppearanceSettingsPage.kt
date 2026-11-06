@@ -130,7 +130,7 @@ internal fun LazyListScope.appearanceSettingsContent(
                 SettingsNavigationRow(
                     title = lx("شاشة الدخول", "Launch opener"),
                     description = lx(
-                        "اختيار افتتاحية التطبيق: شرائط الضوء، الإطار الذهبي، قوس الضوء، أو عشوائي",
+                        "اختيار افتتاحية التطبيق من ست افتتاحيات، أو عشوائي",
                         "Pick the launch opener",
                     ),
                     isTablet = isTablet,

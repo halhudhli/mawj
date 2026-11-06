@@ -44,7 +44,7 @@ private fun MawjIdentSettingsBody() {
     val choice = MawjIdentPrefs.choice
     var preview by remember { mutableStateOf<MawjIdentStyle?>(null) }
     Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("تُختار افتتاحية التطبيق، ويظهر الاختيار من التشغيل التالي. والضغط على الافتتاحية يتخطاها.", fontSize = 13.sp, color = Color.Gray)
+        Text("تُختار افتتاحية التطبيق، ويظهر الاختيار من التشغيل التالي. والضغط على الافتتاحية يتخطاها.", fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
         MawjIdentStyle.entries.forEach { s ->
             IdentCard(
                 title = s.title,
@@ -59,7 +59,7 @@ private fun MawjIdentSettingsBody() {
                 MawjIdent(s, Modifier.fillMaxSize(), replayKey = loop)
             }
         }
-        IdentCard("عشوائي 🎲", "تُختار إحدى الافتتاحيات الثلاث عشوائياً عند كل تشغيل.", choice == MawjIdentPrefs.RANDOM, { MawjIdentPrefs.set(MawjIdentPrefs.RANDOM) }, null, null)
+        IdentCard("عشوائي 🎲", "تُختار إحدى الافتتاحيات عشوائياً عند كل تشغيل.", choice == MawjIdentPrefs.RANDOM, { MawjIdentPrefs.set(MawjIdentPrefs.RANDOM) }, null, null)
         IdentCard("بدون افتتاحية", "يُفتح التطبيق مباشرة.", choice == MawjIdentPrefs.OFF, { MawjIdentPrefs.set(MawjIdentPrefs.OFF) }, null, null)
     }
     preview?.let { s ->
@@ -93,16 +93,17 @@ private fun IdentCard(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text((if (selected) "◉ " else "○ ") + title, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
+            Text((if (selected) "◉ " else "○ ") + title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
             if (onPreview != null) {
                 Text(
                     "▶ معاينة",
+                    color = Color.White,
                     fontSize = 13.sp,
                     modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.08f)).clickable(onClick = onPreview).padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
         }
-        Text(desc, fontSize = 13.sp, color = Color.Gray)
+        Text(desc, fontSize = 13.sp, color = Color.White.copy(alpha = 0.62f), lineHeight = 20.sp)
         if (thumb != null && selected) {
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(14.dp)).background(Color.Black)) { thumb() }
         }
