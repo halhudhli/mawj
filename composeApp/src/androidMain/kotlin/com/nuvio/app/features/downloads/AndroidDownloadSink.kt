@@ -12,6 +12,9 @@ internal interface DownloadSink {
     fun length(): Long
 
     fun open(append: Boolean): FileOutputStream
+
+    /** A channel for positional writes (several connections writing their own parts). */
+    fun openChannel(): java.nio.channels.FileChannel
 }
 
 internal class FileDownloadSink(private val file: File) : DownloadSink {
@@ -21,6 +24,12 @@ internal class FileDownloadSink(private val file: File) : DownloadSink {
         val parent = file.parentFile
         check(parent == null || parent.isDirectory || parent.mkdirs()) { "Cannot create downloads directory" }
         return FileOutputStream(file, append)
+    }
+
+    override fun openChannel(): java.nio.channels.FileChannel {
+        val parent = file.parentFile
+        check(parent == null || parent.isDirectory || parent.mkdirs()) { "Cannot create downloads directory" }
+        return java.io.RandomAccessFile(file, "rw").channel
     }
 }
 
@@ -46,6 +55,9 @@ internal class DocumentDownloadSink(
         }
         return output
     }
+
+    override fun openChannel(): java.nio.channels.FileChannel =
+        ParcelFileDescriptor.AutoCloseOutputStream(openDescriptor("rw")).channel
 
     private fun openDescriptor(mode: String): ParcelFileDescriptor = try {
         context.contentResolver.openFileDescriptor(uri, mode)

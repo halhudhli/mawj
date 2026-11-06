@@ -30,7 +30,21 @@ internal suspend fun transferAndroidDownload(
     client: OkHttpClient = downloadHttpClient,
     onHeaders: (totalBytes: Long?, validator: String?) -> Unit,
     onProgress: (downloadedBytes: Long, totalBytes: Long?) -> Unit,
+    /** Side file for «تحميل متعدد الاتصالات»; null keeps the single-connection download. */
+    segmentState: File? = null,
 ): Unit = coroutineScope {
+    // Resume a download that was already split into parts.
+    if (segmentState != null && LuxoSegmentedDownload.hasState(segmentState)) {
+        val total = LuxoSegmentedDownload.stateTotal(segmentState)
+        if (total != null && LuxoSegmentedDownload.enabled()) {
+            onHeaders(total, validator)
+            LuxoSegmentedDownload.run(item, sink, segmentState, total, validator, client, onProgress)
+            return@coroutineScope
+        }
+        segmentState.delete()
+    }
+    var segmentedTotal: Long? = null
+    var segmentedValidator: String? = null
     val activeCall = AtomicReference<Call?>()
     val transfer = async(Dispatchers.IO) {
         try {
@@ -73,11 +87,18 @@ internal suspend fun transferAndroidDownload(
                     val responseValidator = response.header("ETag")?.takeUnless { it.startsWith("W/") }
                         ?: response.header("Last-Modified")
                     onHeaders(totalBytes, responseValidator)
+                    // A fresh, large file from a server that accepts ranges goes over several connections.
+                    val acceptsRanges = resumed || response.header("Accept-Ranges").equals("bytes", ignoreCase = true)
+                    if (segmentState != null && offset == 0L && LuxoSegmentedDownload.worthIt(totalBytes, acceptsRanges)) {
+                        segmentedTotal = totalBytes
+                        segmentedValidator = responseValidator
+                        return@async
+                    }
                     var downloaded = startingBytes
                     onProgress(downloaded, totalBytes)
                     body.byteStream().use { input ->
                         sink.open(append = resumed && offset > 0L).use { output ->
-                            val buffer = ByteArray(64 * 1024)
+                            val buffer = ByteArray(256 * 1024)
                             while (true) {
                                 ensureActive()
                                 val size = input.read(buffer)
@@ -106,6 +127,9 @@ internal suspend fun transferAndroidDownload(
         transfer.await()
     } finally {
         activeCall.get()?.cancel()
+    }
+    segmentedTotal?.let { total ->
+        LuxoSegmentedDownload.run(item, sink, segmentState!!, total, segmentedValidator ?: validator, client, onProgress)
     }
 }
 

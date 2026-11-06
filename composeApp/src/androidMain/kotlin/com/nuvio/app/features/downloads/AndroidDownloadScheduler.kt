@@ -150,6 +150,7 @@ internal class AndroidDownloadScheduler(val context: Context) {
             lock(fileName).withLock {
                 if (store.get(fileName) == null) {
                     File(directory, "$fileName.part").delete()
+                    File(directory, "$fileName.segments").delete()
                     transfer?.partialDocumentUri?.let(AndroidDownloadExport::delete)
                     DownloadSubtitleStorage(File(directory, fileName).toURI().toString()).remove()
                 }
@@ -222,6 +223,7 @@ internal class AndroidDownloadScheduler(val context: Context) {
                     client = client,
                     onHeaders = onHeaders,
                     onProgress = reportProgress,
+                    segmentState = File(directory, "$fileName.segments"),
                 )
                 currentCoroutineContext().ensureActive()
                 subtitles.join()
@@ -253,6 +255,7 @@ internal class AndroidDownloadScheduler(val context: Context) {
                     client = client,
                     onHeaders = onHeaders,
                     onProgress = reportProgress,
+                    segmentState = File(directory, "$fileName.segments"),
                 )
             }
             currentCoroutineContext().ensureActive()

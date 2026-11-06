@@ -105,6 +105,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.privateMode }, { f, v -> f.copy(privateMode = v) },
         ),
         LuxoFeatureSwitch(
+            lx("تحميل متعدد الاتصالات ⚡", "Multi-connection download ⚡"),
+            lx("يُقسَّم الملف الكبير إلى أجزاء تُحمَّل معاً (8 اتصالات، و4 على الشاشة)، فيتضاعف التحميل من TorBox وReal-Debrid وأمثالهما. ويُستأنف كل جزء من حيث توقف", "Splits big files into parts downloaded together"),
+            { it.fastDownload }, { f, v -> f.copy(fastDownload = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("«أكمل المشاهدة» في واجهة Google TV 📺", "«أكمل المشاهدة» في واجهة Google TV 📺"),
             lx("ما بدأته يظهر في صف «أكمل المشاهدة» في الشاشة الرئيسية للتلفزيون ويُفتح مباشرة (على الشاشة فقط)", "ما بدأته يظهر في صف «أكمل المشاهدة» في الشاشة الرئيسية للتلفزيون ويُفتح مباشرة (على الشاشة فقط)"),
             { it.googleTvRow }, { f, v -> f.copy(googleTvRow = v) },

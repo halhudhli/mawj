@@ -173,6 +173,8 @@ data class LuxoFeatures(
     val secondScreen: Boolean = true,
     /** «خلفية من المشهد» in the player menu */
     val sceneWallpaper: Boolean = true,
+    /** Big downloads split over several connections (much faster on debrid servers). */
+    val fastDownload: Boolean = true,
 )
 
 object LuxoFeaturesRepository {
