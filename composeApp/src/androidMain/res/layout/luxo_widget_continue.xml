@@ -58,4 +58,16 @@
         android:maxLines="1"
         android:textColor="#C9CDD4"
         android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/luxo_widget_next"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#9DB8E0"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </LinearLayout>

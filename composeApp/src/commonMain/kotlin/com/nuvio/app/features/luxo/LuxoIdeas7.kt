@@ -289,7 +289,7 @@ fun LuxoAnimeSeasonDialog(onDismiss: () -> Unit) {
     LaunchedEffect(Unit) { list = loadSeason() }
     LaunchedEffect(opening) {
         val t = opening ?: return@LaunchedEffect
-        val hit = LuxoTmdbLite.get("search/tv", mapOf("query" to t))?.a("results")?.firstOrNull()?.i("id")
+        val hit = LuxoTmdbLite.get("search/tv", mapOf("query" to LuxoTmdbLite.enc(t)))?.a("results")?.firstOrNull()?.i("id")
         if (hit != null) openMeta("series", "tmdb:$hit")
         opening = null
         if (hit != null) onDismiss()

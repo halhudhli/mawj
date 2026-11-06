@@ -211,7 +211,8 @@ actual object LuxoRemoteNet {
                             val line = reader.readLine().orEmpty()
                             val sep = line.indexOf('|')
                             val ok = sep > 0 && line.substring(0, sep) == code
-                            s.getOutputStream().write((if (ok) "ok\n" else "denied\n").toByteArray())
+                            // "ok|<now playing JSON>" lets the second screen follow what the TV shows.
+                            s.getOutputStream().write((if (ok) "ok|${LuxoNowPlaying.json.replace('\n', ' ')}\n" else "denied\n").toByteArray(Charsets.UTF_8))
                             if (ok) {
                                 val payload = line.substring(sep + 1)
                                 main.post { runCatching { onCommand(payload) } }
@@ -292,7 +293,7 @@ actual object LuxoRemoteNet {
                 s.connect(InetSocketAddress(host, port), 2500)
                 s.soTimeout = 3000
                 s.getOutputStream().write("$code|${payload.replace('\n', ' ')}\n".toByteArray(Charsets.UTF_8))
-                BufferedReader(InputStreamReader(s.getInputStream())).readLine() == "ok"
+                BufferedReader(InputStreamReader(s.getInputStream())).readLine()?.startsWith("ok") == true
             }
         }.getOrDefault(false)
     }

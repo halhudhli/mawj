@@ -227,6 +227,9 @@ internal fun LazyListScope.luxoProfileHubContent(
                 if (luxoF.watchTogether) {
                     add(LuxoHall(lx("ماذا نشاهد معاً؟", "Watch together"), lx("المشترك بين الملفات", "Shared between profiles"), Icons.Rounded.PlayArrow, Color(0xFF8FB0DA), { com.nuvio.app.features.luxo.LuxoOverlays.watchTogether = true }))
                 }
+                if (luxoF.secondScreen && !com.nuvio.app.features.luxo.luxoIsTv()) {
+                    add(LuxoHall(lx("الشاشة الثانية", "Second screen"), lx("معلومات ما يُعرض على التلفزيون", "What the TV is showing"), Icons.Rounded.PlayArrow, Color(0xFF9DB8E0), { com.nuvio.app.features.luxo.LuxoOverlays.secondScreen = true }))
+                }
                 if (luxoF.tierList) {
                     add(LuxoHall(lx("ترتيبي الخاص", "My tiers"), lx("مراتب لما شوهد", "Rank what you watched"), Icons.Rounded.AutoAwesome, Color(0xFFF08C3A), { com.nuvio.app.features.luxo.LuxoOverlays.tierList = true }))
                 }

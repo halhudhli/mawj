@@ -262,6 +262,9 @@ internal fun PlayerControlActions(
         LuxoPlayerBridge.onGifClick?.let {
             PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif)
         },
+        LuxoPlayerBridge.onWallpaperClick?.let {
+            PlayerControlAction("خلفية من المشهد", it, icon = Icons.Rounded.Palette)
+        },
         LuxoPlayerBridge.onQuizClick?.let {
             PlayerControlAction("اختبار الحلقة", it, icon = Icons.Rounded.AutoAwesome)
         },

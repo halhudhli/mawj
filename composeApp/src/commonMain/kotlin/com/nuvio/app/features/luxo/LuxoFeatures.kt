@@ -165,6 +165,14 @@ data class LuxoFeatures(
     val tierList: Boolean = true,
     /** «اقتراح المساء» notification */
     val eveningPick: Boolean = true,
+    /** Google TV «أكمل المشاهدة» row */
+    val googleTvRow: Boolean = true,
+    /** Nearest upcoming episode on the home-screen widget */
+    val widgetNext: Boolean = true,
+    /** «الشاشة الثانية» on the tablet */
+    val secondScreen: Boolean = true,
+    /** «خلفية من المشهد» in the player menu */
+    val sceneWallpaper: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

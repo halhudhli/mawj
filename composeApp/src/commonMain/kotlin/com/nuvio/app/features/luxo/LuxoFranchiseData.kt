@@ -41,6 +41,7 @@ object LuxoOverlays {
     var animeSeason by mutableStateOf(false)
     var watchTogether by mutableStateOf(false)
     var tierList by mutableStateOf(false)
+    var secondScreen by mutableStateOf(false)
 
     fun openMeta(preview: MetaPreview) {
         franchise = null

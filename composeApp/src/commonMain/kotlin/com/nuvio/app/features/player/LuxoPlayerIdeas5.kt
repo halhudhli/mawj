@@ -98,6 +98,19 @@ internal fun LuxoIdeas5PlayerHooks(
         )
     }
 
+    // ---- «خلفية من المشهد»
+    DisposableEffect(features.sceneWallpaper) {
+        LuxoPlayerBridge.onWallpaperClick = if (features.sceneWallpaper && !com.nuvio.app.features.luxo.luxoIsTv()) ({
+            scope.launch {
+                val jpeg = luxoCaptureVideoJpeg(1920, 1080)
+                val ok = jpeg != null && com.nuvio.app.features.luxo.luxoSetWallpaper(jpeg)
+                LuxoPlayerBridge.toast = if (ok) "صارت اللقطة خلفية للجهاز 🖼️" else "تعذّر تعيين الخلفية (بعض المصادر محمية)"
+                delay(3_000L); LuxoPlayerBridge.toast = null
+            }
+        }) else null
+        onDispose { LuxoPlayerBridge.onWallpaperClick = null }
+    }
+
     // ---- «اختبار الحلقة»
     var quizOpen by remember { mutableStateOf(false) }
     DisposableEffect(features.episodeQuiz, metaId) {
