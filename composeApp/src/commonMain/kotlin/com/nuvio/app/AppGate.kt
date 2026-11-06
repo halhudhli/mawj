@@ -166,7 +166,7 @@ internal fun AppGate(
     var introHoldElapsed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         // «موج» ident: a fixed length, skippable with a tap.
-        val total = com.nuvio.app.features.splash.MAWJ_IDENT_MS
+        val total = com.nuvio.app.features.splash.MawjIdentPrefs.forThisLaunch?.durationMs ?: 0L
         var elapsed = 0L
         while (elapsed < total) {
             if (com.nuvio.app.features.splash.SplashSkip.requested) break

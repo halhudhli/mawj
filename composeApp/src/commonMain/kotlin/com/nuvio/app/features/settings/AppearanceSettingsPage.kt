@@ -127,6 +127,16 @@ internal fun LazyListScope.appearanceSettingsContent(
                     onClick = onFontsClick,
                 )
                 SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = lx("شاشة الدخول", "Launch opener"),
+                    description = lx(
+                        "اختيار افتتاحية التطبيق: شرائط الضوء، الإطار الذهبي، قوس الضوء، أو عشوائي",
+                        "Pick the launch opener",
+                    ),
+                    isTablet = isTablet,
+                    onClick = onSplashClick,
+                )
+                SettingsGroupDivider(isTablet = isTablet)
                 LuxoNavTabSwitches(isTablet = isTablet)
                 SettingsGroupDivider(isTablet = isTablet)
                 LuxoLookControls(isTablet = isTablet)
