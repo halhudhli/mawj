@@ -28,6 +28,9 @@ import androidx.compose.ui.window.DialogProperties
 /** Opens the official YouTube app (used on TV). Returns false when it is not installed. */
 expect fun luxoOpenYoutubeApp(): Boolean
 
+/** Opens an ad-free YouTube app when installed: ReVanced/RVX on tablets, SmartTube on TV. */
+expect fun luxoOpenYoutubeAdFree(): Boolean
+
 /** The official YouTube site inside the app. [goBack] is set to a function that steps back in its history (false when nothing is left). */
 @Composable
 expect fun LuxoYoutubeWeb(modifier: Modifier, onBackHandler: ((() -> Boolean)) -> Unit)
@@ -36,7 +39,16 @@ expect fun LuxoYoutubeWeb(modifier: Modifier, onBackHandler: ((() -> Boolean)) -
 @Composable
 fun LuxoYoutubeDialog(onDismiss: () -> Unit) {
     val tv = luxoIsTv()
+    val features = rememberLuxoFeatures()
     var appMissing by remember { mutableStateOf(false) }
+    // An installed ad-free app (ReVanced, SmartTube…) is preferred when the option is on.
+    var triedAdFree by remember { mutableStateOf(false) }
+    if (!triedAdFree) {
+        LaunchedEffect(Unit) {
+            if (features.youtubeAdFreeApp && luxoOpenYoutubeAdFree()) onDismiss() else triedAdFree = true
+        }
+        return
+    }
     if (tv) {
         LaunchedEffect(Unit) {
             if (luxoOpenYoutubeApp()) onDismiss() else appMissing = true

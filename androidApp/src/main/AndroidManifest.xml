@@ -24,6 +24,12 @@
         <package android:name="com.google.android.youtube" />
         <package android:name="com.google.android.youtube.tv" />
         <package android:name="com.google.android.youtube.googletv" />
+        <package android:name="app.revanced.android.youtube" />
+        <package android:name="app.rvx.android.youtube" />
+        <package android:name="app.revanced.android.apps.youtube" />
+        <package android:name="com.liskovsoft.smarttubetv.beta" />
+        <package android:name="com.liskovsoft.smarttubetv" />
+        <package android:name="com.teamsmart.videomanager.tv" />
     </queries>
 
     <application

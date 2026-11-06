@@ -7,3 +7,5 @@ actual fun luxoOpenYoutubeApp(): Boolean = false
 
 @Composable
 actual fun LuxoYoutubeWeb(modifier: Modifier, onBackHandler: ((() -> Boolean)) -> Unit) {}
+
+actual fun luxoOpenYoutubeAdFree(): Boolean = false

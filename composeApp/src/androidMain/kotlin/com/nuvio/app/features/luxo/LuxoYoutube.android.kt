@@ -29,6 +29,59 @@ actual fun luxoOpenYoutubeApp(): Boolean = runCatching {
     true
 }.getOrDefault(false)
 
+private fun launchFirst(packages: List<String>): Boolean = runCatching {
+    val context = LuxoPrefsStorage.appContext ?: return@runCatching false
+    val pm = context.packageManager
+    for (p in packages) {
+        val intent = runCatching { pm.getLeanbackLaunchIntentForPackage(p) ?: pm.getLaunchIntentForPackage(p) }.getOrNull() ?: continue
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        return@runCatching true
+    }
+    false
+}.getOrDefault(false)
+
+actual fun luxoOpenYoutubeAdFree(): Boolean =
+    if (luxoIsTv()) launchFirst(listOf("com.liskovsoft.smarttubetv.beta", "com.liskovsoft.smarttubetv", "com.teamsmart.videomanager.tv"))
+    else launchFirst(listOf("app.revanced.android.youtube", "app.rvx.android.youtube", "app.revanced.android.apps.youtube"))
+
+// ---- ad blocking for the in-app page
+private val AD_HOSTS = listOf(
+    "doubleclick.net", "googlesyndication.com", "googleadservices.com", "adservice.google.com",
+    "google-analytics.com", "googletagservices.com", "googletagmanager.com", "imasdk.googleapis.com",
+)
+private val AD_PATHS = listOf("/pagead/", "/api/stats/ads", "/ptracking", "/get_midroll_", "/ad_break", "/youtubei/v1/log_event", "/api/stats/qoe?adformat", "ad_type=")
+
+private fun isAdRequest(url: android.net.Uri): Boolean {
+    val host = url.host.orEmpty()
+    if (AD_HOSTS.any { host == it || host.endsWith(".$it") }) return true
+    val s = url.toString()
+    return AD_PATHS.any { it in s }
+}
+
+private const val AD_SKIP_JS = """
+(function(){
+  if (window.__mawjAds) return; window.__mawjAds = true;
+  var css = document.createElement('style');
+  css.textContent = 'ytm-promoted-sparkles-web-renderer,ytm-companion-ad-renderer,ytm-promoted-video-renderer,ytm-ad-slot-renderer,ad-slot-renderer,ytd-ad-slot-renderer,ytm-banner-promo-renderer,#player-ads,.ytp-ad-overlay-container,.ytp-ad-module .ytp-ad-overlay-slot,ytm-statement-banner-renderer,ytm-mealbar-promo-renderer{display:none!important}';
+  (document.head||document.documentElement).appendChild(css);
+  function tick(){
+    try{
+      var player = document.querySelector('.html5-video-player');
+      var video = document.querySelector('video');
+      var ad = player && (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting'));
+      if (ad && video){ video.muted = true; if (isFinite(video.duration)) video.currentTime = video.duration; video.playbackRate = 16; }
+      else if (video && video.playbackRate === 16){ video.playbackRate = 1; video.muted = false; }
+      var skip = document.querySelector('.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-skip-ad-button,.ytm-ad-skip-button');
+      if (!skip && ad) skip = document.querySelector('[class*="ad-skip"],[class*="skip-ad"]');
+      if (skip) skip.click();
+      document.querySelectorAll('ytm-promoted-sparkles-web-renderer,ytm-ad-slot-renderer,ad-slot-renderer').forEach(function(e){ var r=e.closest('ytm-rich-item-renderer,ytm-item-section-renderer'); (r||e).remove(); });
+    }catch(e){}
+  }
+  setInterval(tick, 300);
+})();
+"""
+
 private fun isYoutubeHost(host: String): Boolean =
     host.endsWith("youtube.com") || host.endsWith("youtu.be") || host.endsWith("google.com") ||
         host.endsWith("googlevideo.com") || host.endsWith("gstatic.com") || host.endsWith("ytimg.com") ||
@@ -80,7 +133,23 @@ actual fun LuxoYoutubeWeb(modifier: Modifier, onBackHandler: ((() -> Boolean)) -
                         this@apply.visibility = View.VISIBLE
                     }
                 }
+                val blockAds = runCatching { LuxoFeaturesRepository.current().youtubeAdBlock }.getOrDefault(true)
                 webViewClient = object : WebViewClient() {
+                    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
+                        if (blockAds && isAdRequest(request.url)) {
+                            return android.webkit.WebResourceResponse("text/plain", "utf-8", java.io.ByteArrayInputStream(ByteArray(0)))
+                        }
+                        return null
+                    }
+
+                    override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
+                        if (blockAds) view.evaluateJavascript(AD_SKIP_JS, null)
+                    }
+
+                    override fun onPageFinished(view: WebView, url: String?) {
+                        if (blockAds) view.evaluateJavascript(AD_SKIP_JS, null)
+                    }
+
                     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                         val uri = request.url
                         val scheme = uri.scheme.orEmpty()

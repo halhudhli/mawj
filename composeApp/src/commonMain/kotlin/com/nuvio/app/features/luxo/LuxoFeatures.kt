@@ -177,6 +177,10 @@ data class LuxoFeatures(
     val fastDownload: Boolean = true,
     /** «بطاقة عضوية موج» at the top of the profile page. */
     val membershipCard: Boolean = true,
+    /** Ads are blocked and skipped inside Mawj's YouTube page. */
+    val youtubeAdBlock: Boolean = true,
+    /** «يوتيوب» opens ReVanced / SmartTube when installed. */
+    val youtubeAdFreeApp: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

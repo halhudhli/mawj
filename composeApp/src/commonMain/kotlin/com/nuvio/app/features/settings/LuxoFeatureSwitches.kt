@@ -255,6 +255,16 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.companionVoice }, { f, v -> f.copy(companionVoice = v) },
         ),
         LuxoFeatureSwitch(
+            lx("حجب إعلانات يوتيوب 🚫", "YouTube ad blocking 🚫"),
+            lx("في صفحة يوتيوب داخل موج: تُحجب طلبات الإعلانات، ويُتخطّى أي إعلان يظهر في الفيديو تلقائياً، وتُخفى بطاقات الإعلانات من الصفحات", "Blocks and skips ads in Mawj's YouTube page"),
+            { it.youtubeAdBlock }, { f, v -> f.copy(youtubeAdBlock = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("يوتيوب بلا إعلانات (ReVanced) 📲", "Ad-free YouTube app 📲"),
+            lx("إن كان YouTube ReVanced أو RVX مثبّتاً على التابلت، أو SmartTube على الشاشة، تفتحه قاعة «يوتيوب» بدل الصفحة الداخلية", "Opens ReVanced/RVX (tablet) or SmartTube (TV) when installed"),
+            { it.youtubeAdFreeApp }, { f, v -> f.copy(youtubeAdFreeApp = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("يوتيوب ▶️", "YouTube ▶️"),
             lx("قاعة في «حسابي» تفتح موقع يوتيوب الرسمي داخل التطبيق، وعلى الشاشة يُفتح تطبيق يوتيوب الرسمي", "A profile hall that opens the official YouTube site in the app; on TV the official YouTube app opens"),
             { it.youtube }, { f, v -> f.copy(youtube = v) },
