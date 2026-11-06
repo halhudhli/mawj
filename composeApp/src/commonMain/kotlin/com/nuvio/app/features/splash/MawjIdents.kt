@@ -51,7 +51,7 @@ import kotlin.random.Random
 enum class MawjIdentStyle(val title: String, val inspired: String, val durationMs: Long) {
     Moonrise("طلوع القمر", "يطلع القمر الذهبي من خلف البحر في ليل مرصّع بالنجوم، وينعكس ضوؤه على الموج، ثم يُنحت فيه زر التشغيل ويظهر «مَوج».", 5000L),
     Strands("شرائط الضوء", "مستوحاة من افتتاحية نتفليكس: يتوهّج القمر ثم ينفجر منه ستار من خيوط الضوء الذهبية والفيروزية، وتلتئم الخيوط ليعود الشعار.", 4400L),
-    Arc("قوس الضوء", "مستوحاة من افتتاحية ديزني+: قوس من الضوء يرتسم فوق القمر ويترك خلفه شرراً، ثم يتوهّج الاسم.", 4400L),
+    Searchlights("الكشّافات", "مستوحاة من افتتاحية فوكس للقرن العشرين: كشّافات ضوء تتمايل فوق البحر في ليل ضبابي، ثم تلتقي كلها على القمر فيتوهّج ويظهر الاسم.", 4600L),
     Pulse("النبض", "مستوحاة من افتتاحية HBO Max: نبضات ضوء بنفسجية وزرقاء تنتشر في الظلام، وخط وهج سينمائي يكشف الشعار.", 4200L),
     Glass("الزجاج", "مستوحاة من افتتاحية Apple TV: لوح زجاجي يدور في الضوء ويلمع، وفي داخله القمر والموج، وانعكاسه تحته.", 4400L),
     Curtains("الستائر الملوّنة", "مستوحاة من Hulu وPrime Video: ستائر بألوان البحر والقمر تنسحب تباعاً، ثم ترتسم موجة تحت الاسم.", 4000L),
@@ -178,7 +178,7 @@ private fun DrawScope.drawWordBlock(
     val word = cache.getOrPut("w${px.toInt()}_${family.hashCode()}") {
         measurer.measure("مَوج", TextStyle(fontFamily = family, fontWeight = FontWeight.Black, fontSize = (px / density).sp))
     }
-    val bottomOfWord = top + word.size.height * 0.86f
+    val bottomOfWord = top + word.size.height * 1.0f
     if (alpha > 0f) {
         val left = cx - word.size.width / 2f
         drawText(word, brush = Brush.verticalGradient(colors, startY = top + word.size.height * 0.2f, endY = top + word.size.height * 0.85f), topLeft = Offset(left, top), alpha = alpha)
@@ -197,8 +197,8 @@ private fun DrawScope.drawWordBlock(
     val l = cache.getOrPut(key) {
         measurer.measure("MAWJ", TextStyle(fontSize = (size / density).sp, letterSpacing = latinSpacing.em, fontWeight = FontWeight.SemiBold, color = latinColor))
     }
-    drawText(l, topLeft = Offset(cx - l.size.width / 2f + size * latinSpacing / 2f, bottomOfWord + size * 0.4f), alpha = latinAlpha)
-    return bottomOfWord + size * 0.4f + l.size.height
+    drawText(l, topLeft = Offset(cx - l.size.width / 2f + size * latinSpacing / 2f, bottomOfWord + size * 0.25f), alpha = latinAlpha)
+    return bottomOfWord + size * 0.25f + l.size.height
 }
 
 @Composable
@@ -226,7 +226,7 @@ private fun DrawScope.drawLockup(text: IdentText, t: Float, markAlpha: Float, wo
     val w = size.width; val h = size.height
     val r = minOf(w, h) * 0.13f * scaleK
     val px = minOf(w * 0.15f, h * 0.15f) * scaleK
-    val blockH = r * 2f + r * 0.35f + px * 1.25f
+    val blockH = r * 2f + r * 0.35f + px * 1.75f
     val top = h / 2f - blockH / 2f
     val c = Offset(w / 2f, top + r)
     drawMoonMark(c, r, markAlpha, t, carve = carve, lite = lite)
@@ -240,7 +240,7 @@ fun MawjIdent(style: MawjIdentStyle, modifier: Modifier = Modifier, replayKey: I
     when (style) {
         MawjIdentStyle.Moonrise -> MoonriseIdent(modifier, replayKey)
         MawjIdentStyle.Strands -> StrandsIdent(modifier, replayKey)
-        MawjIdentStyle.Arc -> ArcIdent(modifier, replayKey)
+        MawjIdentStyle.Searchlights -> SearchlightsIdent(modifier, replayKey)
         MawjIdentStyle.Pulse -> PulseIdent(modifier, replayKey)
         MawjIdentStyle.Glass -> GlassIdent(modifier, replayKey)
         MawjIdentStyle.Curtains -> CurtainsIdent(modifier, replayKey)
@@ -282,7 +282,7 @@ private fun MoonriseIdent(modifier: Modifier, replayKey: Int) {
             val r = minOf(w, h) * 0.13f
             // It ends exactly where the lockup puts the mark.
             val px = minOf(w * 0.15f, h * 0.15f)
-            val finalY = h / 2f - (r * 2f + r * 0.35f + px * 1.25f) / 2f + r
+            val finalY = h / 2f - (r * 2f + r * 0.35f + px * 1.75f) / 2f + r
             val c = Offset(cx, lerp(horizon + r * 1.1f, finalY, rise))
             clipPath(Path().apply { addRect(androidx.compose.ui.geometry.Rect(0f, 0f, w, horizon + 1f)) }) {
                 drawMoonMark(c, r, scene, t, carve = 0f, sea = 0f, glow = 1.4f)
@@ -384,63 +384,63 @@ private fun StrandsIdent(modifier: Modifier, replayKey: Int) {
     }
 }
 
-// ------------------------------------------------------------------ 3) «قوس الضوء»
-
-private data class Spark(val u: Float, val dx: Float, val dy: Float, val life: Float)
+// ------------------------------------------------------------------ 3) «الكشّافات»
 
 @Composable
-private fun ArcIdent(modifier: Modifier, replayKey: Int) {
+private fun SearchlightsIdent(modifier: Modifier, replayKey: Int) {
     val time = rememberElapsed(replayKey)
     val lite = remember { luxoLiteMode() }
     val text = rememberIdentText()
-    val stars = remember { val r = Random(3); List(if (lite) 50 else 140) { Star(r.nextFloat(), r.nextFloat(), 0.4f + r.nextFloat() * 1.4f, r.nextFloat() * TAU) } }
-    val sparks = remember { val r = Random(11); List(if (lite) 30 else 80) { Spark(r.nextFloat(), r.nextFloat() * 2f - 1f, r.nextFloat() * 2f - 0.3f, 0.3f + r.nextFloat() * 0.7f) } }
-    Canvas(modifier.fillMaxSize().background(Color(0xFF03060F))) {
+    val stars = remember { val r = Random(9); List(if (lite) 40 else 110) { Star(r.nextFloat(), r.nextFloat() * 0.6f, 0.4f + r.nextFloat() * 1.2f, r.nextFloat() * TAU) } }
+    Canvas(modifier.fillMaxSize().background(Color(0xFF02050C))) {
         val t = time()
-        val p = clamp01(t / (MawjIdentStyle.Arc.durationMs / 1000f))
+        val p = clamp01(t / (MawjIdentStyle.Searchlights.durationMs / 1000f))
         val w = size.width; val h = size.height; val cx = w / 2f
-        val out = 1f - seg(p, 0.92f, 1f)
-        drawRect(Brush.radialGradient(listOf(Color(0xFF14306B).copy(alpha = out), Color(0xFF060C22).copy(alpha = out), Color.Transparent), center = Offset(cx, h * 0.62f), radius = maxOf(w, h) * 0.75f))
-        drawStars(stars, t, seg(p, 0f, 0.2f) * out)
-        // Same geometry as the lockup, so the arc sits over the moon.
+        val out = 1f - seg(p, 0.93f, 1f)
+        val horizon = h * 0.80f
+        // Night sky, a little fog and the sea.
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF030814), Color(0xFF0B1C36), Color(0xFF16304F)), startY = 0f, endY = horizon), size = Size(w, horizon), alpha = out)
+        drawStars(stars, t, seg(p, 0f, 0.2f) * out * 0.8f)
+        // Where the mark sits (same as the lockup).
         val r = minOf(w, h) * 0.13f
         val px = minOf(w * 0.15f, h * 0.15f)
-        val blockH = r * 2f + r * 0.35f + px * 1.25f
-        val c = Offset(cx, h / 2f - blockH / 2f + r)
-        val flash = seg(p, 0.56f, 0.64f) * (1f - seg(p, 0.64f, 0.80f))
-        if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFBFE0FF).copy(alpha = 0.45f * flash), Color.Transparent), center = c, radius = r * 3f), radius = r * 3f, center = c)
-        val markIn = easeOut(seg(p, 0.06f, 0.26f)) * out
-        drawMoonMark(c, r, markIn, t, lite = lite)
-        // The arc draws over the moon from left to right, sparks trailing its head.
-        val draw = easeInOut(seg(p, 0.20f, 0.60f))
-        if (draw > 0f) {
-            val rx = r * 1.75f; val ry = r * 1.3f
-            val acy = c.y + r * 0.25f
-            val start = 200f; val full = 140f
-            val sweep = full * draw
-            val glowA = out * (0.7f + 0.3f * flash)
-            val tl = Offset(cx - rx, acy - ry); val sz = Size(rx * 2, ry * 2)
-            val arcBrush = Brush.sweepGradient(listOf(Color(0xFF4F8DFF), Color(0xFFBFE6FF), Color.White, Color(0xFF7FB2F0), Color(0xFF4F8DFF)), center = Offset(cx, acy))
-            if (!lite) drawArc(arcBrush, start, sweep, false, tl, sz, alpha = 0.18f * glowA, style = Stroke(r * 0.16f, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
-            drawArc(arcBrush, start, sweep, false, tl, sz, alpha = 0.35f * glowA, style = Stroke(r * 0.06f, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
-            drawArc(Color.White, start, sweep, false, tl, sz, alpha = 0.95f * glowA, style = Stroke(r * 0.018f, cap = StrokeCap.Round))
-            val headAng = (start + sweep) * PI.toFloat() / 180f
-            val head = Offset(cx + cos(headAng) * rx, acy + sin(headAng) * ry)
-            if (draw < 1f) drawCircle(Brush.radialGradient(listOf(Color.White, Color(0xFF9CCBFF).copy(alpha = 0.5f), Color.Transparent), center = head, radius = r * 0.3f), radius = r * 0.3f, center = head, blendMode = BlendMode.Plus)
-            sparks.forEach { s ->
-                if (s.u > draw) return@forEach
-                val age = (draw - s.u) / s.life
-                if (age > 1f) return@forEach
-                val ang = (start + full * s.u) * PI.toFloat() / 180f
-                val base = Offset(cx + cos(ang) * rx, acy + sin(ang) * ry)
-                val pos = base + Offset(s.dx * r * 0.22f * age, (s.dy * 0.2f + 0.45f * age) * r * age)
-                drawCircle(Color(0xFFE6F2FF).copy(alpha = (1f - age) * 0.9f * out), radius = (1.6f - age) * density, center = pos, blendMode = BlendMode.Plus)
-            }
+        val c = Offset(cx, h / 2f - (r * 2f + r * 0.35f + px * 1.75f) / 2f + r)
+        // Searchlights from the shore sway, then all swing onto the moon.
+        val meet = easeInOut(seg(p, 0.42f, 0.62f))
+        val beams = if (lite) 4 else 6
+        val beamA = seg(p, 0.04f, 0.18f) * (1f - 0.65f * seg(p, 0.70f, 0.86f)) * out
+        for (i in 0 until beams) {
+            val side = if (i % 2 == 0) -1f else 1f
+            val k = i / 2
+            val base = Offset(cx + side * w * (0.12f + 0.16f * k), horizon)
+            val sway = sin(t * (0.9f + 0.25f * k) + i * 1.3f) * 0.42f
+            val free = -PI.toFloat() / 2f + side * (0.18f + 0.12f * k) + sway
+            val toMark = kotlin.math.atan2(c.y - base.y, c.x - base.x)
+            val ang = lerp(free, toMark, meet)
+            val len = h * 1.4f
+            val spread = lerp(0.065f, 0.035f, meet)
+            val tip1 = base + Offset(cos(ang - spread) * len, sin(ang - spread) * len)
+            val tip2 = base + Offset(cos(ang + spread) * len, sin(ang + spread) * len)
+            val beam = Path().apply { moveTo(base.x, base.y); lineTo(tip1.x, tip1.y); lineTo(tip2.x, tip2.y); close() }
+            drawPath(beam, Brush.radialGradient(listOf(Color(0xFFFFF3D6).copy(alpha = 0.55f * beamA), Color(0xFFBFD8F5).copy(alpha = 0.18f * beamA), Color.Transparent), center = base, radius = len), blendMode = BlendMode.Plus)
+            drawCircle(Color(0xFFFFF6DC).copy(alpha = 0.9f * beamA), radius = 3.5f * density, center = base)
         }
-        val nameIn = easeOut(seg(p, 0.60f, 0.78f)) * out
-        if (nameIn > 0f) {
-            drawWordBlock(text.measurer, text.cache, text.family, cx, c.y + r * 1.15f + (1f - nameIn) * h * 0.025f, px, nameIn,
-                latinAlpha = nameIn * seg(p, 0.70f, 0.84f), glint = seg(p, 0.76f, 0.92f))
+        // Fog bank over the horizon.
+        if (!lite) drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color(0xFF8FA9C8).copy(alpha = 0.10f * out), Color.Transparent), startY = horizon - h * 0.12f, endY = horizon + h * 0.04f), topLeft = Offset(0f, horizon - h * 0.12f), size = Size(w, h * 0.16f))
+        drawRect(Brush.verticalGradient(listOf(SeaDeep, SeaNight), startY = horizon, endY = h), topLeft = Offset(0f, horizon), size = Size(w, h - horizon), alpha = out)
+        for (layer in 0..2) {
+            val base = horizon + (h - horizon) * (0.18f + layer * 0.3f)
+            drawPath(waveLine(0f, w, base, h * 0.005f * (layer + 1), w * (0.32f - layer * 0.05f), t * (0.9f + layer * 0.5f) + layer, if (lite) 40 else 90),
+                SeaLight, alpha = 0.35f * out, style = Stroke(1.5f * density))
+        }
+        // Where the beams meet, the moon lights up and the name follows.
+        val lit = easeOut(seg(p, 0.56f, 0.70f))
+        if (lit > 0f) {
+            val flash = seg(p, 0.58f, 0.64f) * (1f - seg(p, 0.64f, 0.82f))
+            if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFF6DC).copy(alpha = 0.5f * flash), Color.Transparent), center = c, radius = r * 3f), radius = r * 3f, center = c, blendMode = BlendMode.Plus)
+            drawMoonMark(c, r * lerp(0.85f, 1f, lit), lit * out, t, lite = lite)
+            drawWordBlock(text.measurer, text.cache, text.family, cx, c.y + r * 1.15f + (1f - easeOut(seg(p, 0.66f, 0.80f))) * h * 0.025f, px,
+                easeOut(seg(p, 0.66f, 0.80f)) * out, latinAlpha = seg(p, 0.74f, 0.86f) * out, glint = seg(p, 0.78f, 0.94f))
         }
     }
 }
@@ -498,7 +498,7 @@ private fun GlassIdent(modifier: Modifier, replayKey: Int) {
         drawRect(Brush.radialGradient(listOf(Color(0xFF16213A).copy(alpha = out), Color.Transparent), center = Offset(cx, h * 0.4f), radius = maxOf(w, h) * 0.6f))
         val tile = minOf(w, h) * 0.34f
         val px = minOf(w * 0.13f, h * 0.13f)
-        val blockH = tile + tile * 0.12f + px * 1.25f
+        val blockH = tile + tile * 0.12f + px * 1.75f
         val top = h / 2f - blockH / 2f
         val c = Offset(cx, top + tile / 2f)
         // The glass tile turns towards the viewer.
@@ -560,7 +560,7 @@ private fun CurtainsIdent(modifier: Modifier, replayKey: Int) {
         // The lockup underneath, revealed as the curtains lift.
         val r = minOf(w, h) * 0.13f
         val px = minOf(w * 0.15f, h * 0.15f)
-        val blockH = r * 2f + r * 0.35f + px * 1.25f
+        val blockH = r * 2f + r * 0.35f + px * 1.75f
         val c = Offset(cx, h / 2f - blockH / 2f + r)
         drawMoonMark(c, r, out * seg(p, 0.30f, 0.45f).coerceAtLeast(0.001f), t, lite = lite)
         val bottom = drawWordBlock(text.measurer, text.cache, text.family, cx, c.y + r * 1.15f, px, easeOut(seg(p, 0.42f, 0.60f)) * out,
