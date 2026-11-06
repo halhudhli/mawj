@@ -105,7 +105,7 @@ private val MoonDark = Color(0xFFC9963A)
 private val GoldText = listOf(Color(0xFFFFF6DC), Color(0xFFEDCB78), Color(0xFFC9963A))
 
 /** A sine wave band across [x0]..[x1], closed down to [bottom]. */
-private fun waveBand(x0: Float, x1: Float, base: Float, amp: Float, length: Float, phase: Float, bottom: Float, steps: Int): Path = Path().apply {
+internal fun waveBand(x0: Float, x1: Float, base: Float, amp: Float, length: Float, phase: Float, bottom: Float, steps: Int): Path = Path().apply {
     for (i in 0..steps) {
         val x = x0 + (x1 - x0) * i / steps
         val y = base + amp * sin(x / length * TAU + phase) + amp * 0.35f * sin(x / length * TAU * 2.3f - phase * 1.4f)
@@ -114,7 +114,7 @@ private fun waveBand(x0: Float, x1: Float, base: Float, amp: Float, length: Floa
     lineTo(x1, bottom); lineTo(x0, bottom); close()
 }
 
-private fun waveLine(x0: Float, x1: Float, base: Float, amp: Float, length: Float, phase: Float, steps: Int): Path = Path().apply {
+internal fun waveLine(x0: Float, x1: Float, base: Float, amp: Float, length: Float, phase: Float, steps: Int): Path = Path().apply {
     for (i in 0..steps) {
         val x = x0 + (x1 - x0) * i / steps
         val y = base + amp * sin(x / length * TAU + phase) + amp * 0.35f * sin(x / length * TAU * 2.3f - phase * 1.4f)
@@ -126,7 +126,7 @@ private fun waveLine(x0: Float, x1: Float, base: Float, amp: Float, length: Floa
  * The mark: a golden moon of radius [r] at [c] with the play button carved in it and three moving
  * wave bands inside its lower part. [carve] fades the play button in, [sea] the waves.
  */
-private fun DrawScope.drawMoonMark(c: Offset, r: Float, alpha: Float, t: Float, carve: Float = 1f, sea: Float = 1f, glow: Float = 1f, lite: Boolean = false) {
+internal fun DrawScope.drawMoonMark(c: Offset, r: Float, alpha: Float, t: Float, carve: Float = 1f, sea: Float = 1f, glow: Float = 1f, lite: Boolean = false) {
     if (alpha <= 0f || r <= 0f) return
     val u = r / 92f
     if (glow > 0f) drawCircle(
@@ -583,4 +583,9 @@ private fun CurtainsIdent(modifier: Modifier, replayKey: Int) {
             if (!lite) drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.10f), Color.Transparent)), topLeft = Offset(i * pw - 1f, y), size = Size(pw + 2f, h * 0.3f))
         }
     }
+}
+
+/** The moon mark for other screens (the profile card). */
+object MawjMarkScope {
+    fun DrawScope.drawMark(center: Offset, radius: Float, time: Float) = drawMoonMark(center, radius, 1f, time, glow = 0.6f)
 }

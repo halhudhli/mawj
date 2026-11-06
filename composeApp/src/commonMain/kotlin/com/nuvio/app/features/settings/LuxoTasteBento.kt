@@ -179,6 +179,18 @@ private fun nicknameOf(s: LuxoBentoStats): Pair<String, String> {
     return base to flavour
 }
 
+/** The taste-board nickname (e.g. «ذوّاق الدراما الليلي 🌙»), or null before anything is watched. */
+@Composable
+internal fun rememberLuxoNickname(): String? {
+    val watched by remember { WatchedRepository.ensureLoaded(); WatchedRepository.uiState }.collectAsStateWithLifecycle()
+    LaunchedEffect(watched.items.size) { if (watched.items.isNotEmpty()) LuxoTasteFacts.ensure(watched.items) }
+    val facts = LuxoTasteFacts.facts.toMap()
+    val stats = remember(watched.items, facts.size) { buildBento(watched.items, facts) }
+    if (stats.titles == 0) return null
+    val (base, flavour) = nicknameOf(stats)
+    return "$base $flavour"
+}
+
 /** «ذوقي» as a Bento board: nickname, world map, watch clock, decades, favourite people, taste twin, monthly mood, share. */
 @Composable
 internal fun LuxoTasteBentoCard(isTablet: Boolean) {

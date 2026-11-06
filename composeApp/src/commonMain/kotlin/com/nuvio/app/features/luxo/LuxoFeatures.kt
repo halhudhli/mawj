@@ -175,6 +175,8 @@ data class LuxoFeatures(
     val sceneWallpaper: Boolean = true,
     /** Big downloads split over several connections (much faster on debrid servers). */
     val fastDownload: Boolean = true,
+    /** «بطاقة عضوية موج» at the top of the profile page. */
+    val membershipCard: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

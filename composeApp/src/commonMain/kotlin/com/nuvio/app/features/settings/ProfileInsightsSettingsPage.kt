@@ -100,6 +100,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.datetime.toLocalDateTime
 import com.nuvio.app.core.format.resolveReleaseInfoForDisplay
 import com.nuvio.app.core.ui.platformPhysicalTopInset
 import com.nuvio.app.core.ui.NuvioPrimaryButton
@@ -371,8 +374,20 @@ private fun ProfileInsightsBody(
         selectedInsightCollection = insightCollections[kind]
             ?.takeIf { collection -> collection.items.isNotEmpty() }
     }
+    val membership = com.nuvio.app.features.luxo.rememberLuxoFeatures().membershipCard
     Column(modifier = Modifier.fillMaxWidth()) {
-        ProfileInsightsHero(
+        if (membership) LuxoMembershipHero(
+            profile = activeProfile,
+            avatarItem = avatarItem,
+            profileName = profileName,
+            isTablet = isTablet,
+            stats = stats,
+            isCollectionAvailable = isCollectionAvailable,
+            onCollectionClick = onCollectionClick,
+            onEditProfile = onEditProfile,
+            onSwitchProfile = onSwitchProfile,
+            onBack = onBack.takeUnless { isTablet },
+        ) else ProfileInsightsHero(
             profile = activeProfile,
             avatarItem = avatarItem,
             profileName = profileName,
@@ -397,7 +412,7 @@ private fun ProfileInsightsBody(
                 isRefreshing = isRefreshing,
                 onRefresh = ProfileInsightsRefresher::refresh,
             )
-            ProfileWatchTimeRow(stats = stats)
+            if (!membership) ProfileWatchTimeRow(stats = stats)
             LuxoTasteBentoCard(isTablet = isTablet)
             SettingsSection(
                 title = stringResource(Res.string.profile_insights_section_taste),
@@ -3642,6 +3657,198 @@ private fun LuxoUpcomingCalendarCard(episodes: List<LibraryUpcomingEpisode>) {
                 }
             }
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = tokens.colors.textMuted) }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- «بطاقة عضوية موج»
+
+private data class LuxoTier(val name: String, val fromHours: Int, val colors: List<Color>)
+
+private val LuxoTiers = listOf(
+    LuxoTier("البرونزية", 0, listOf(Color(0xFF2A160B), Color(0xFF6B3C1E), Color(0xFF0B1226))),
+    LuxoTier("الفضية", 50, listOf(Color(0xFF1C2129), Color(0xFF59616E), Color(0xFF0B1226))),
+    LuxoTier("الذهبية", 200, listOf(Color(0xFF1A1408), Color(0xFF3A2A0E), Color(0xFF0B1226))),
+    LuxoTier("الماسية", 500, listOf(Color(0xFF0A1A2E), Color(0xFF2B5C8A), Color(0xFF3B1D5E))),
+)
+
+/** The top of the profile as a membership card that shines, tilts with the device and levels up with watch time. */
+@Composable
+private fun LuxoMembershipHero(
+    profile: NuvioProfile?,
+    avatarItem: AvatarCatalogItem?,
+    profileName: String,
+    isTablet: Boolean,
+    stats: ProfileInsightsStats,
+    isCollectionAvailable: (ProfileInsightCollectionKind) -> Boolean,
+    onCollectionClick: (ProfileInsightCollectionKind) -> Unit,
+    onEditProfile: (() -> Unit)?,
+    onSwitchProfile: (() -> Unit)?,
+    onBack: (() -> Unit)?,
+) {
+    val accent = profile?.avatarColorHex?.let(::parseHexColor) ?: Color(0xFFEDCB78)
+    val avatarImageUrl = remember(profile, avatarItem) { profile?.let { profileAvatarImageUrl(it, avatarItem) } }
+    val nickname = rememberLuxoNickname()
+    val watched by remember { WatchedRepository.ensureLoaded(); WatchedRepository.uiState }.collectAsStateWithLifecycle()
+    val since = remember(watched.items) {
+        watched.items.minOfOrNull { it.markedAtEpochMs }?.takeIf { it > 0 }?.let { ms ->
+            runCatching {
+                kotlin.time.Instant.fromEpochMilliseconds(ms)
+                    .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).year
+            }.getOrNull()
+        }
+    }
+    val hours = (stats.trackedDurationMs / 3_600_000L).toInt()
+    val tierIndex = LuxoTiers.indexOfLast { hours >= it.fromHours }.coerceAtLeast(0)
+    val tier = LuxoTiers[tierIndex]
+    val next = LuxoTiers.getOrNull(tierIndex + 1)
+    val series = stats.completedCount + stats.ongoingSeriesCount
+    val tv = com.nuvio.app.features.luxo.luxoIsTv()
+    val tilt = com.nuvio.app.features.luxo.rememberLuxoTilt(enabled = !tv)
+    var time by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        val start = withFrameNanos { it }
+        while (true) withFrameNanos { now -> time = (now - start) / 1_000_000_000f }
+    }
+
+    val card: @Composable (Modifier) -> Unit = { mod ->
+        val shape = RoundedCornerShape(28.dp)
+        Box(
+            mod
+                .aspectRatio(1.6f)
+                .graphicsLayer {
+                    rotationY = tilt.x * 10f
+                    rotationX = -tilt.y * 7f
+                    cameraDistance = 14f * density
+                }
+                .clip(shape)
+                .background(Brush.linearGradient(tier.colors))
+                .border(1.dp, Color(0xFFEDCB78).copy(alpha = 0.35f), shape),
+        ) {
+            Canvas(Modifier.matchParentSize()) {
+                val w = size.width; val h = size.height
+                // Sea along the bottom of the card.
+                val base = h * 0.80f
+                drawPath(com.nuvio.app.features.splash.waveBand(0f, w, base, h * 0.03f, w * 0.5f, time * 0.8f, h, 60), Color(0xFF0B2D4A), alpha = 0.8f)
+                drawPath(com.nuvio.app.features.splash.waveBand(0f, w, base + h * 0.07f, h * 0.025f, w * 0.42f, time * 1.2f + 1f, h, 60), Color(0xFF145B7A), alpha = 0.85f)
+                drawPath(com.nuvio.app.features.splash.waveLine(0f, w, base + h * 0.07f, h * 0.025f, w * 0.42f, time * 1.2f + 1f, 60), Color(0xFFD8F3F5),
+                    alpha = 0.5f, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f * density))
+                // Holographic sheen that follows the tilt.
+                val sx = w * (0.15f + 0.35f * (tilt.x + 1f)) + w * 0.12f * kotlin.math.sin(time * 0.6f)
+                drawRect(
+                    Brush.linearGradient(
+                        listOf(Color.Transparent, Color(0x47FFF6DC), Color(0x382E9AB0), Color(0x24FF78C8), Color.Transparent),
+                        start = androidx.compose.ui.geometry.Offset(sx - w * 0.3f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(sx + w * 0.3f, h),
+                    ),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.Screen,
+                )
+                // The moon mark (its waves move).
+                with(com.nuvio.app.features.splash.MawjMarkScope) { drawMark(androidx.compose.ui.geometry.Offset(w * 0.12f, h * 0.20f), h * 0.11f, time) }
+            }
+            Column(Modifier.align(Alignment.TopEnd).padding(22.dp), horizontalAlignment = Alignment.End) {
+                Text("عضوية موج", color = Color(0xFFEDCB78), fontSize = 13.sp, letterSpacing = 2.sp)
+                Text("${tier.name} ✦", color = Color.White, fontSize = if (isTablet) 30.sp else 24.sp, fontWeight = FontWeight.Black)
+            }
+            Row(
+                Modifier.align(Alignment.CenterEnd).padding(horizontal = 22.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(profileName, color = Color.White, fontSize = if (isTablet) 40.sp else 30.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        listOfNotNull(since?.let { "عضو منذ $it" }, nickname).joinToString(" · "),
+                        color = Color(0xFFE6DCC0), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                ProfileHeroAvatar(
+                    profileName = profileName,
+                    avatarImageUrl = avatarImageUrl,
+                    avatarColor = accent,
+                    avatarBackgroundColor = avatarItem?.bgColor?.let(::parseHexColor) ?: accent,
+                    isTablet = false,
+                )
+            }
+            Text(
+                listOf(stats.episodesWatchedCount, stats.watchedMovieCount, series, hours).joinToString("  ·  ") { it.toString().padStart(4, '0') },
+                color = Color(0xFFFFF6DC), fontSize = 15.sp, letterSpacing = 3.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 22.dp, bottom = 16.dp),
+            )
+            Row(Modifier.align(Alignment.BottomEnd).padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (onSwitchProfile != null) ProfileHeaderIconButton(Icons.Rounded.People, stringResource(Res.string.profile_insights_switch_profile), onSwitchProfile)
+                if (onEditProfile != null) ProfileHeaderIconButton(Icons.Rounded.Edit, stringResource(Res.string.profile_insights_edit_profile), onEditProfile)
+            }
+            if (onBack != null) {
+                Box(Modifier.align(Alignment.TopStart).padding(10.dp)) {
+                    ProfileHeaderIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع", onBack)
+                }
+            }
+        }
+    }
+
+    val side: @Composable (Modifier) -> Unit = { mod ->
+        Column(mod, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("إجمالي المشاهدة", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp)
+            Text("$hours ساعة", color = Color.White, fontSize = if (isTablet) 38.sp else 30.sp, fontWeight = FontWeight.Black)
+            Text("نحو ${hours / 24} يوماً و${hours % 24} ساعات", color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
+            if (next != null) {
+                val f = ((hours - tier.fromHours).toFloat() / (next.fromHours - tier.fromHours)).coerceIn(0f, 1f)
+                Box(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.10f))) {
+                    Box(Modifier.fillMaxWidth(f).fillMaxHeight().clip(RoundedCornerShape(8.dp))
+                        .background(Brush.horizontalGradient(listOf(Color(0xFF2E9AB0), Color(0xFFEDCB78)))))
+                }
+                Text("بقي ${next.fromHours - hours} ساعة للوصول إلى العضوية ${next.name}", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+            } else {
+                Text("أعلى درجة عضوية 💎", color = Color(0xFFBFE0FF), fontSize = 13.sp)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LuxoTiers.forEachIndexed { i, t ->
+                    Box(
+                        Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                            .background(if (i == tierIndex) Brush.linearGradient(listOf(Color(0xFF3A2A0E), Color(0xFF7A5A1C))) else Brush.linearGradient(listOf(Color(0xFF10131C), Color(0xFF10131C))))
+                            .padding(vertical = 7.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(t.name.removePrefix("ال"), color = if (i == tierIndex) Color.White else Color.White.copy(alpha = 0.45f), fontSize = 12.sp, fontWeight = if (i == tierIndex) FontWeight.Bold else FontWeight.Normal) }
+                }
+            }
+            val tiles = listOf(
+                Triple(stats.episodesWatchedCount, "حلقة", ProfileInsightCollectionKind.Watched),
+                Triple(stats.watchedMovieCount, "فيلماً", ProfileInsightCollectionKind.Watched),
+                Triple(series, "مسلسلاً", ProfileInsightCollectionKind.Ongoing),
+                Triple(stats.continueCount, "قيد المشاهدة", ProfileInsightCollectionKind.Continue),
+                Triple(stats.libraryCount, "محفوظ", ProfileInsightCollectionKind.Library),
+                Triple(stats.upcomingCount, "قادم", ProfileInsightCollectionKind.Upcoming),
+            )
+            tiles.chunked(if (isTablet) 3 else 3).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { (n, label, kind) ->
+                        val enabled = isCollectionAvailable(kind)
+                        Column(
+                            Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(Color(0xFF10131C))
+                                .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                                .clickable(enabled = enabled) { onCollectionClick(kind) }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                        ) {
+                            Text(n.toString(), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                            Text(label, color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (isTablet) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(28.dp), verticalAlignment = Alignment.Top) {
+            card(Modifier.weight(1.05f))
+            side(Modifier.weight(1f))
+        }
+    } else {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            card(Modifier.fillMaxWidth())
+            side(Modifier.fillMaxWidth())
         }
     }
 }
