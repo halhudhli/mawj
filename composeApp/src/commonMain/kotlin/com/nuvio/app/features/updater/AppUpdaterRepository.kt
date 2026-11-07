@@ -44,7 +44,7 @@ internal fun luxoGitHubHeaders(accept: String): Map<String, String> = buildMap {
 
 internal const val GITHUB_API_BASE = "https://api.github.com"
 internal const val GITHUB_OWNER = "halhudhli"
-internal const val GITHUB_REPO = "Luxo"
+internal const val GITHUB_REPO = "mawj"
 
 internal object AppUpdaterRepository {
     private val json = Json {

@@ -29,6 +29,10 @@ class NuvioApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // Luxo: apply the chosen app language here, before any screen opens. Applying it later (in
+        // MainActivity) made Android 12-and-older devices — most TVs — rebuild the whole screen right
+        // after launch: the content showed, went black, then came back.
+        runCatching { com.nuvio.app.features.settings.ThemeSettingsStorage.initialize(this) }
         DnsPlatform.initialize(this)
     }
 
