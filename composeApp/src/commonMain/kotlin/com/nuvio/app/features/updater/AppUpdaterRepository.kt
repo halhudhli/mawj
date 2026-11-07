@@ -117,10 +117,16 @@ internal object AppUpdaterRepository {
         assets: List<GitHubAssetDto>,
         supportedAbis: List<String>,
     ): GitHubAssetDto? {
-        val apkAssets = assets.filter { asset ->
+        val allApks = assets.filter { asset ->
             asset.name.endsWith(".apk", ignoreCase = true) ||
                 asset.contentType == "application/vnd.android.package-archive"
         }
+        // Luxo: a TV always updates to the TV APK (light, optimised, TV mode on), and a phone or
+        // tablet never picks the TV one — even when both match the device's processor.
+        val tvApks = allApks.filter { it.name.contains("-TV", ignoreCase = true) }
+        val wantTv = com.nuvio.app.features.luxo.luxoIsTv()
+        if (wantTv && tvApks.isNotEmpty()) return tvApks.first()
+        val apkAssets = (allApks - tvApks.toSet()).ifEmpty { allApks }
         for (abi in supportedAbis) {
             apkAssets.firstOrNull { it.name.contains(abi, ignoreCase = true) }?.let { return it }
         }

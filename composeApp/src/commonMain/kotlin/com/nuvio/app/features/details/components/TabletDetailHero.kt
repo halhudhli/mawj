@@ -102,7 +102,8 @@ fun TabletDetailBackdrop(
             onHeroTrailerReady = onHeroTrailerReady,
             onHeroTrailerFinished = onHeroTrailerFinished,
         )
-        if (cinematic) {
+        // Luxo TV light mode: no second, blurred copy of the backdrop.
+        if (cinematic && !com.nuvio.app.features.luxo.luxoLiteMode()) {
             BackdropArtwork(
                 meta = meta,
                 gradientColor = backgroundColor,

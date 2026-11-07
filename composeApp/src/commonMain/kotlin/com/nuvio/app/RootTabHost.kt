@@ -13,6 +13,10 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -79,6 +83,19 @@ private fun RootTabPane(
     val lifecycleOwner = rememberLifecycleOwner(
         maxLifecycle = if (active) Lifecycle.State.RESUMED else Lifecycle.State.CREATED,
     )
+    // Luxo TV: when a tab opens (or Home comes back after Details), the remote's focus goes into
+    // the tab and returns to the card it was on, instead of disappearing.
+    val tvRemote = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
+    val paneFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    var paneHasFocus by remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(active, tvRemote) {
+        if (!active || !tvRemote) return@LaunchedEffect
+        repeat(16) {
+            kotlinx.coroutines.delay(200)
+            if (paneHasFocus) return@LaunchedEffect
+            runCatching { paneFocus.requestFocus() }
+        }
+    }
     CompositionLocalProvider(
         LocalLifecycleOwner provides lifecycleOwner,
         LocalScreenActive provides active,
@@ -87,6 +104,16 @@ private fun RootTabPane(
             Box(
                 Modifier.fillMaxSize()
                     .graphicsLayer()
+                    .then(
+                        if (tvRemote) {
+                            Modifier
+                                .onFocusChanged { paneHasFocus = it.hasFocus }
+                                .focusRequester(paneFocus)
+                                .focusRestorer()
+                        } else {
+                            Modifier
+                        },
+                    )
                     .focusProperties { canFocus = active }
                     .pointerInput(active) {
                         if (!active) {

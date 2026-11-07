@@ -52,6 +52,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
@@ -425,10 +429,45 @@ fun NuvioInputField(
     val tokens = MaterialTheme.nuvio
     val luxoLook = luxoDesignOn()
     val accent = luxoAccentColors().first()
+    // Luxo TV: passing over a text field with the remote must not pop the keyboard up. The field
+    // only starts typing after OK is pressed on it, and stops again when focus leaves it.
+    val luxoTv = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
+    var luxoEditing by remember { mutableStateOf(false) }
+    val luxoKeyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    androidx.compose.runtime.LaunchedEffect(luxoEditing) {
+        if (luxoEditing) {
+            kotlinx.coroutines.delay(80)
+            luxoKeyboard?.show()
+        }
+    }
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        readOnly = luxoTv && !luxoEditing,
+        modifier = modifier
+            .then(
+                if (luxoTv) {
+                    Modifier
+                        .onFocusChanged { if (!it.isFocused) luxoEditing = false }
+                        .onPreviewKeyEvent { event ->
+                            val ok = event.key == androidx.compose.ui.input.key.Key.DirectionCenter ||
+                                event.key == androidx.compose.ui.input.key.Key.Enter ||
+                                event.key == androidx.compose.ui.input.key.Key.NumPadEnter
+                            if (ok && !luxoEditing) {
+                                if (event.type == androidx.compose.ui.input.key.KeyEventType.KeyUp) {
+                                    luxoEditing = true
+                                    luxoKeyboard?.show()
+                                }
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                } else {
+                    Modifier
+                },
+            )
+            .fillMaxWidth(),
         singleLine = true,
         shape = if (luxoLook) RoundedCornerShape(50) else RoundedCornerShape(NuvioTokens.Radius.lg),
         placeholder = {

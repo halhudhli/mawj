@@ -51,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.nuvio.app.features.luxo.luxoTvAutoFocus
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -870,6 +871,7 @@ internal fun StreamList(
                     streamSection(
                         sectionKey = "pinned:" + streamSectionRenderKey(groupIndex = pinnedIndex, group = group),
                         group = group,
+                        autoFocusFirst = pinnedIndex == 0,
                         showHeader = true,
                         debridEnabled = debridEnabled,
                         appendInstantServiceToDefaultName = appendInstantServiceToDefaultName,
@@ -888,6 +890,7 @@ internal fun StreamList(
                     streamSection(
                         sectionKey = streamSectionRenderKey(groupIndex = groupIndex, group = group),
                         group = group,
+                        autoFocusFirst = groupIndex == 0 && pinnedFirst.pinnedGroups.isEmpty(),
                         showHeader = uiState.selectedFilter == null,
                         debridEnabled = debridEnabled,
                         appendInstantServiceToDefaultName = appendInstantServiceToDefaultName,
@@ -919,6 +922,7 @@ internal fun StreamList(
 private fun LazyListScope.streamSection(
     sectionKey: String,
     group: AddonStreamGroup,
+    autoFocusFirst: Boolean = false,
     showHeader: Boolean,
     debridEnabled: Boolean,
     appendInstantServiceToDefaultName: Boolean,
@@ -980,7 +984,7 @@ private fun LazyListScope.streamSection(
                     stream = stream,
                 )
             },
-        ) { _, stream ->
+        ) { index, stream ->
             val isSelectable = stream.isSelectableForPlayback(debridEnabled)
             val isUnsupportedTorrentStream =
                 stream.needsLocalDebridResolve &&
@@ -988,6 +992,8 @@ private fun LazyListScope.streamSection(
                     !(debridEnabled && stream.isAddonDebridCandidate)
             StreamCard(
                 stream = stream,
+                // Luxo TV: the first source takes the remote's focus.
+                modifier = if (autoFocusFirst && sourceIndex == 0 && index == 0) Modifier.luxoTvAutoFocus() else Modifier,
                 enabled = isSelectable || isUnsupportedTorrentStream,
                 appendInstantServiceToDefaultName = appendInstantServiceToDefaultName,
                 showFileSizeBadges = showFileSizeBadges,

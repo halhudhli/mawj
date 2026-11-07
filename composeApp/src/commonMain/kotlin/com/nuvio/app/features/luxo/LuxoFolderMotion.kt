@@ -97,7 +97,8 @@ fun LuxoFolderMotion(
     content: @Composable (Modifier) -> Unit,
 ) {
     val features = rememberLuxoFeatures()
-    if (!features.animatedCatalog) {
+    // On a TV the cards stay still: cycling pictures on every visible card is too heavy for TV boxes.
+    if (!features.animatedCatalog || luxoIsTv()) {
         content(Modifier.fillMaxSize())
         return
     }
@@ -175,7 +176,7 @@ fun LuxoFolderMotion(
 @Composable
 fun luxoShimmerTitleStyle(title: String, base: TextStyle, color: Color): TextStyle {
     val features = rememberLuxoFeatures()
-    if (!features.animatedCatalog || luxoLiteMode() || !(title.contains("اكتشف") || title.contains("Discover", ignoreCase = true))) return base
+    if (!features.animatedCatalog || luxoIsTv() || !(title.contains("اكتشف") || title.contains("Discover", ignoreCase = true))) return base
     val inf = rememberInfiniteTransition(label = "shimmer")
     val x by inf.animateFloat(-300f, 900f, infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Restart), label = "x")
     return base.merge(

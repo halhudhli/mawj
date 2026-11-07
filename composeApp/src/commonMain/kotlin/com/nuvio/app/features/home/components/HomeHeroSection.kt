@@ -52,6 +52,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -234,8 +235,11 @@ internal fun HomeHeroSection(
         }
     }
 
-    ScreenActivityEffect(autoScrollPage, items.size, effectiveTrailerPlaybackEnabled) { active ->
-        if (!active || items.size <= 1 || effectiveTrailerPlaybackEnabled) return@ScreenActivityEffect
+    // Luxo TV: while the remote's focus is on the hero it stays on the same title, so the focused
+    // card never slides away under the remote.
+    var luxoHeroFocused by remember { mutableStateOf(false) }
+    ScreenActivityEffect(autoScrollPage, items.size, effectiveTrailerPlaybackEnabled, luxoHeroFocused) { active ->
+        if (!active || items.size <= 1 || effectiveTrailerPlaybackEnabled || luxoHeroFocused) return@ScreenActivityEffect
         delay(HERO_AUTO_SCROLL_INTERVAL_MS)
         while (pagerState.isScrollInProgress) {
             delay(100L)
@@ -263,7 +267,7 @@ internal fun HomeHeroSection(
     }
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().onFocusChanged { luxoHeroFocused = it.hasFocus },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         BoxWithConstraints(

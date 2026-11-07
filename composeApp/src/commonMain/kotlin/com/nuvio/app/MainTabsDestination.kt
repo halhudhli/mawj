@@ -168,6 +168,15 @@ internal fun MainTabsDestination(
             onTabLongPressed = onTabLongPressed,
         )
 
+        // Luxo TV: the remote's Back first moves focus to the side menu. This handler is registered
+        // before the tabs' own content, so a page inside a tab (settings pages, sheets, search…)
+        // still handles Back itself first, and only then does Back reach the menu.
+        val tvRemoteOn = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
+        val railFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+        var railHasFocus by remember { androidx.compose.runtime.mutableStateOf(false) }
+        PlatformBackHandler(enabled = useSideRail && tvRemoteOn && !railHasFocus) {
+            runCatching { railFocus.requestFocus() }
+        }
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -307,12 +316,6 @@ internal fun MainTabsDestination(
                 if (useSideRail) {
                     // Luxo TV (like Nuvio TV): the remote's Back goes to the side menu first, and only
                     // a second Back (while the menu is focused) does the usual back/exit.
-                    val tvRemoteOn = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
-                    val railFocus = remember { androidx.compose.ui.focus.FocusRequester() }
-                    var railHasFocus by remember { androidx.compose.runtime.mutableStateOf(false) }
-                    PlatformBackHandler(enabled = tvRemoteOn && !railHasFocus) {
-                        runCatching { railFocus.requestFocus() }
-                    }
                     com.nuvio.app.features.luxo.LuxoSideRail(
                         items = floatingNavigationItems,
                         expanded = luxoNav.railExpanded,

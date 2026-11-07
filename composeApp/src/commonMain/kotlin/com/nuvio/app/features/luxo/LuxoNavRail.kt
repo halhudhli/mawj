@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -140,6 +141,12 @@ internal fun LuxoSideRail(
     val accent = tokens.colors.accent
     val muted = tokens.colors.textMuted
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // Luxo TV: the rail never hides (a hidden rail could still take the remote's focus), and it
+    // opens with names while the remote is on it, closing again when focus returns to the page.
+    val tv = rememberLuxoTvRemote()
+    var railFocused by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val hidden = hidden && !tv
+    val expanded = if (tv) expanded || railFocused else expanded
     val width by animateDpAsState(if (expanded) 212.dp else 68.dp, spring(dampingRatio = 0.82f, stiffness = 420f), label = "rail_width")
     val hide by animateFloatAsState(if (hidden) 1f else 0f, tween(260), label = "rail_hide")
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -150,6 +157,7 @@ internal fun LuxoSideRail(
 
     Box(
         modifier = modifier
+            .onFocusChanged { railFocused = it.hasFocus }
             .padding(top = topInset + 12.dp, bottom = bottomInset + 12.dp)
             .padding(horizontal = 10.dp)
             .graphicsLayer {
@@ -181,7 +189,7 @@ internal fun LuxoSideRail(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Box(
+            if (!tv) Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)

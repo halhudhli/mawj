@@ -1141,7 +1141,8 @@ fun MetaDetailsScreen(
                             (listState.firstVisibleItemIndex > 0 || detailScrollOffsetPx() > thresholdPx)
                     }
                 }
-                val heroTrailerSourceUrl = heroTrailerPlaybackSource
+                // Luxo TV light mode: no autoplaying trailer behind the details page.
+                val heroTrailerSourceUrl = heroTrailerPlaybackSource.takeUnless { com.nuvio.app.features.luxo.luxoLiteMode() }
                     ?.videoUrl
                     ?.takeIf { it.isNotBlank() && heroTrailerPlaybackEnabled && !heroTrailerFinished && !isLeavingDetails }
                 val heroTrailerSourceAudioUrl = heroTrailerPlaybackSource

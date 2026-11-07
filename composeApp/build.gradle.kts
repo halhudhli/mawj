@@ -49,6 +49,10 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     @get:Input
     abstract val mdbListApiKey: Property<String>
 
+    /** Luxo: true for the TV APK, which then always runs in TV mode (remote focus, light mode). */
+    @get:Input
+    abstract val luxoTvBuild: Property<Boolean>
+
     @TaskAction
     fun generate() {
         val props = Properties()
@@ -155,6 +159,15 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |
                 |internal object LuxoUpdateConfig {
                 |    const val TOKEN = "${prop("LUXO_UPDATE_TOKEN", "")}"
+                |}
+                """.trimMargin()
+            )
+            resolve("LuxoTvBuildConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.updater
+                |
+                |object LuxoTvBuildConfig {
+                |    const val TV_BUILD = ${luxoTvBuild.get()}
                 |}
                 """.trimMargin()
             )
@@ -360,6 +373,7 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     sentryDsn.set(runtimeConfigValue("SENTRY_DSN"))
     tmdbApiKey.set(runtimeConfigValue("TMDB_API_KEY"))
     mdbListApiKey.set(runtimeConfigValue("MDBLIST_API_KEY"))
+    luxoTvBuild.set(providers.gradleProperty("luxo.tv").map(String::toBoolean).orElse(false))
     sentryEnvironment.set(
         when {
             requestedGradleTasks.any { "benchmark" in it } -> "benchmark"

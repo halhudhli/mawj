@@ -30,6 +30,15 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import kotlinx.coroutines.delay
 
 /*
  * Luxo on TV — the ideas Nuvio TV uses to stay smooth on weak boxes, applied to Luxo:
@@ -142,7 +151,10 @@ private class LuxoTvIndicationNode(
             drawContent()
             return
         }
-        val grow = 1f + 0.05f * p - (if (pressed) 0.02f else 0f)
+        // Big surfaces (a full-width hero, a wide banner) only get the frame: growing them would
+        // overflow the screen and redraw a huge layer on every focus move.
+        val big = size.width > 520.dp.toPx() || size.height > 420.dp.toPx()
+        val grow = if (big) 1f else 1f + 0.05f * p - (if (pressed) 0.02f else 0f)
         scale(grow) {
             this@draw.drawContent()
             if (pressed) drawRect(Color.Black.copy(alpha = 0.14f))
@@ -162,3 +174,23 @@ private class LuxoTvIndicationNode(
 @Composable
 fun luxoTvIndicationOrNull(): androidx.compose.foundation.Indication? =
     if (rememberLuxoTvRemote()) LuxoTvIndication else null
+
+/**
+ * TV only: gives this element the remote's focus when the screen opens (e.g. «تشغيل» on a details
+ * page), retrying briefly while the screen is still loading. Does nothing on phones and tablets.
+ */
+@Composable
+fun Modifier.luxoTvAutoFocus(key: Any? = Unit, enabled: Boolean = true): Modifier {
+    if (!rememberLuxoTvRemote()) return this
+    val requester = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
+    LaunchedEffect(key, enabled) {
+        if (!enabled) return@LaunchedEffect
+        repeat(12) {
+            delay(150)
+            if (focused) return@LaunchedEffect
+            runCatching { requester.requestFocus() }
+        }
+    }
+    return this.onFocusChanged { focused = it.isFocused || it.hasFocus }.focusRequester(requester)
+}

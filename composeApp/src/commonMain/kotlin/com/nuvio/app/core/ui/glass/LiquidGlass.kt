@@ -58,7 +58,9 @@ object LiquidGlassSettings {
 
 fun isLiquidGlassAvailable(): Boolean = isRenderEffectSupported()
 
-fun isLiquidGlassSupported(): Boolean = LiquidGlassSettings.enabled && isLiquidGlassAvailable()
+// Luxo TV light mode: liquid glass re-captures and blurs the screen behind it every frame, which
+// TV boxes can't keep up with, so TVs draw the plain tinted fallback instead.
+fun isLiquidGlassSupported(): Boolean = LiquidGlassSettings.enabled && isLiquidGlassAvailable() && !com.nuvio.app.features.luxo.luxoLiteMode()
 
 fun isLiquidRefractionSupported(): Boolean = isRuntimeShaderSupported()
 
@@ -120,7 +122,8 @@ fun rememberNuvioBackdrop(): NuvioBackdrop {
 }
 
 fun Modifier.nuvioBackdropSource(backdrop: NuvioBackdrop): Modifier =
-    this then NuvioBackdropSourceElement(backdrop)
+    // Luxo TV light mode: nothing reads the glass backdrop there, so skip drawing the screen twice.
+    if (com.nuvio.app.features.luxo.luxoLiteMode()) this else this then NuvioBackdropSourceElement(backdrop)
 
 private class NuvioBackdropSourceElement(
     val backdrop: NuvioBackdrop,
@@ -306,7 +309,7 @@ internal fun Modifier.liquidGlassBlur(
     radius: Dp,
     alphaProvider: () -> Float = { 1f },
 ): Modifier =
-    if (backdrop == null || !isLiquidGlassAvailable()) {
+    if (backdrop == null || !isLiquidGlassAvailable() || com.nuvio.app.features.luxo.luxoLiteMode()) {
         this
     } else {
         graphicsLayer { alpha = alphaProvider() }

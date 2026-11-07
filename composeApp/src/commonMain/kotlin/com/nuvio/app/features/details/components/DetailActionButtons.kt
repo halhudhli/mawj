@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.nuvio.app.features.luxo.luxoTvAutoFocus
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -747,6 +748,8 @@ private fun PlayButton(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Luxo TV: «تشغيل» takes the remote's focus when the page opens.
+                    .luxoTvAutoFocus(enabled = playEnabled)
                     .combinedClickable(
                         enabled = playEnabled,
                         onClick = {

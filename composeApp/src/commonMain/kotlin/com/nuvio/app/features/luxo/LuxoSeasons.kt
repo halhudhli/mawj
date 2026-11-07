@@ -87,12 +87,13 @@ internal fun LuxoSeasonBanner(modifier: Modifier = Modifier) {
     var dismissed by remember { mutableStateOf(LuxoPrefsStorage.load(SEASON_DISMISSED_KEY) == today) }
     if (dismissed) return
     val motion = rememberInfiniteTransition(label = "season")
-    val swing by motion.animateFloat(
+    val swingAnimated by motion.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(3600, easing = LinearEasing), RepeatMode.Restart),
         label = "season_swing",
     )
+    val swing = if (rememberLuxoLite()) 0.25f else swingAnimated
     Box(
         modifier = modifier
             .fillMaxWidth()

@@ -91,8 +91,11 @@ internal fun Modifier.posterCardClickable(
             )
         }
         .then(this)
-    if (onClick == null && onLongClick == null) return posterModifier
-    return posterModifier
+    // Luxo TV: the poster "lift" re-records every card's picture on each frame; TVs skip it.
+    val luxoTv = com.nuvio.app.features.luxo.luxoIsTv()
+    val baseModifier = if (luxoTv) this else posterModifier
+    if (onClick == null && onLongClick == null) return baseModifier
+    return baseModifier
         .combinedClickable(
             interactionSource = interactionSource,
             // Luxo: posters with their own pressed effect skip the grey ripple flash.
