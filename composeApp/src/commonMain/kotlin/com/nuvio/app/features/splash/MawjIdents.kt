@@ -63,7 +63,9 @@ object MawjIdentPrefs {
     const val RANDOM = "random"
     const val OFF = "off"
 
-    var choice by mutableStateOf(LuxoPrefsStorage.load(KEY) ?: MawjIdentStyle.Moonrise.name)
+    // On a TV the app starts straight away unless an opener was chosen on purpose: the animation
+    // competes with loading the home on weak TV boxes.
+    var choice by mutableStateOf(LuxoPrefsStorage.load(KEY) ?: if (com.nuvio.app.features.luxo.luxoIsTv()) OFF else MawjIdentStyle.Moonrise.name)
         private set
 
     fun set(value: String) { choice = value; LuxoPrefsStorage.save(KEY, value) }

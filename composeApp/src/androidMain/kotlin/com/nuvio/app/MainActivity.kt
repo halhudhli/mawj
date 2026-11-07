@@ -115,6 +115,13 @@ open class MainActivity : AppCompatActivity() {
         SentrySettingsStorage.initialize(applicationContext)
         SentryInitializer.start(application)
         super.onCreate(savedInstanceState)
+        // Luxo: start-up diagnostics (Settings → Advanced → Debugging), to see on a TV whether the
+        // screen is being rebuilt by the system after launch.
+        luxoCreateCount++
+        com.nuvio.app.core.logging.InAppLogger.info(
+            "Luxo/Startup",
+            "MainActivity created #$luxoCreateCount (recreated=${savedInstanceState != null}, tv=${com.nuvio.app.features.luxo.luxoIsTv()}, lite=${com.nuvio.app.features.luxo.luxoLiteMode()}, sdk=${android.os.Build.VERSION.SDK_INT}, abi=${android.os.Build.SUPPORTED_ABIS.joinToString()})",
+        )
         ProfileBiometricAuth.initialize(this)
         AutoSyncPreferencesAndroid.initialize(applicationContext) // AutoSync hook
         window.setBackgroundDrawableResource(R.color.nuvio_background)
@@ -233,7 +240,18 @@ open class MainActivity : AppCompatActivity() {
         PlayerPictureInPictureManager.onPictureInPictureModeChanged(this, isInPictureInPictureMode)
     }
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        com.nuvio.app.core.logging.InAppLogger.info("Luxo/Startup", "Configuration changed without restart: keyboard=${newConfig.keyboard} navigation=${newConfig.navigation} uiMode=${newConfig.uiMode}")
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        com.nuvio.app.core.logging.InAppLogger.warn("Luxo/Startup", "Low memory signal from Android (level $level)")
+    }
+
     override fun onDestroy() {
+        com.nuvio.app.core.logging.InAppLogger.info("Luxo/Startup", "MainActivity destroyed (changingConfigurations=${isChangingConfigurations}, finishing=$isFinishing)")
         startupScope.cancel()
         EpisodeReleaseNotificationPlatform.unbindActivity(this)
         super.onDestroy()
@@ -256,3 +274,5 @@ open class MainActivity : AppCompatActivity() {
         handleAppUrl(appUrl)
     }
 }
+
+private var luxoCreateCount = 0

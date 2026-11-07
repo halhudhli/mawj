@@ -1760,7 +1760,7 @@ internal fun MainAppContent(
                                 onRequestedSettingsPageConsumed = {
                                     requestedSettingsPageName = null
                                 },
-                                onInitialHomeContentRendered = { initialHomeReady = true },
+                                onInitialHomeContentRendered = { if (!initialHomeReady) InAppLogger.info("Luxo/Startup", "Home first shown"); initialHomeReady = true },
                             )
                         },
                         onBack = {

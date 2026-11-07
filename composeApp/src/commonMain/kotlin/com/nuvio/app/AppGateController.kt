@@ -30,6 +30,7 @@ class AppGateController {
     internal fun beginContentReload() {
         _mainContentReady.value = false
         _contentGeneration.update { it + 1 }
+        com.nuvio.app.core.logging.InAppLogger.info("Luxo/Startup", "Home content reload #${_contentGeneration.value}")
     }
 
     internal fun reportMainContentReady(ready: Boolean) {

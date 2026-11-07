@@ -360,7 +360,11 @@ internal fun AppGate(
     }
 
     fun selectProfile(profile: NuvioProfile, sync: Boolean) {
-        if (!renderMainContent) {
+        // Luxo: re-picking the profile that is already active (the remembered one at launch) no
+        // longer tears the home down and rebuilds it — that showed the home, blacked it out, then
+        // showed it again, and doubled the start-up work on TVs.
+        val alreadyActive = ProfileRepository.state.value.activeProfile?.profileIndex == profile.profileIndex
+        if (!renderMainContent && !alreadyActive) {
             appGateController?.beginContentReload()
         }
         ProfileRepository.selectProfile(profile.profileIndex)
