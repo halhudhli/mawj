@@ -1,4 +1,4 @@
-name: Build Mawj iPhone IPA
+name: Build Mawj iPhone and iPad IPA
 
 # نسخة الآيفون: ملف IPA بدون توقيع، يوقّعه Zeus / SideStore على الجوال.
 # تُنشر دائماً في إصدار ثابت اسمه «iphone» بملف واحد: Mawj-iPhone.ipa
@@ -106,10 +106,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes="موج للآيفون — الإصدار 1.0.${{ github.run_number }}. ملف بدون توقيع، يُثبَّت عبر Zeus أو SideStore."
+          notes="موج للآيفون والآيباد — الإصدار 1.0.${{ github.run_number }}. ملف بدون توقيع، يُثبَّت عبر Zeus أو SideStore."
           if gh release view iphone >/dev/null 2>&1; then
             gh release upload iphone build/ios-ipa/Mawj-iPhone.ipa --clobber
-            gh release edit iphone --title "موج للآيفون" --notes "${notes}" --prerelease
+            gh release edit iphone --title "موج للآيفون والآيباد" --notes "${notes}" --prerelease
           else
-            gh release create iphone build/ios-ipa/Mawj-iPhone.ipa --title "موج للآيفون" --notes "${notes}" --prerelease --target "${{ github.sha }}"
+            gh release create iphone build/ios-ipa/Mawj-iPhone.ipa --title "موج للآيفون والآيباد" --notes "${notes}" --prerelease --target "${{ github.sha }}"
           fi

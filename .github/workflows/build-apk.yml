@@ -1,4 +1,4 @@
-name: Build LUXO APK
+name: Build Mawj APK
 
 on:
   push:
@@ -117,7 +117,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: LUXO-Stream-APK
+          name: Mawj-APK
           path: luxo-out/*.apk
           if-no-files-found: error
           retention-days: 2
@@ -135,16 +135,16 @@ jobs:
           HAS_MDBLIST: ${{ secrets.MDBLIST_API_KEY != '' }}
         run: |
           VERSION="1.0.${{ github.run_number }}"
-          cp luxo-out/arm64-v8a.apk "Luxo-${VERSION}-arm64-v8a.apk"
-          cp luxo-out/armeabi-v7a.apk "Luxo-${VERSION}-armeabi-v7a-TV.apk"
+          cp luxo-out/arm64-v8a.apk "Mawj-${VERSION}-tablet-arm64-v8a.apk"
+          cp luxo-out/armeabi-v7a.apk "Mawj-${VERSION}-TV-armeabi-v7a.apk"
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
           echo "" >> notes.txt
           echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt-id=${HAS_TRAKT_ID} trakt-secret=${HAS_TRAKT_SECRET} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            gh release upload "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" "Luxo-${VERSION}-armeabi-v7a-TV.apk" --clobber
+            gh release upload "v${VERSION}" "Mawj-${VERSION}-tablet-arm64-v8a.apk" "Mawj-${VERSION}-TV-armeabi-v7a.apk" --clobber
           else
-            gh release create "v${VERSION}" "Luxo-${VERSION}-arm64-v8a.apk" "Luxo-${VERSION}-armeabi-v7a-TV.apk" \
-              --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
+            gh release create "v${VERSION}" "Mawj-${VERSION}-tablet-arm64-v8a.apk" "Mawj-${VERSION}-TV-armeabi-v7a.apk" \
+              --title "موج ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
           fi
           # نخلي آخر 5 إصدارات بس
           gh release list --limit 100 --json tagName -q '[.[] | select(.tagName != "iphone")] | .[5:][].tagName' | while read -r tag; do
