@@ -105,7 +105,10 @@ fun AppGateViewController(
 private fun nuvioComposeViewController(
     content: @androidx.compose.runtime.Composable () -> Unit,
 ): UIViewController = ComposeUIViewController(
-    configure = { onFocusBehavior = OnFocusBehavior.DoNothing },
+    configure = {
+        onFocusBehavior = OnFocusBehavior.DoNothing
+        com.nuvio.app.features.luxo.luxoInstallIosCrashHook()
+    },
     content = content,
  ).apply {
     ProfileBiometricAuth.initialize(this)
