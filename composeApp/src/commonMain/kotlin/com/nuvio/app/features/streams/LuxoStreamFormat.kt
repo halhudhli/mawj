@@ -21,7 +21,17 @@ internal object LuxoStreamFormat {
     private val BITRATE = Regex("""(\d+(?:\.\d+)?)\s*(Mbps|Mb/s|kbps)""", RegexOption.IGNORE_CASE)
     private val DURATION = Regex("""\b(\d{1,2})h[: ]?(\d{1,2})m(?:[: ]?(\d{1,2})s)?\b""", RegexOption.IGNORE_CASE)
     private val SERVICE = Regex("""\b(TorBox|Real-?Debrid|RD|AllDebrid|AD|Premiumize|PM|Debrid-?Link|EasyDebrid|Offcloud)\b""", RegexOption.IGNORE_CASE)
-    private val FLAG = Regex("""[\x{1F1E6}-\x{1F1FF}]{2}""")
+    // Flag emoji = two regional-indicator symbols (U+1F1E6..U+1F1FF, i.e. \uD83C + \uDDE6..\uDDFF).
+    // Scanned by hand: `\x{…}` in a regex is Java-only and crashes the iPhone build.
+    private fun findFlags(text: String): List<String> {
+        fun indicator(at: Int) = at + 1 < text.length && text[at] == '\uD83C' && text[at + 1] in '\uDDE6'..'\uDDFF'
+        val out = mutableListOf<String>()
+        var i = 0
+        while (i < text.length) {
+            if (indicator(i) && indicator(i + 2)) { out += text.substring(i, i + 4); i += 4 } else i++
+        }
+        return out
+    }
 
     fun lines(stream: StreamItem): Lines? {
         val text = listOfNotNull(stream.name, stream.title, stream.description, stream.behaviorHints.filename)
@@ -46,7 +56,7 @@ internal object LuxoStreamFormat {
             Regex("""\bP2P\b""", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "P2P"
             else -> null
         }
-        val flags = FLAG.findAll(text).map { it.value }.distinct().joinToString(" ").ifBlank { null }
+        val flags = findFlags(text).distinct().joinToString(" ").ifBlank { null }
 
         val known = listOfNotNull(res, source, codec, size, audio.firstOrNull()).size
         if (known < 2) return null
