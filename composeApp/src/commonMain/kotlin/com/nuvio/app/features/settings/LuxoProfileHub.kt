@@ -138,7 +138,7 @@ internal fun rememberLuxoPassStats(): LuxoPassStats {
         // Finished titles rarely keep a position, so count a typical runtime for them.
         val hours = ((inProgressMs / 3_600_000L) + movies * 2 + (episodes * 45) / 60).toInt()
         val stamps = watched.items.map { it.markedAtEpochMs } + progress.entries.map { it.lastUpdatedEpochMs }
-        val days = stamps.filter { it > 0 }.map { it / DAY_MS }.toSortedSet()
+        val days = stamps.filter { it > 0 }.map { it / DAY_MS }.distinct().sorted()
         var streak = 0
         var best = 0
         var previous: Long? = null

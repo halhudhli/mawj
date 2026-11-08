@@ -88,7 +88,7 @@ fun LuxoOverlayHost() {
     LuxoOverlays.person?.let { pd ->
         androidx.compose.ui.window.Dialog(
             onDismissRequest = { LuxoOverlays.person = null },
-            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+            properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties(),
         ) {
             com.nuvio.app.features.details.LuxoPersonPage(initial = pd, onOpenMeta = { m -> LuxoOverlays.person = null; LuxoOverlays.openMeta(m) })
         }
@@ -105,7 +105,7 @@ fun LuxoOverlayHost() {
 private fun LuxoFranchiseDialog(startKey: String) {
     Dialog(
         onDismissRequest = { LuxoOverlays.franchise = null },
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties(),
     ) {
         var openKey by remember(startKey) { mutableStateOf(startKey.takeIf { it.isNotBlank() }) }
         val startedOnDetail = startKey.isNotBlank()

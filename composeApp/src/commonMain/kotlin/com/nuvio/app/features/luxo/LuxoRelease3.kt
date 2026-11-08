@@ -162,7 +162,7 @@ private fun LuxoScreensaver(onExit: () -> Unit) {
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     val drift = rememberInfiniteTransition(label = "saver")
     val zoom by drift.animateFloat(1f, 1.12f, infiniteRepeatable(tween(9_000, easing = LinearEasing), RepeatMode.Reverse), label = "zoom")
-    Dialog(onDismissRequest = onExit, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = onExit, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
         Box(
             Modifier
                 .fillMaxSize()

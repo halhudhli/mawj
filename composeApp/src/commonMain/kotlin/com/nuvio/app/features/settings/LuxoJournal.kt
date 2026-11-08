@@ -183,7 +183,7 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
             .sortedByDescending { it.sample.markedAtEpochMs }
     }
     val months = entries.groupBy { civilOf(it.day).let { c -> c.year * 100 + c.month } }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -480,7 +480,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
         progress.animateTo(1f, tween(5500, easing = LinearEasing))
         if (index < slides.lastIndex) index += 1
     }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
             Box(
                 Modifier

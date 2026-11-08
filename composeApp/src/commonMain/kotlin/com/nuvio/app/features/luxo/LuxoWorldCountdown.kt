@@ -171,7 +171,7 @@ internal object LuxoWorldCountdown {
                     tmdb = existing.tmdb ?: item.tmdb,
                     isAnime = existing.isAnime || item.isAnime,
                 )
-                ids.forEach { byIds.putIfAbsent(it, existing.key) }
+                ids.forEach { if (it !in byIds) byIds[it] = existing.key }
             }
         }
         _items.value = seen.values.filter { !isExcluded(it.country, it.language) }.sortedBy { it.airMs }

@@ -504,7 +504,7 @@ private fun LinkChip(label: String, onClick: () -> Unit) {
 internal fun LuxoImageViewer(images: List<LuxoImage>, start: Int, onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties(),
     ) {
         val pager = rememberPagerState(initialPage = start.coerceIn(0, (images.size - 1).coerceAtLeast(0))) { images.size }
         Box(Modifier.fillMaxSize().background(Color.Black)) {

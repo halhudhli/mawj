@@ -203,7 +203,7 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties(),
     ) {
         Box(
             modifier = Modifier

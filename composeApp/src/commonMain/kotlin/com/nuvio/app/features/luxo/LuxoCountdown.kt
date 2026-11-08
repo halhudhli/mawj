@@ -534,7 +534,7 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
     val visible = episodes.filter { selected == LuxoCountdownSections.ALL || sectionFor(it.item) == selected }
         .sortedBy { it.dateIso }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
 
         com.nuvio.app.features.luxo.LuxoIdleBusy()
         Box(

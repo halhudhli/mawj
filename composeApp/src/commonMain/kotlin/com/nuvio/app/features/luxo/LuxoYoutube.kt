@@ -42,7 +42,7 @@ fun LuxoYoutubeDialog(onDismiss: () -> Unit) {
     var webBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
     Dialog(
         onDismissRequest = { if (webBack?.invoke() != true) onDismiss() },
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties(),
     ) {
         Column(Modifier.fillMaxSize().background(Color(0xFF0F0F0F))) {
             Row(

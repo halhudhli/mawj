@@ -68,7 +68,7 @@ private fun MawjIdentSettingsBody() {
             kotlinx.coroutines.delay(s.durationMs + 600L)
             preview = null
         }
-        Dialog(onDismissRequest = { preview = null }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Dialog(onDismissRequest = { preview = null }, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
             Box(Modifier.fillMaxSize().clickable { preview = null }) { MawjIdent(s, Modifier.fillMaxSize(), replayKey = key) }
         }
     }
