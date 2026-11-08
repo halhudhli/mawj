@@ -147,6 +147,6 @@ jobs:
               --title "Luxo ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
           fi
           # نخلي آخر 5 إصدارات بس
-          gh release list --limit 100 --json tagName -q '.[5:][].tagName' | while read -r tag; do
+          gh release list --limit 100 --json tagName -q '[.[] | select(.tagName != "iphone")] | .[5:][].tagName' | while read -r tag; do
             gh release delete "$tag" --yes --cleanup-tag || true
           done

@@ -1,0 +1,108 @@
+name: Build Mawj iPhone IPA
+
+# نسخة الآيفون: ملف IPA بدون توقيع، يوقّعه Zeus / SideStore على الجوال.
+# تُنشر دائماً في إصدار ثابت اسمه «iphone» بملف واحد: Mawj-iPhone.ipa
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore: [ "AGENTS.md", "README.md", "docs/**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      GRADLE_OPTS: -Dfile.encoding=UTF-8
+      KOTLIN_DAEMON_JVMARGS: -Xmx1024M
+      NUVIO_GRADLE_JVMARGS: -Xmx2048M -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=768M -XX:+UseG1GC
+      NUVIO_KOTLIN_NATIVE_JVMARGS: -Xmx9216M -XX:+UseG1GC
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+      TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+      TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
+      SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+      MDBLIST_CLIENT_ID: ${{ secrets.MDBLIST_CLIENT_ID }}
+      OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+      PREMIUMIZE_CLIENT_ID: ${{ secrets.PREMIUMIZE_CLIENT_ID }}
+      INTRODB_API_URL: ${{ secrets.INTRODB_API_URL }}
+      LUXO_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN }}
+      LUXO_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Kotlin Native
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Version and Gradle memory
+        run: |
+          touch local.properties
+          printf 'CURRENT_PROJECT_VERSION=%s\nMARKETING_VERSION=1.0.%s\n' "$((1000 + ${{ github.run_number }}))" "${{ github.run_number }}" > iosApp/Configuration/Version.xcconfig
+          gradle_user_home="${GRADLE_USER_HOME:-${HOME}/.gradle}"
+          mkdir -p "${gradle_user_home}"
+          {
+            echo "org.gradle.jvmargs=${NUVIO_GRADLE_JVMARGS}"
+            echo "kotlin.daemon.jvmargs=${KOTLIN_DAEMON_JVMARGS}"
+            echo "kotlin.native.jvmArgs=${NUVIO_KOTLIN_NATIVE_JVMARGS}"
+            echo "org.gradle.parallel=false"
+            echo "org.gradle.workers.max=1"
+            echo "kotlin.native.disableCompilerDaemon=true"
+          } >> "${gradle_user_home}/gradle.properties"
+
+      - name: Prepare iOS dependencies
+        run: ./scripts/prepare-ios-dependencies.sh
+
+      - name: Build unsigned IPA
+        run: |
+          set -o pipefail
+          ./scripts/build-ios-ipa.sh 2>&1 | tee build.log
+
+      # أخطاء Kotlin وSwift تظهر كتنبيهات في صفحة البناء
+      - name: Report compile errors
+        if: failure()
+        run: |
+          grep -E '^e: |error: ' build.log | sed 's#.*/composeApp/src/#src/#; s#.*/iosApp/#iosApp/#' | sort -u | head -80 > errs.txt || true
+          split -l 8 errs.txt errpart_ || true
+          for f in errpart_*; do
+            [ -s "$f" ] && echo "::error::$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/%0A/g' "$f")"
+          done
+          grep -A12 'What went wrong' build.log | head -25 > wrong.txt || true
+          [ -s wrong.txt ] && echo "::error::$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/%0A/g' wrong.txt)" || true
+
+      - name: Publish to the «iphone» release
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="موج للآيفون — الإصدار 1.0.${{ github.run_number }}. ملف بدون توقيع، يُثبَّت عبر Zeus أو SideStore."
+          if gh release view iphone >/dev/null 2>&1; then
+            gh release upload iphone build/ios-ipa/Mawj-iPhone.ipa --clobber
+            gh release edit iphone --title "موج للآيفون" --notes "${notes}" --prerelease
+          else
+            gh release create iphone build/ios-ipa/Mawj-iPhone.ipa --title "موج للآيفون" --notes "${notes}" --prerelease --target "${{ github.sha }}"
+          fi
