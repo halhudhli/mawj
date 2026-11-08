@@ -17,14 +17,15 @@ permissions:
 
 jobs:
   ios:
-    runs-on: macos-26
-    timeout-minutes: 180
+    # The release link of the Kotlin framework needs ~10 GB of memory: the Intel runner has 14 GB,
+    # the Apple-silicon one only 7 GB (it ran out of memory there).
+    runs-on: macos-15-intel
+    timeout-minutes: 240
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       GRADLE_OPTS: -Dfile.encoding=UTF-8
       KOTLIN_DAEMON_JVMARGS: -Xmx1024M
       NUVIO_GRADLE_JVMARGS: -Xmx2048M -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=768M -XX:+UseG1GC
-      NUVIO_KOTLIN_NATIVE_JVMARGS: -Xmx9216M -XX:+UseG1GC
+      NUVIO_KOTLIN_NATIVE_JVMARGS: -Xmx10240M -XX:+UseG1GC
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
       MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
       TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
@@ -56,6 +57,12 @@ jobs:
 
       - name: Apple toolchain
         run: |
+          ls -d /Applications/Xcode*.app
+          xcode="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
+          [ -n "$xcode" ] || xcode="$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          echo "DEVELOPER_DIR=$xcode/Contents/Developer" >> "$GITHUB_ENV"
+          export DEVELOPER_DIR="$xcode/Contents/Developer"
+          sysctl -n hw.memsize
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
 
