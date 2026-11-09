@@ -114,3 +114,26 @@ jobs:
           else
             gh release create iphone build/ios-ipa/Mawj-iPhone.ipa --title "موج للآيفون والآيباد" --notes "${notes}" --prerelease --target "${{ github.sha }}"
           fi
+
+      # The same file also goes into the numbered release of this commit («موج 1.0.x»), next to the
+      # tablet and TV APKs, so every version is on one page. The fixed «iphone» link above stays for
+      # Zeus re-downloads. The in-app updater only looks at .apk files, so the IPA does not affect it.
+      - name: Add the IPA to the version release of this commit
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=""
+          for attempt in $(seq 1 20); do
+            tag=$(gh api "repos/${{ github.repository }}/releases?per_page=20" \
+              -q '[.[] | select(.target_commitish == "${{ github.sha }}" and .tag_name != "iphone")][0].tag_name // empty')
+            [ -n "$tag" ] && break
+            echo "Waiting for the APK release of this commit… ($attempt)"
+            sleep 60
+          done
+          if [ -z "$tag" ]; then
+            echo "::warning::No version release for this commit (the APK build may have failed); only the «iphone» link was updated."
+            exit 0
+          fi
+          gh release upload "$tag" build/ios-ipa/Mawj-iPhone.ipa --clobber
+          echo "Added Mawj-iPhone.ipa to $tag"
