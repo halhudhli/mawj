@@ -62,7 +62,9 @@ import org.jetbrains.skia.SamplingMode
 private const val MinFrameDurationMillis = 20
 private const val MaxCachedSourceBytes = 24L * 1024 * 1024
 private const val MaxConcurrentLoads = 6
-private const val IdleRetentionMillis = 2_000L
+// Mawj: cards scrolled off-screen keep their decoded frames longer, so swiping back does not
+// re-download and re-decode them (idle ones are still freed when memory is needed).
+private const val IdleRetentionMillis = 30_000L
 
 private const val MaxAnimationBudgetBytes = 120L * 1024 * 1024
 
@@ -446,6 +448,7 @@ private suspend fun acquireShared(url: String, targetWidth: Int, targetHeight: I
 
     val inFlight = pending[key] ?: registryScope.async {
         val bytes = fetchSourceBytes(url) ?: return@async null
+        freeIdleAnimations(MaxPerAnimationBytes)
         val remaining = MaxAnimationBudgetBytes - budgetUsedBytes
         if (remaining <= 0) return@async null
 
@@ -455,6 +458,7 @@ private suspend fun acquireShared(url: String, targetWidth: Int, targetHeight: I
 
         registry[key]?.let { return@async it }
 
+        if (budgetUsedBytes + animation.bytes > MaxAnimationBudgetBytes) freeIdleAnimations(animation.bytes)
         if (budgetUsedBytes + animation.bytes > MaxAnimationBudgetBytes) return@async null
 
         budgetUsedBytes += animation.bytes
@@ -504,6 +508,15 @@ private fun releaseShared(shared: SharedAnimation) {
     shared.idleEviction = registryScope.launch {
         delay(IdleRetentionMillis)
         evictIfIdle(shared.key)
+    }
+}
+
+/** Frees animations no card is showing (oldest first) until [neededBytes] fit in the budget. */
+private fun freeIdleAnimations(neededBytes: Long) {
+    if (MaxAnimationBudgetBytes - budgetUsedBytes >= neededBytes) return
+    for (key in registry.filterValues { it.refCount <= 0 }.keys.toList()) {
+        evictIfIdle(key)
+        if (MaxAnimationBudgetBytes - budgetUsedBytes >= neededBytes) return
     }
 }
 

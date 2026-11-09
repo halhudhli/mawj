@@ -49,6 +49,15 @@ internal actual fun NuvioAsyncImage(
                 modifier = Modifier.matchParentSize(),
                 contentScale = contentScale,
             )
+
+            // Mawj: while the animation is still downloading/decoding, show the still picture
+            // (first frame, from the normal image cache) instead of an empty card.
+            else -> AsyncImage(
+                model = imageUrl,
+                contentDescription = contentDescription,
+                modifier = Modifier.matchParentSize(),
+                contentScale = contentScale,
+            )
         }
     }
 }
