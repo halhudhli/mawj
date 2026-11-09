@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.util.AttributeSet
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -97,6 +98,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlin.math.abs
+import kotlin.math.PI
+import kotlin.math.sqrt
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -196,6 +199,7 @@ actual fun PlatformPlayerSurface(
         )
     }
 
+    SideEffect { LuxoAvRuntime.engineIsMpv = activeEngine == ResolvedAndroidPlaybackEngine.Libmpv }
     when (activeEngine) {
         ResolvedAndroidPlaybackEngine.ExoPlayer -> ExoPlayerSurface(
             sourceUrl = sourceUrl,
@@ -263,7 +267,9 @@ private enum class ResolvedAndroidPlaybackEngine {
 
 private fun AndroidPlaybackEngine.initialAndroidEngine(): ResolvedAndroidPlaybackEngine =
     when (this) {
-        AndroidPlaybackEngine.Auto,
+        // LUXO: «تحسين الصورة» options that only libmpv can do start the video with libmpv.
+        AndroidPlaybackEngine.Auto ->
+            if (LuxoAvRepository.wantsLibmpv()) ResolvedAndroidPlaybackEngine.Libmpv else ResolvedAndroidPlaybackEngine.ExoPlayer
         AndroidPlaybackEngine.ExoPlayer -> ResolvedAndroidPlaybackEngine.ExoPlayer
         AndroidPlaybackEngine.Libmpv -> ResolvedAndroidPlaybackEngine.Libmpv
     }
@@ -345,7 +351,10 @@ private fun ExoPlayerSurface(
     var chaptersProbeDone by remember(playerSourceKey) { mutableStateOf(false) }
     val effectiveDecoderPriority = decoderPriorityOverride ?: playerSettings.decoderPriority
     val volumeBoostAudioProcessor = remember(playerSourceKey) {
-        PlayerOutputAudioProcessor(stereoDownmixEnabled = !playerSettings.androidAudioPassthroughEnabled)
+        PlayerOutputAudioProcessor(
+            stereoDownmixEnabled = !playerSettings.androidAudioPassthroughEnabled &&
+                !(LuxoAvRuntime.spatialOn && luxoSystemSpatialUsable(context)),
+        )
     }
 
     var resolvedMediaItem by remember(playerSourceKey, externalSubtitles) {
@@ -844,6 +853,7 @@ private fun ExoPlayerSurface(
 
             override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
                 Log.d(TAG, "onTracksChanged: ${tracks.groups.size} groups total")
+                LuxoAvRuntime.videoFps = exoPlayer.videoFormat?.frameRate?.takeIf { it > 0f } ?: 0f
                 InAppLogger.info("ExoPlayer/Android", "tracksChanged groups=${tracks.groups.size}")
                 exoPlayer.logCurrentTracks("onTracksChanged")
                 exoPlayer.logSelectedPlaybackDetails("onTracksChanged")
@@ -1638,9 +1648,29 @@ private fun LibmpvPlayerSurface(
         playerViewRef?.applyResizeMode(resizeMode)
     }
 
-    // LUXO: dialogue / night audio for libmpv.
-    LaunchedEffect(playerViewRef, com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night) {
-        playerViewRef?.luxoApplyAudioFx(com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night)
+    // LUXO: dialogue / night audio, «تحسين الصوت» and «تحسين الصورة» for libmpv.
+    val luxoAvState by remember { LuxoAvRepository.ensureLoaded(); LuxoAvRepository.state }.collectAsState()
+    val luxoFeatures = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+    val luxoAv = remember(luxoAvState, luxoFeatures) { LuxoAvRepository.effective(luxoAvState) }
+    val luxoOutput = LuxoAvRuntime.outputName
+    LaunchedEffect(playerViewRef, com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, com.nuvio.app.features.luxo.LuxoAudioFx.night, luxoAv, luxoOutput) {
+        playerViewRef?.luxoApplyAudioFx(
+            com.nuvio.app.features.luxo.LuxoAudioFx.dialogue,
+            com.nuvio.app.features.luxo.LuxoAudioFx.night,
+            spatial = luxoAv.spatial,
+            levelling = luxoAv.levelling,
+            advanceMs = luxoAv.audioDelays[luxoOutput.orEmpty()] ?: 0,
+        )
+    }
+    LaunchedEffect(playerViewRef, luxoAv.smoothMotion, luxoAv.upscale, luxoAv.deband) {
+        playerViewRef?.luxoApplyPicture(luxoAv.smoothMotion, luxoAv.upscale, luxoAv.deband)
+    }
+    LaunchedEffect(playerViewRef) {
+        val view = playerViewRef ?: return@LaunchedEffect
+        while (isActive) {
+            LuxoAvRuntime.videoFps = view.luxoFps()
+            delay(2_000L)
+        }
     }
     // LUXO: picture colours through libmpv's own brightness/contrast/saturation/gamma.
     LuxoMpvColorEffect(
@@ -1840,15 +1870,71 @@ private class NuvioLibmpvView(
         executeMpv { setPausedNow(paused) }
     }
 
-    fun luxoApplyAudioFx(dialogue: Boolean, night: Boolean) {
+    fun luxoApplyAudioFx(dialogue: Boolean, night: Boolean, spatial: Boolean = false, levelling: Boolean = false, advanceMs: Int = 0) {
         executeMpv {
-            val filters = buildList {
+            val base = buildList {
                 // A speech-band lift works on any channel layout (a pan filter would fail on stereo files).
                 if (dialogue) add("lavfi=[equalizer=f=1800:t=q:w=1.2:g=6]")
                 if (night) add("lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=200:makeup=2]")
             }
-            mpv.setPropertyString("af", filters.joinToString(","))
+            val extra = buildList {
+                if (levelling) add("lavfi=[dynaudnorm=f=500:g=31:p=0.9:m=8]")
+                if (spatial) {
+                    add("lavfi=[extrastereo=m=1.35]")
+                    add("lavfi=[crossfeed=strength=0.3:range=0.6]")
+                }
+            }
+            // If this libmpv build lacks one of the newer filters, keep at least the older ones.
+            val applied = runCatching { mpv.setPropertyString("af", (base + extra).joinToString(",")) }.isSuccess
+            if (!applied) runCatching { mpv.setPropertyString("af", base.joinToString(",")) }
+            // Positive «تقديم الصوت» = audio earlier (mpv: a negative audio-delay).
+            runCatching { mpv.setPropertyString("audio-delay", (-advanceMs / 1000.0).toString()) }
         }
+    }
+
+    /** «تحسين الصورة»: smooth motion, upscaling (sharp scaler / Anime4K) and deband. */
+    fun luxoApplyPicture(smoothMotion: Boolean, upscale: Int, deband: Boolean) {
+        executeMpv {
+            runCatching {
+                if (smoothMotion) {
+                    mpv.setPropertyString("video-sync", "display-resample")
+                    mpv.setPropertyString("tscale", "oversample")
+                    mpv.setPropertyString("interpolation", "yes")
+                } else {
+                    mpv.setPropertyString("interpolation", "no")
+                    mpv.setPropertyString("video-sync", "audio")
+                }
+            }
+            runCatching { mpv.setPropertyString("deband", if (deband) "yes" else "no") }
+            runCatching {
+                val shaders = when (upscale) {
+                    2 -> luxoShaderPaths(LUXO_ANIME4K_LIGHT)
+                    3 -> luxoShaderPaths(LUXO_ANIME4K_STRONG)
+                    else -> emptyList()
+                }
+                mpv.setPropertyString("scale", if (upscale == 1) "ewa_lanczossharp" else "bilinear")
+                mpv.setPropertyString("glsl-shaders", shaders.joinToString(":"))
+            }
+        }
+    }
+
+    /** Copies the bundled Anime4K shaders out of the APK once and returns their paths. */
+    private fun luxoShaderPaths(names: List<String>): List<String> {
+        val dir = File(context.filesDir, "luxo_shaders").apply { mkdirs() }
+        return names.mapNotNull { name ->
+            val file = File(dir, name)
+            if (!file.exists() || file.length() == 0L) {
+                runCatching { context.assets.open("luxo_shaders/$name").use { input -> file.outputStream().use { input.copyTo(it) } } }
+            }
+            file.takeIf { it.exists() && it.length() > 0L }?.absolutePath
+        }
+    }
+
+    suspend fun luxoFps(): Float = withContext(mpvDispatcher) {
+        if (released.get()) return@withContext 0f
+        val fps = runCatching { mpv.getPropertyDouble("container-fps") }.getOrNull()
+            ?: runCatching { mpv.getPropertyDouble("estimated-vf-fps") }.getOrNull()
+        (fps ?: 0.0).toFloat().takeIf { it.isFinite() && it > 0f } ?: 0f
     }
 
     fun luxoApplyColors(values: LuxoColorValues) {
@@ -3275,6 +3361,18 @@ private class PlayerOutputAudioProcessor(
 
     private var downmix = false
     private var luxoEnvelope = 0f
+    // LUXO «توحيد مستوى الصوت»: slow loudness follower and its smoothed gain.
+    private var luxoMeanSquare = 0.01f
+    private var luxoLevelGain = 1f
+    private var luxoLevelMeasure = 0f
+    private var luxoLevelGlide = 0f
+    // LUXO «صوت محيطي للسماعات»: crossfeed (opposite ear, low-passed, ~0.3 ms later).
+    private val luxoCrossDelay = FloatArray(2 * LUXO_CROSS_DELAY_MAX)
+    private var luxoCrossIndex = 0
+    private var luxoCrossDelayFrames = 14
+    private var luxoLowLeft = 0f
+    private var luxoLowRight = 0f
+    private var luxoLowCoefficient = 0.2f
     private var limiterGain = 1f
     private var releaseCoefficient = 0f
     private val frame = FloatArray(MAX_CHANNELS)
@@ -3285,6 +3383,11 @@ private class PlayerOutputAudioProcessor(
         if (channels <= 0 || channels > MAX_CHANNELS) return AudioProcessor.AudioFormat.NOT_SET
         downmix = stereoDownmixEnabled && (channels == 6 || channels == 8)
         releaseCoefficient = 1f - exp(-1f / (LIMITER_RELEASE_SECONDS * inputAudioFormat.sampleRate))
+        val rate = inputAudioFormat.sampleRate.coerceAtLeast(8000).toFloat()
+        luxoLevelMeasure = 1f - exp(-1f / (3f * rate))
+        luxoLevelGlide = 1f - exp(-1f / (1.5f * rate))
+        luxoCrossDelayFrames = (0.0003f * rate).roundToInt().coerceIn(1, LUXO_CROSS_DELAY_MAX - 1)
+        luxoLowCoefficient = 1f - exp(-2f * PI.toFloat() * 700f / rate)
         return if (downmix) {
             AudioProcessor.AudioFormat(inputAudioFormat.sampleRate, 2, C.ENCODING_PCM_16BIT)
         } else {
@@ -3302,8 +3405,10 @@ private class PlayerOutputAudioProcessor(
         // LUXO: «توضيح الحوار» (centre / mid lifted) and «صوت ليلي» (loud peaks tamed, quiet parts lifted).
         val dialogueFx = com.nuvio.app.features.luxo.LuxoAudioFx.dialogueOn
         val nightFx = com.nuvio.app.features.luxo.LuxoAudioFx.nightOn
+        val spatialFx = LuxoAvRuntime.spatialOn && outputChannels == 2
+        val levelFx = LuxoAvRuntime.levellingOn
 
-        if (!downmix && gain == 1f && limiterGain >= 1f && !dialogueFx && !nightFx) {
+        if (!downmix && gain == 1f && limiterGain >= 1f && !dialogueFx && !nightFx && !spatialFx && !levelFx) {
             val bytes = frames * inputChannels * 2
             val slice = input.duplicate()
             slice.limit(slice.position() + bytes)
@@ -3329,6 +3434,16 @@ private class PlayerOutputAudioProcessor(
                     val compressed = if (env > threshold) (threshold + (env - threshold) / 4f) / env else 1f
                     val nightGain = compressed * 1.6f
                     for (channel in 0 until outputChannels) frame[channel] *= nightGain
+                }
+                if (spatialFx) luxoHeadphoneSurround()
+                if (levelFx) {
+                    var energy = 0f
+                    for (channel in 0 until outputChannels) energy += frame[channel] * frame[channel]
+                    luxoMeanSquare += (energy / outputChannels - luxoMeanSquare) * luxoLevelMeasure
+                    // Target ≈ −20 dBFS RMS, between −6 dB and +10 dB of change; silence is left alone.
+                    val target = if (luxoMeanSquare < 1e-6f) luxoLevelGain else (0.1f / sqrt(luxoMeanSquare)).coerceIn(0.5f, 3.2f)
+                    luxoLevelGain += (target - luxoLevelGain) * luxoLevelGlide
+                    for (channel in 0 until outputChannels) frame[channel] *= luxoLevelGain
                 }
                 var peak = 0f
                 for (channel in 0 until outputChannels) {
@@ -3362,6 +3477,26 @@ private class PlayerOutputAudioProcessor(
         }
     }
 
+    /** Wider stereo plus crossfeed, so headphones sound like speakers around the listener. */
+    private fun luxoHeadphoneSurround() {
+        val left = frame[0]
+        val right = frame[1]
+        val mid = (left + right) * 0.5f
+        val side = (left - right) * 0.5f * 1.35f
+        val wideLeft = mid + side
+        val wideRight = mid - side
+        luxoLowLeft += (wideLeft - luxoLowLeft) * luxoLowCoefficient
+        luxoLowRight += (wideRight - luxoLowRight) * luxoLowCoefficient
+        val read = ((luxoCrossIndex - luxoCrossDelayFrames + LUXO_CROSS_DELAY_MAX) % LUXO_CROSS_DELAY_MAX) * 2
+        val delayedLeft = luxoCrossDelay[read]
+        val delayedRight = luxoCrossDelay[read + 1]
+        luxoCrossDelay[luxoCrossIndex * 2] = luxoLowLeft
+        luxoCrossDelay[luxoCrossIndex * 2 + 1] = luxoLowRight
+        luxoCrossIndex = (luxoCrossIndex + 1) % LUXO_CROSS_DELAY_MAX
+        frame[0] = (wideLeft + delayedRight * 0.3f) * 0.85f
+        frame[1] = (wideRight + delayedLeft * 0.3f) * 0.85f
+    }
+
     private fun downmixToStereo(channels: Int) {
         val frontLeft = frame[0]
         val frontRight = frame[1]
@@ -3387,6 +3522,7 @@ private class PlayerOutputAudioProcessor(
 
     private companion object {
         const val MAX_CHANNELS = 8
+        const val LUXO_CROSS_DELAY_MAX = 64
         const val SHORT_SCALE = 32768f
         const val LIMITER_CEILING = 0.94f
         const val LIMITER_RELEASE_SECONDS = 0.15f
@@ -3754,4 +3890,30 @@ private fun Format.hdrFormats(): List<String> = buildList {
         C.COLOR_TRANSFER_ST2084 -> add("HDR10")
         C.COLOR_TRANSFER_HLG -> add("HLG")
     }
+}
+
+
+// LUXO «تحسين الصورة»: Anime4K (MIT, bundled in assets/luxo_shaders) — light and strong chains.
+private val LUXO_ANIME4K_LIGHT = listOf(
+    "Anime4K_Clamp_Highlights.glsl",
+    "Anime4K_Restore_CNN_S.glsl",
+    "Anime4K_Upscale_CNN_x2_S.glsl",
+    "Anime4K_AutoDownscalePre_x2.glsl",
+)
+private val LUXO_ANIME4K_STRONG = listOf(
+    "Anime4K_Clamp_Highlights.glsl",
+    "Anime4K_Restore_CNN_M.glsl",
+    "Anime4K_Upscale_CNN_x2_M.glsl",
+    "Anime4K_AutoDownscalePre_x2.glsl",
+)
+
+/** True when Android can spatialize multichannel sound for the connected headphones (Android 12L+). */
+private fun luxoSystemSpatialUsable(context: Context): Boolean {
+    if (android.os.Build.VERSION.SDK_INT < 32) return false
+    return runCatching {
+        val manager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+        val spatializer = manager.spatializer
+        spatializer.immersiveAudioLevel != android.media.Spatializer.SPATIALIZER_IMMERSIVE_LEVEL_NONE &&
+            spatializer.isAvailable && spatializer.isEnabled
+    }.getOrDefault(false)
 }

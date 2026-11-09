@@ -20,6 +20,8 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ListAlt
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.Gif
 import androidx.compose.material.icons.rounded.Tv
@@ -237,6 +239,12 @@ internal fun PlayerControlActions(
         },
         LuxoPlayerBridge.onColorsClick?.let {
             PlayerControlAction("ألوان الصورة", it, icon = Icons.Rounded.Palette)
+        },
+        LuxoPlayerBridge.onPictureClick?.let {
+            PlayerControlAction("تحسين الصورة", it, icon = Icons.Rounded.AutoFixHigh)
+        },
+        LuxoPlayerBridge.onSoundClick?.let {
+            PlayerControlAction("تحسين الصوت", it, icon = Icons.Rounded.GraphicEq)
         },
         LuxoPlayerBridge.onTranslateSubtitlesClick?.let {
             PlayerControlAction(LuxoPlayerBridge.translateLabel, it, icon = Icons.Rounded.Translate)

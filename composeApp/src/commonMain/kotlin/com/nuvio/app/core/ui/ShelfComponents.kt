@@ -1,5 +1,6 @@
 package com.nuvio.app.core.ui
 
+import com.nuvio.app.features.luxo.luxoPosterMotion
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -214,7 +215,7 @@ fun NuvioPosterCard(
                 AsyncImage(
                     model = imageModel,
                     contentDescription = title,
-                    modifier = Modifier.matchParentSize(),
+                    modifier = Modifier.matchParentSize().luxoPosterMotion(title.hashCode()),
                     contentScale = ContentScale.Crop,
                     onError = { imageFailed = true },
                     onSuccess = { imageFailed = false },

@@ -209,6 +209,14 @@ data class LuxoFeatures(
     val companyHall: Boolean = true,
     /** Animated catalog cards */
     val animatedCatalog: Boolean = true,
+    /** Stream cards: the add-on's text tidied into four short lines (off = the add-on's full text). */
+    val compactStreamInfo: Boolean = false,
+    /** Calm motion and a passing sheen on poster cards. */
+    val posterMotion: Boolean = true,
+    /** Player «تحسين الصورة» panel (refresh-rate matching, smooth motion, upscaling, deband). */
+    val picturePack: Boolean = true,
+    /** Player «تحسين الصوت» panel (headphone surround, levelling, Bluetooth delay). */
+    val soundPack: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

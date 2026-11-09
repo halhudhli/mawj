@@ -1,5 +1,6 @@
 package com.nuvio.app
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -45,7 +46,10 @@ fun App(
     appGateController: AppGateController? = null,
 ) {
     AppEnvironment {
-      androidx.compose.foundation.layout.Box(com.nuvio.app.features.luxo.luxoIdleWatcher()) {
+      androidx.compose.foundation.layout.Box(
+          com.nuvio.app.features.luxo.luxoIdleWatcher()
+              .nestedScroll(com.nuvio.app.features.luxo.LuxoMotionScroll.connection),
+      ) {
         AppGate(
             initialTab = initialTab,
             initialRoute = initialRoute,

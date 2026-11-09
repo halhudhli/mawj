@@ -170,6 +170,26 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.companyHall }, { f, v -> f.copy(companyHall = v) },
         ),
         LuxoFeatureSwitch(
+            lx("عرض مختصر لبيانات المصدر 🧾", "Compact stream details 🧾"),
+            lx("تختصر بطاقة المصدر نص الإضافة في أربعة أسطر: الدقة، والصورة، والصوت، والحجم. عند الإيقاف يظهر نص الإضافة كاملاً", "Stream cards show four short lines instead of the add-on's full text"),
+            { it.compactStreamInfo }, { f, v -> f.copy(compactStreamInfo = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حركة البوسترات ✨", "Poster motion ✨"),
+            lx("البوسترات الظاهرة على الشاشة تقترب وتبتعد بهدوء وتعبرها لمعة خفيفة، وتتوقف الحركة أثناء التمرير", "Visible posters drift gently with a passing sheen; motion pauses while scrolling"),
+            { it.posterMotion }, { f, v -> f.copy(posterMotion = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تحسين الصورة في المشغل 🎬", "Picture enhancements 🎬"),
+            lx("في قائمة المشغل: مطابقة سرعة الشاشة مع الفيلم، ونعومة الحركة، وتحسين الدقة (Anime4K)، وإزالة التكتل", "Player menu: refresh-rate matching, smooth motion, upscaling (Anime4K) and deband"),
+            { it.picturePack }, { f, v -> f.copy(picturePack = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("تحسين الصوت في المشغل 🎧", "Sound enhancements 🎧"),
+            lx("في قائمة المشغل: صوت محيطي للسماعات، وتوحيد مستوى الصوت بين المصادر، وتعويض تأخير سماعات البلوتوث لكل سماعة", "Player menu: headphone surround, loudness levelling and per-headset Bluetooth delay"),
+            { it.soundPack }, { f, v -> f.copy(soundPack = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("الكتالوج المتحرك 🎞️", "الكتالوج المتحرك 🎞️"),
             lx("بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار", "بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار"),
             { it.animatedCatalog }, { f, v -> f.copy(animatedCatalog = v) },

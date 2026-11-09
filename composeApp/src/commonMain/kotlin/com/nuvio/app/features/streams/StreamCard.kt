@@ -152,7 +152,9 @@ internal fun StreamCard(
                 }
             }
 
-            val luxoLines = remember(stream) { LuxoStreamFormat.lines(stream) }
+            // Off by default: the card shows the add-on's own full text, as the add-on wrote it.
+            val luxoCompact = com.nuvio.app.features.luxo.rememberLuxoFeatures().compactStreamInfo
+            val luxoLines = remember(stream, luxoCompact) { if (luxoCompact) LuxoStreamFormat.lines(stream) else null }
             val subtitle = stream.streamSubtitle
             if (luxoLines != null) {
                 LuxoStreamLines(luxoLines)

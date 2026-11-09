@@ -16,6 +16,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,8 @@ import kotlinx.coroutines.delay
  * show their buttons; only one player exists at a time, so a single shared holder is enough.
  */
 internal object LuxoPlayerBridge {
+    var onPictureClick by mutableStateOf<(() -> Unit)?>(null)
+    var onSoundClick by mutableStateOf<(() -> Unit)?>(null)
     var sleepLabel by mutableStateOf<String?>(null)
     var onSleepTimerClick by mutableStateOf<(() -> Unit)?>(null)
     var onCompanionClick by mutableStateOf<(() -> Unit)?>(null)
@@ -195,6 +198,33 @@ internal fun LuxoPlayerExtrasHost(
             onDismiss = { sceneShot = null },
         )
     }
+    // «تحسين الصورة» / «تحسين الصوت» — Android (tablet) first.
+    var pictureOpen by remember { mutableStateOf(false) }
+    var soundOpen by remember { mutableStateOf(false) }
+    val avPlatform = com.nuvio.app.features.luxo.luxoIsAndroidPlatform()
+    DisposableEffect(features.picturePack, features.soundPack, avPlatform) {
+        LuxoPlayerBridge.onPictureClick = if (avPlatform && features.picturePack) ({ pictureOpen = true }) else null
+        LuxoPlayerBridge.onSoundClick = if (avPlatform && features.soundPack) ({ soundOpen = true }) else null
+        LuxoAvRepository.refreshRuntimeFlags()
+        onDispose {
+            LuxoPlayerBridge.onPictureClick = null
+            LuxoPlayerBridge.onSoundClick = null
+        }
+    }
+    if (avPlatform && features.picturePack) LuxoPicturePanel(visible = pictureOpen, onDismiss = { pictureOpen = false })
+    if (avPlatform && features.soundPack) LuxoSoundPanel(visible = soundOpen, onDismiss = { soundOpen = false })
+    val avSettings by androidx.compose.runtime.remember { LuxoAvRepository.ensureLoaded(); LuxoAvRepository.state }.collectAsState()
+    if (avPlatform && features.picturePack && avSettings.matchRefresh) {
+        com.nuvio.app.features.luxo.LuxoFrameRateMatch(LuxoAvRuntime.videoFps)
+    }
+    LaunchedEffect(avPlatform) {
+        if (!avPlatform) return@LaunchedEffect
+        while (true) {
+            LuxoAvRuntime.outputName = com.nuvio.app.features.luxo.luxoAudioOutputName()
+            delay(3_000L)
+        }
+    }
+    DisposableEffect(Unit) { onDispose { LuxoAvRuntime.videoFps = 0f } }
     DisposableEffect(features.videoColors) {
         LuxoPlayerBridge.onColorsClick = if (features.videoColors) ({ colorsOpen = true }) else null
         onDispose { LuxoPlayerBridge.onColorsClick = null }
