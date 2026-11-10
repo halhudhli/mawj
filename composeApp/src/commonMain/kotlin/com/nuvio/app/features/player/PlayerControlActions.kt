@@ -368,6 +368,12 @@ internal fun PlayerControlActions(
     LaunchedEffect(expanded, scrollState.maxValue) {
         if (expanded) scrollState.animateScrollTo(scrollState.maxValue) else scrollState.scrollTo(0)
     }
+    // Mawj: dragging the strip (or opening its extra buttons) counts as activity, so the controls
+    // do not hide while the buttons are being browsed.
+    LaunchedEffect(scrollState, expanded) {
+        androidx.compose.runtime.snapshotFlow { scrollState.value to scrollState.isScrollInProgress }
+            .collect { onInteraction() }
+    }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = PlayerTimelineContentInset),

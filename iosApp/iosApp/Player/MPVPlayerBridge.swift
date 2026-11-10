@@ -705,6 +705,9 @@ final class MPVPlayerViewController: UIViewController {
         setSetupOption("gpu-api", "vulkan")
         setSetupOption("gpu-context", "moltenvk")
         setSetupOption("hwdec", "videotoolbox")
+        // Mawj: subtitle files that are not valid UTF-8 are read as Arabic Windows-1256 instead of
+        // turning into unreadable symbols. UTF-8 files are unaffected.
+        setSetupOption("sub-codepage", "+cp1256")
         setSetupOption("hwdec-software-fallback", "300")
         setSetupOption("ao", Self.defaultAudioOutput)
         setSetupOption("audio-exclusive", "yes")

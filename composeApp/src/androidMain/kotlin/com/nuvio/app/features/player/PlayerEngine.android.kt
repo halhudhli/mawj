@@ -1229,7 +1229,16 @@ private fun ExoPlayerSurface(
                             "external subtitle resolved mime=$resolvedMime positionMs=$currentPosition wasPlaying=$wasPlaying",
                         )
                         Log.d(TAG, "setSubtitleUri: currentPosition=$currentPosition, wasPlaying=$wasPlaying")
-                        val subtitleConfig = MediaItem.SubtitleConfiguration.Builder(Uri.parse(url))
+                        // LUXO: ExoPlayer reads text subtitles as UTF-8 only. Legacy encodings (Arabic
+                        // Windows-1256 above all) are detected and rewritten as UTF-8 first.
+                        val luxoSubtitleUri = luxoUtf8SubtitleUri(
+                            context = context,
+                            url = url,
+                            headers = externalSubtitles.firstOrNull { it.url == url }?.headers.orEmpty(),
+                            languageHint = externalSubtitles.firstOrNull { it.url == url }?.language,
+                            mimeType = resolvedMime,
+                        )
+                        val subtitleConfig = MediaItem.SubtitleConfiguration.Builder(luxoSubtitleUri)
                             .setMimeType(resolvedMime)
                             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
                             .setRoleFlags(C.ROLE_FLAG_SUBTITLE)
@@ -1768,6 +1777,8 @@ private class NuvioLibmpvView(
         setVo(videoOutput.mpvValue)
         mpv.setOptionString("profile", "fast")
         mpv.setOptionString("hwdec", if (hardwareDecodingEnabled) "auto" else "no")
+        // LUXO: subtitle files that are not valid UTF-8 are read as Arabic Windows-1256.
+        runCatching { mpv.setOptionString("sub-codepage", "+cp1256") }
         if (yuv420pEnabled) {
             mpv.setOptionString("vf", "format=yuv420p")
         }
@@ -3916,4 +3927,63 @@ private fun luxoSystemSpatialUsable(context: Context): Boolean {
         spatializer.immersiveAudioLevel != android.media.Spatializer.SPATIALIZER_IMMERSIVE_LEVEL_NONE &&
             spatializer.isAvailable && spatializer.isEnabled
     }.getOrDefault(false)
+}
+
+
+/**
+ * Downloads a text subtitle, detects its encoding (UTF-8 / UTF-16 / Windows-1256 and the other
+ * legacy code pages) and stores it as UTF-8, because ExoPlayer assumes UTF-8. Any failure, a
+ * non-text format or a file above 8 MB returns the original address untouched.
+ */
+private suspend fun luxoUtf8SubtitleUri(
+    context: Context,
+    url: String,
+    headers: Map<String, String>,
+    languageHint: String?,
+    mimeType: String?,
+): Uri {
+    val original = Uri.parse(url)
+    val isText = mimeType == MimeTypes.APPLICATION_SUBRIP || mimeType == MimeTypes.TEXT_VTT || mimeType == MimeTypes.TEXT_SSA
+    if (!isText || !(url.startsWith("http://") || url.startsWith("https://"))) return original
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 10_000
+                readTimeout = 15_000
+                instanceFollowRedirects = true
+                headers.forEach { (name, value) -> setRequestProperty(name, value) }
+            }
+            try {
+                if (connection.responseCode !in 200..299) return@runCatching original
+                val bytes = connection.inputStream.use { input ->
+                    val out = java.io.ByteArrayOutputStream()
+                    val buffer = ByteArray(16 * 1024)
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read < 0) break
+                        out.write(buffer, 0, read)
+                        if (out.size() > 8 * 1024 * 1024) return@runCatching original
+                    }
+                    out.toByteArray()
+                }
+                // Compressed or binary answers are left to ExoPlayer.
+                if (bytes.size < 4 || (bytes[0] == 0x1F.toByte() && bytes[1] == 0x8B.toByte()) || (bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte())) {
+                    return@runCatching original
+                }
+                val text = com.nuvio.app.features.autosync.SubtitleCharsetDetector.decode(bytes, languageHint = languageHint)
+                val extension = when (mimeType) {
+                    MimeTypes.TEXT_VTT -> "vtt"
+                    MimeTypes.TEXT_SSA -> "ass"
+                    else -> "srt"
+                }
+                val dir = File(context.cacheDir, "luxo_subtitles").apply { mkdirs() }
+                dir.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 24L * 60 * 60 * 1000 }?.forEach { it.delete() }
+                val file = File(dir, "${url.hashCode().toUInt().toString(16)}.$extension")
+                file.writeText(text, Charsets.UTF_8)
+                Uri.fromFile(file)
+            } finally {
+                connection.disconnect()
+            }
+        }.getOrDefault(original)
+    }
 }
