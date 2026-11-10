@@ -5,6 +5,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import com.nuvio.app.core.ui.nuvio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -74,10 +76,13 @@ private fun HomeCatalogRowSectionContent(
     onPosterFocused: ((MetaPreview) -> Unit)? = null,
 ) {
     val posterCardStyle = rememberPosterCardStyleUiState()
+    // Mawj «أفضل 10»: popular / trending rows become a ranked row of ten.
+    val ranked = com.nuvio.app.features.luxo.rememberLuxoFeatures().top10Rank && luxoIsRankedTitle(section.title) && entries.size >= 5
+    val shownEntries = if (ranked) entries.take(10) else entries
 
     NuvioShelfSection(
         title = section.title,
-        entries = entries,
+        entries = shownEntries,
         modifier = modifier,
         headerHorizontalPadding = sectionPadding,
         rowContentPadding = PaddingValues(horizontal = sectionPadding),
@@ -85,7 +90,17 @@ private fun HomeCatalogRowSectionContent(
         viewAllPillSize = NuvioViewAllPillSize.Compact,
         key = { item -> item.stableKey() },
     ) { item ->
-        HomePosterCard(
+        val rank = if (ranked) shownEntries.indexOf(item) + 1 else 0
+        if (rank > 0) androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+            LuxoRankNumber(rank)
+            HomePosterCard(
+                item = item,
+                useLandscapeBackdropMode = false,
+                isWatched = WatchingState.isPosterWatched(watchedKeys = watchedKeys, item = item, fullyWatchedSeriesKeys = fullyWatchedSeriesKeys),
+                onClick = onPosterClick?.let { { it(item) } },
+                onLongClick = onPosterLongClick?.let { { it(item) } },
+            )
+        } else HomePosterCard(
             item = item,
             modifier = Modifier.onFocusChanged { focusState ->
                 if (focusState.hasFocus) {
@@ -100,6 +115,31 @@ private fun HomeCatalogRowSectionContent(
             ),
             onClick = onPosterClick?.let { { it(item) } },
             onLongClick = onPosterLongClick?.let { { it(item) } },
+        )
+    }
+}
+
+
+private fun luxoIsRankedTitle(title: String): Boolean {
+    val t = title.lowercase()
+    return listOf("popular", "trending", "top 10", "top10", "الأكثر شعبية", "الأكثر مشاهدة", "الرائج", "رائج", "شائع", "أفضل 10").any { it in t }
+}
+
+/** The big outlined rank number that sits behind and beside the poster, like a «Top 10» row. */
+@Composable
+private fun LuxoRankNumber(rank: Int) {
+    val color = androidx.compose.material3.MaterialTheme.nuvio.colors.textPrimary
+    androidx.compose.foundation.layout.Box(Modifier.offset(x = Dp(if (rank >= 10) 0f else 6f))) {
+        androidx.compose.material3.Text(
+            rank.toString(),
+            fontSize = androidx.compose.ui.unit.TextUnit(96f, androidx.compose.ui.unit.TextUnitType.Sp),
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+            color = color.copy(alpha = 0.9f),
+            style = androidx.compose.ui.text.TextStyle(
+                drawStyle = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f),
+                lineHeight = androidx.compose.ui.unit.TextUnit(88f, androidx.compose.ui.unit.TextUnitType.Sp),
+            ),
+            maxLines = 1,
         )
     }
 }

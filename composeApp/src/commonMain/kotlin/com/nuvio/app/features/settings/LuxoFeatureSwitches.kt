@@ -190,6 +190,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("أفضل 10 بالأرقام 🔟", "Top 10 numbers 🔟"),
+            lx("صفوف الأكثر شعبية والرائج تعرض أول عشرة أعمال برقم كبير خلف كل بوستر", "Popular and trending rows show their first ten with a big rank number"),
+            { it.top10Rank }, { f, v -> f.copy(top10Rank = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("ترجمة من ملف 📄", "Subtitle from file 📄"),
             lx("زر في قائمة المشغل لاختيار ملف ترجمة من الجهاز (srt أو vtt أو ass)، ويُكتشف ترميز الملف تلقائياً", "Player menu button to load a subtitle file from the device; its encoding is detected automatically"),
             { it.subtitleFromFile }, { f, v -> f.copy(subtitleFromFile = v) },

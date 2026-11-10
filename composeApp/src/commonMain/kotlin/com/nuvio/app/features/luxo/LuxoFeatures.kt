@@ -219,6 +219,8 @@ data class LuxoFeatures(
     val soundPack: Boolean = true,
     /** Player action «ترجمة من ملف»: load a subtitle file from the device. */
     val subtitleFromFile: Boolean = true,
+    /** «أفضل 10»: popular / trending rows show their first ten with big rank numbers. */
+    val top10Rank: Boolean = true,
 )
 
 object LuxoFeaturesRepository {
