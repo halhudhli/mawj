@@ -1,5 +1,6 @@
 package com.nuvio.app.features.library
 
+import com.nuvio.app.core.ui.background.appBackgroundCover
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.animation.Crossfade
@@ -664,7 +665,7 @@ fun LibraryScreen(
                                 Box(
                                     modifier = Modifier
                                         .matchParentSize()
-                                        .background(MaterialTheme.colorScheme.background)
+                                        .appBackgroundCover(MaterialTheme.colorScheme.background)
                                         .nuvioConsumePointerEvents(),
                                 )
                                 LibrarySavedControls(
