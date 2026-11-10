@@ -116,6 +116,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 private const val TAG = "NuvioPlayer"
 private const val PLAYER_DIAGNOSTIC_TAG = "NuvioPlayerDiag"
@@ -389,6 +390,8 @@ private fun ExoPlayerSurface(
             }
             .let { factory -> aiostreamsAss?.extractors(factory) ?: factory }
     }
+    val networkBytesRead = remember(playerSourceKey) { AtomicLong(0L) }
+    val networkSpeedSampler = remember(playerSourceKey) { ByteRateSampler() }
     val dataSourceFactory = remember(
         context,
         sourceUrl,
@@ -416,7 +419,7 @@ private fun ExoPlayerSurface(
                     }
                     .toSet()
             },
-        )
+        ).countingNetworkBytes(networkBytesRead)
     }
 
     LaunchedEffect(playerSourceKey) {
@@ -1020,6 +1023,9 @@ private fun ExoPlayerSurface(
 
                 private var cachedAudioTracksSource: androidx.media3.common.Tracks? = null
                 private var cachedAudioTracks: List<AudioTrack> = emptyList()
+
+                override fun networkSpeedBytesPerSecond(): Long? =
+                    networkSpeedSampler.sample(networkBytesRead.get(), SystemClock.elapsedRealtime())
 
                 override fun play() {
                     InAppLogger.debug("ExoPlayer/Android", "control play positionMs=${exoPlayer.currentPosition.coerceAtLeast(0L)}")
@@ -1993,6 +1999,9 @@ private class NuvioLibmpvView(
         }
     }
 
+    @Volatile
+    private var cacheSpeedBytesPerSecond: Long? = null
+
     private var cachedChapters: List<PlayerChapter> = emptyList()
     private var cachedChaptersKey: String? = null
 
@@ -2003,6 +2012,9 @@ private class NuvioLibmpvView(
         val ended = mpv.getPropertyBoolean("eof-reached") ?: false
         val seeking = mpv.getPropertyBoolean("seeking") ?: false
         val cacheBufferingState = mpv.getPropertyInt("cache-buffering-state")
+        cacheSpeedBytesPerSecond = mpv.getPropertyInt("cache-speed")
+            ?.takeIf { it >= 0 }
+            ?.toLong()
         val durationMs = mpv.getPropertyDouble("duration").toMillis()
         val positionMs = mpv.getPropertyDouble("time-pos").toMillis()
         val cachePositionMs = mpv.getPropertyDouble("demuxer-cache-time").toMillis()
@@ -2228,6 +2240,8 @@ private class NuvioLibmpvView(
     ): PlayerEngineController =
         object : PlayerEngineController {
             override val playbackEngine = AndroidPlaybackEngine.Libmpv
+
+            override fun networkSpeedBytesPerSecond(): Long? = cacheSpeedBytesPerSecond
 
             private var lastAppliedVolume: Float? = null
             private var lastLoggedAudioTracks: String? = null

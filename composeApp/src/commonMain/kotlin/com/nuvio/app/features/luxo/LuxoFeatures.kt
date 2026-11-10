@@ -217,6 +217,8 @@ data class LuxoFeatures(
     val picturePack: Boolean = true,
     /** Player «تحسين الصوت» panel (headphone surround, levelling, Bluetooth delay). */
     val soundPack: Boolean = true,
+    /** Player action «ترجمة من ملف»: load a subtitle file from the device. */
+    val subtitleFromFile: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

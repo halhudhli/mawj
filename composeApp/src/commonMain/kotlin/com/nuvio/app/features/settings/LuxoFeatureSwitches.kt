@@ -190,6 +190,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("ترجمة من ملف 📄", "Subtitle from file 📄"),
+            lx("زر في قائمة المشغل لاختيار ملف ترجمة من الجهاز (srt أو vtt أو ass)، ويُكتشف ترميز الملف تلقائياً", "Player menu button to load a subtitle file from the device; its encoding is detected automatically"),
+            { it.subtitleFromFile }, { f, v -> f.copy(subtitleFromFile = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("الكتالوج المتحرك 🎞️", "الكتالوج المتحرك 🎞️"),
             lx("بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار", "بطاقات التصنيفات والمنصات والشبكات تتحرك: صور تتقلب ولمعة تعبر الشعار"),
             { it.animatedCatalog }, { f, v -> f.copy(animatedCatalog = v) },

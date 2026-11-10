@@ -77,3 +77,7 @@ internal fun LuxoAmbientGlow(isPlaying: Boolean, modifier: Modifier = Modifier) 
 
 /** The current frame as JPEG bytes (for questions about the scene); null when the platform can't. */
 internal expect suspend fun luxoCaptureVideoJpeg(width: Int, height: Int): ByteArray?
+
+
+/** Layout size of the video view in pixels (before any zoom), or null when the platform can't tell. */
+internal expect suspend fun luxoVideoViewSize(): androidx.compose.ui.unit.IntSize?

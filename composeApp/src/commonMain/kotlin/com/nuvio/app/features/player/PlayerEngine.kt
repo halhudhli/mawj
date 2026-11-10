@@ -15,6 +15,7 @@ interface PlayerEngineController {
     fun setVideoZoom(scale: Float) {}
     fun showCastDialog() {}
     fun setPlaybackSpeed(speed: Float)
+    fun networkSpeedBytesPerSecond(): Long? = null
     fun currentPlayerVolume(): PlayerAudioLevel = PlayerAudioLevel(
         fraction = 1f,
         isMuted = false,

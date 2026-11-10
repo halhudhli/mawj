@@ -981,7 +981,8 @@ private fun findCredentialRefreshCandidate(
 
 private fun SkipInterval.isEligibleForSkipButton(positionSec: Double): Boolean {
     val effectiveStartTime = if (isIntroLikeSkipInterval()) {
-        (startTime - SKIP_INTRO_PRE_ROLL_SECONDS).coerceAtLeast(0.0)
+        // LUXO: the lead time is adjustable in «تحسين الصورة» (default 10 s).
+        (startTime - LuxoAvRepository.effective().skipIntroLead.toDouble()).coerceAtLeast(0.0)
     } else {
         startTime
     }
@@ -994,6 +995,5 @@ private fun SkipInterval.isIntroLikeSkipInterval(): Boolean =
         else -> false
     }
 
-private const val SKIP_INTRO_PRE_ROLL_SECONDS = 10.0
 private const val CREDENTIAL_REFRESH_POLL_COUNT = 30
 private const val CREDENTIAL_REFRESH_POLL_INTERVAL_MS = 500L

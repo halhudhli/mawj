@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
  */
 internal object LuxoPlayerBridge {
     var onPictureClick by mutableStateOf<(() -> Unit)?>(null)
+    var onSubtitleFileClick by mutableStateOf<(() -> Unit)?>(null)
     var onSoundClick by mutableStateOf<(() -> Unit)?>(null)
     var sleepLabel by mutableStateOf<String?>(null)
     var onSleepTimerClick by mutableStateOf<(() -> Unit)?>(null)

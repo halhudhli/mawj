@@ -90,3 +90,9 @@ internal actual suspend fun luxoCaptureVideoJpeg(width: Int, height: Int): ByteA
         }.getOrNull()
     }
 }
+
+internal actual suspend fun luxoVideoViewSize(): androidx.compose.ui.unit.IntSize? = withContext(Dispatchers.Main) {
+    val activity = ProfileBiometricAuth.hostActivity() ?: return@withContext null
+    val view = findVideoView(activity.window?.decorView) ?: return@withContext null
+    if (view.width <= 0 || view.height <= 0) null else androidx.compose.ui.unit.IntSize(view.width, view.height)
+}

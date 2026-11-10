@@ -8,3 +8,6 @@ actual fun luxoIsAndroidPlatform(): Boolean = false
 actual fun LuxoFrameRateMatch(fps: Float) = Unit
 
 actual fun luxoAudioOutputName(): String? = null
+
+@Composable
+actual fun rememberLuxoSubtitleFilePicker(onPicked: (text: String, extension: String) -> Unit): (() -> Unit)? = null

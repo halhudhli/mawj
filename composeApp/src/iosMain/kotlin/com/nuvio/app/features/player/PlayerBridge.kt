@@ -91,6 +91,7 @@ interface NuvioPlayerBridge {
     fun getIsEnded(): Boolean
     fun getDurationMs(): Long
     fun getPositionMs(): Long
+    fun networkSpeedBytesPerSecond(): Long
     fun getBufferedMs(): Long
     fun getPlaybackSpeed(): Float
     fun getVideoWidth(): Int

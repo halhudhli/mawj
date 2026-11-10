@@ -89,3 +89,39 @@ actual fun luxoAudioOutputName(): String? {
     if (devices.any { it.type in wiredTypes }) return "سماعة سلكية"
     return null
 }
+
+@Composable
+actual fun rememberLuxoSubtitleFilePicker(onPicked: (text: String, extension: String) -> Unit): (() -> Unit)? {
+    val context = LocalContext.current
+    val callback = androidx.compose.runtime.rememberUpdatedState(onPicked)
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+                ?: uri.lastPathSegment.orEmpty()
+            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                val out = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(16 * 1024)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    out.write(buffer, 0, read)
+                    if (out.size() > 8 * 1024 * 1024) return@runCatching
+                }
+                out.toByteArray()
+            } ?: return@runCatching
+            val text = com.nuvio.app.features.autosync.SubtitleCharsetDetector.decode(bytes)
+            val head = text.trimStart().take(200)
+            val extension = when {
+                name.endsWith(".vtt", ignoreCase = true) || head.startsWith("WEBVTT", ignoreCase = true) -> "vtt"
+                name.endsWith(".ass", ignoreCase = true) || name.endsWith(".ssa", ignoreCase = true) || head.startsWith("[Script Info]", ignoreCase = true) -> "ass"
+                else -> "srt"
+            }
+            if (text.isNotBlank()) callback.value(text, extension)
+        }
+    }
+    return { runCatching { launcher.launch("*/*") } }
+}

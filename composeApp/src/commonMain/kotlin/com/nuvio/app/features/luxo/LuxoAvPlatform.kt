@@ -11,3 +11,11 @@ expect fun LuxoFrameRateMatch(fps: Float)
 
 /** Name of the headphones / Bluetooth device the sound is playing on, or null for the device speaker. */
 expect fun luxoAudioOutputName(): String?
+
+/**
+ * A starter that opens the device's file browser for a subtitle file. The file comes back as text
+ * (its encoding detected, so Arabic Windows-1256 files read correctly) with its extension
+ * (srt / vtt / ass). Null where the platform has no picker yet.
+ */
+@Composable
+expect fun rememberLuxoSubtitleFilePicker(onPicked: (text: String, extension: String) -> Unit): (() -> Unit)?

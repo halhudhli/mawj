@@ -18,6 +18,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -242,6 +244,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
     }
 
     BindAutoSyncRuntimeEffects() // AutoSync hook
+    BindLuxoAutoCrop()
 
     Box(
         modifier = Modifier
@@ -420,6 +423,30 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
             com.nuvio.app.features.luxo.LuxoSeriesMemory.update(luxoSeriesKey) {
                 it.copy(speed = speed, dialogue = com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, night = com.nuvio.app.features.luxo.LuxoAudioFx.night)
             }
+        }
+        // LUXO «ترجمة من ملف»: a subtitle file from the device, loaded like a selected add-on subtitle.
+        val luxoSubtitleFilePicker = com.nuvio.app.features.luxo.rememberLuxoSubtitleFilePicker { text, extension ->
+            val uri = com.nuvio.app.features.luxo.luxoWriteTempFile("luxo-file-${text.hashCode()}.$extension", text)
+            if (uri != null) {
+                clearAutoSubtitleState()
+                isUserExplicitSubtitleSelection = true
+                selectedAddonSubtitleId = "luxo-file"
+                selectedSubtitleIndex = -1
+                useCustomSubtitles = true
+                preferredSubtitleSelectionApplied = true
+                playerController?.setSubtitleUri(uri)
+                LuxoPlayerBridge.toast = "تم تحميل ملف الترجمة ✅"
+            } else {
+                LuxoPlayerBridge.toast = "تعذّر فتح ملف الترجمة"
+            }
+            luxoTranslateScope.launch {
+                kotlinx.coroutines.delay(2_500L)
+                LuxoPlayerBridge.toast = null
+            }
+        }
+        DisposableEffect(luxoFeatures.subtitleFromFile, luxoSubtitleFilePicker) {
+            LuxoPlayerBridge.onSubtitleFileClick = if (luxoFeatures.subtitleFromFile) luxoSubtitleFilePicker else null
+            onDispose { LuxoPlayerBridge.onSubtitleFileClick = null }
         }
         DisposableEffect(luxoFeatures.subtitleTranslate, addonSubtitles) {
             LuxoPlayerBridge.onTranslateSubtitlesClick = if (luxoFeatures.subtitleTranslate) {
@@ -789,6 +816,21 @@ private fun BoxScope.RenderPlaybackOverlays(
         val snapshotIsLoading by remember(runtime) { derivedStateOf { playbackSnapshot.isLoading } }
         val snapshotDurationMs by remember(runtime) { derivedStateOf { playbackSnapshot.durationMs } }
         val displayedPositionMs = scrubbingPositionMs ?: overlaySnapshot.positionMs
+        val openingOverlayVisible = playerSettingsUiState.showLoadingOverlay && !initialLoadCompleted && errorMessage == null
+        val showNetworkSpeed = openingOverlayVisible &&
+            playerSettingsUiState.showPlayerLoadingStatus &&
+            p2pInitialLoadingMessage == null
+        val networkSpeedText by produceState<String?>(null, playerController, showNetworkSpeed) {
+            value = null
+            if (!showNetworkSpeed) return@produceState
+            var seenTraffic = false
+            while (true) {
+                val bytesPerSecond = playerController?.networkSpeedBytesPerSecond()
+                if (bytesPerSecond != null && bytesPerSecond > 0L) seenTraffic = true
+                value = if (bytesPerSecond != null && seenTraffic) formatNetworkSpeed(bytesPerSecond) else null
+                delay(1_000L)
+            }
+        }
         PlayerPlaybackOverlays(
             playerControlsLocked = playerControlsLocked,
             useLegacyLayout = playerSettingsUiState.useLegacyPlayerLayout,
@@ -799,7 +841,7 @@ private fun BoxScope.RenderPlaybackOverlays(
         metrics = metrics,
         horizontalSafePadding = horizontalSafePadding,
         onUnlock = { unlockPlayerControls() },
-        showOpeningOverlay = playerSettingsUiState.showLoadingOverlay && !initialLoadCompleted && errorMessage == null,
+        showOpeningOverlay = openingOverlayVisible,
         backdropArtwork = if (isLiveTvPlayback) activeLogo?.takeIf(String::isNotBlank) ?: background ?: poster else background ?: poster,
         logo = if (isLiveTvPlayback) activeLogo else logo,
         title = if (isLiveTvPlayback) activeStreamTitle else title,
@@ -814,6 +856,7 @@ private fun BoxScope.RenderPlaybackOverlays(
                 buffering = snapshotIsLoading,
             )
         } else null,
+        openingNetworkSpeed = networkSpeedText,
         p2pInitialLoadingProgress = p2pInitialLoadingProgress,
         showP2pRebufferStats = showP2pRebufferStats,
         p2pRebufferMessage = p2pRebufferMessage,

@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +58,10 @@ data class LuxoAvSettings(
     val smoothMotion: Boolean = false,
     val upscale: Int = 0,
     val deband: Boolean = false,
+    /** Black bars burned into the file are measured and zoomed away (Fit mode only). */
+    val autoCrop: Boolean = true,
+    /** Seconds before the intro at which «تخطي المقدمة» appears (0–30). */
+    val skipIntroLead: Int = 10,
     val spatial: Boolean = false,
     val levelling: Boolean = false,
     /** Audio advance in ms per output device name ("" = the device speaker). */
@@ -96,7 +101,7 @@ object LuxoAvRepository {
     fun effective(settings: LuxoAvSettings = current()): LuxoAvSettings {
         val features = LuxoFeaturesRepository.current()
         var out = settings
-        if (!features.picturePack) out = out.copy(matchRefresh = false, smoothMotion = false, upscale = 0, deband = false)
+        if (!features.picturePack) out = out.copy(matchRefresh = false, smoothMotion = false, upscale = 0, deband = false, autoCrop = false, skipIntroLead = 10)
         if (!features.soundPack) out = out.copy(spatial = false, levelling = false, audioDelays = emptyMap())
         return out
     }
@@ -225,6 +230,32 @@ internal fun LuxoPicturePanel(visible: Boolean, onDismiss: () -> Unit) {
                 av.matchRefresh,
             ) { v -> LuxoAvRepository.update { it.copy(matchRefresh = v) } }
 
+            AvToggle(
+                "قص الحواف السوداء تلقائياً",
+                "تُقاس الحواف السوداء المدمجة في ملف الفيديو وتُكبَّر الصورة حتى تملأ الشاشة دون قص أي جزء منها. يعمل في وضع «ملاءمة» مع المحركين.",
+                av.autoCrop,
+            ) { v -> LuxoAvRepository.update { it.copy(autoCrop = v) } }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("توقيت زر تخطي المقدمة", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (av.skipIntroLead == 0) "يظهر الزر مع بداية المقدمة" else "يظهر الزر قبل المقدمة بـ ${av.skipIntroLead} ثانية",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 12.sp,
+                )
+                Slider(
+                    value = av.skipIntroLead.toFloat(),
+                    onValueChange = { raw -> LuxoAvRepository.update { it.copy(skipIntroLead = raw.roundToInt().coerceIn(0, 30)) } },
+                    valueRange = 0f..30f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = panelAccent,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.18f),
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
             if (!isMpv) {
                 AvNote("الخيارات التالية تعمل بمحرك mpv. عند تفعيل أيٍّ منها يبدأ الفيديو التالي بمحرك mpv تلقائياً، ويمكن إعادة فتح الفيديو الحالي لتطبيقها الآن.")
             }
@@ -325,4 +356,69 @@ internal fun LuxoSoundPanel(visible: Boolean, onDismiss: () -> Unit) {
             Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+
+/**
+ * «قص الحواف السوداء تلقائياً»: looks at three small copies of the picture, a few seconds apart,
+ * finds the black bars that are part of the file itself and zooms just enough for the real picture
+ * to reach the screen edges — never cropping the picture. Only in Fit mode, only while the zoom is
+ * untouched, once per video. Platforms that cannot copy a frame (iPhone for now) do nothing.
+ */
+@Composable
+internal fun PlayerScreenRuntime.BindLuxoAutoCrop() {
+    val av by remember { LuxoAvRepository.ensureLoaded(); LuxoAvRepository.state }.collectAsState()
+    val features = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+    val enabled = features.picturePack && av.autoCrop && resizeMode == PlayerResizeMode.Fit
+    androidx.compose.runtime.LaunchedEffect(enabled, activeSourceUrl, playerController) {
+        if (!enabled || playerController == null) return@LaunchedEffect
+        var left = 1f; var top = 1f; var right = 1f; var bottom = 1f
+        var samples = 0
+        var attempts = 0
+        while (samples < 3 && attempts < 20) {
+            kotlinx.coroutines.delay(4_000L)
+            attempts++
+            if (playbackSnapshot.isLoading || !playbackSnapshot.isPlaying || videoZoom != 1f) continue
+            val bars = luxoMeasureBlackBars() ?: continue
+            left = minOf(left, bars[0]); top = minOf(top, bars[1]); right = minOf(right, bars[2]); bottom = minOf(bottom, bars[3])
+            samples++
+        }
+        if (samples < 3 || videoZoom != 1f || resizeMode != PlayerResizeMode.Fit) return@LaunchedEffect
+        val view = luxoVideoViewSize() ?: return@LaunchedEffect
+        val screen = layoutSize
+        if (screen.width <= 0 || screen.height <= 0) return@LaunchedEffect
+        val pictureWidth = view.width * (1f - left - right)
+        val pictureHeight = view.height * (1f - top - bottom)
+        if (pictureWidth < view.width * 0.4f || pictureHeight < view.height * 0.4f) return@LaunchedEffect
+        val zoom = minOf(screen.width / pictureWidth, screen.height / pictureHeight).coerceAtMost(PlayerMaxVideoZoom)
+        if (zoom < 1.04f) return@LaunchedEffect
+        rawVideoZoom = zoom
+        videoZoom = zoom
+        playerController?.setVideoZoom(zoom)
+    }
+}
+
+/** Fractions of the view covered by black bars: left, top, right, bottom. Null on dark or unreadable frames. */
+private suspend fun luxoMeasureBlackBars(): FloatArray? {
+    val w = 96
+    val h = 54
+    val pixels = luxoCaptureVideoFrame(w, h)?.toPixelMap() ?: return null
+    if (pixels.width < 8 || pixels.height < 8) return null
+    fun dark(x: Int, y: Int): Boolean {
+        val c = pixels[x, y]
+        return (0.299f * c.red + 0.587f * c.green + 0.114f * c.blue) < 0.075f
+    }
+    fun rowDark(y: Int): Boolean { var lit = 0; for (x in 0 until pixels.width) if (!dark(x, y)) lit++; return lit <= pixels.width / 40 }
+    fun colDark(x: Int): Boolean { var lit = 0; for (y in 0 until pixels.height) if (!dark(x, y)) lit++; return lit <= pixels.height / 40 }
+    var t = 0; while (t < pixels.height && rowDark(t)) t++
+    if (t >= pixels.height) return null
+    var b = 0; while (b < pixels.height - t && rowDark(pixels.height - 1 - b)) b++
+    var l = 0; while (l < pixels.width && colDark(l)) l++
+    var r = 0; while (r < pixels.width - l && colDark(pixels.width - 1 - r)) r++
+    // A frame that is mostly dark says nothing reliable about bars.
+    var lit = 0
+    for (y in t until pixels.height - b) for (x in l until pixels.width - r) if (!dark(x, y)) lit++
+    val area = (pixels.height - b - t) * (pixels.width - r - l)
+    if (area <= 0 || lit < area / 4) return null
+    return floatArrayOf(l.toFloat() / pixels.width, t.toFloat() / pixels.height, r.toFloat() / pixels.width, b.toFloat() / pixels.height)
 }
