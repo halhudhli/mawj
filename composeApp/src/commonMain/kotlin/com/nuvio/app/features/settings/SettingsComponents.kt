@@ -7,6 +7,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import com.nuvio.app.core.ui.luxoGlass
 import com.nuvio.app.core.ui.luxoEnter
+import com.nuvio.app.core.ui.background.appGlassBackdrop
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -97,7 +98,7 @@ private fun SettingsCard(
         return
     }
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().appGlassBackdrop(tokens.shapes.card),
         color = tokens.colors.surface,
         shape = if (isTablet) RoundedCornerShape(NuvioTokens.Radius.xl) else tokens.shapes.compactCard,
         border = BorderStroke(
