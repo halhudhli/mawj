@@ -112,6 +112,18 @@ internal fun LazyListScope.appBackgroundSettingsItem(isTablet: Boolean) {
                         isTablet = isTablet,
                         onClick = { showStyleSheet = true },
                     )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    // Mawj: each tap moves to the next dim level.
+                    SettingsNavigationRow(
+                        title = "تعتيم الخلفية",
+                        description = "${config.dimPercent}% · يُضغط للتغيير",
+                        isTablet = isTablet,
+                        onClick = {
+                            val steps = listOf(0, 10, 20, 30, 45, 60, 80)
+                            val next = steps.firstOrNull { it > config.dimPercent } ?: steps.first()
+                            AppBackgroundRepository.setDimPercent(next)
+                        },
+                    )
                 }
             }
         }

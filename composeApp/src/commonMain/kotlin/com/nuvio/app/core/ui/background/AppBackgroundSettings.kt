@@ -16,8 +16,11 @@ internal data class AppBackgroundConfig(
     val source: AppBackgroundSource = AppBackgroundSource.NONE,
     val url: String = "",
     val localFile: String = "",
-    val glassEnabled: Boolean = false,
-    val glassPreset: GlassUiPreset = GlassUiPreset.BALANCED,
+    // Mawj: the approved look is the default — dark glass, background dimmed by 20 %.
+    val glassEnabled: Boolean = true,
+    val glassPreset: GlassUiPreset = GlassUiPreset.DARK,
+    /** How much the background picture is darkened, in percent (0–80). */
+    val dimPercent: Int = 20,
 ) {
     fun imageModel(): String? = when (source) {
         AppBackgroundSource.NONE -> null
@@ -89,6 +92,8 @@ internal object AppBackgroundRepository {
     fun setGlassEnabled(enabled: Boolean) = update { it.copy(glassEnabled = enabled) }
 
     fun setGlassPreset(preset: GlassUiPreset) = update { it.copy(glassPreset = preset) }
+
+    fun setDimPercent(percent: Int) = update { it.copy(dimPercent = percent.coerceIn(0, 80)) }
 
     fun suspend() {
         _suspendCount.value += 1

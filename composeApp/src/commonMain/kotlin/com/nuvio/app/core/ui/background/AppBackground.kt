@@ -118,7 +118,7 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
         if (config.glassEnabled) config.imageModel() else null
     }
     val glassStyle = if (config.glassEnabled) config.glassPreset.style() else null
-    val dim = glassStyle?.dim ?: DefaultBackgroundDim
+    val dim = if (glassStyle != null) config.dimPercent.coerceIn(0, 80) / 100f else DefaultBackgroundDim
     val baseTokens = MaterialTheme.nuvio
     val baseScheme = MaterialTheme.colorScheme
     val geometry = remember { AppBackgroundGeometry() }
