@@ -1,6 +1,7 @@
 package com.nuvio.app
 
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.nuvio.app.core.ui.background.AppBackgroundHost
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -109,6 +110,8 @@ internal fun AppEnvironment(content: @Composable () -> Unit) {
     val customThemeColors by ThemeSettingsRepository.customThemeColors.collectAsStateWithLifecycle()
 
     NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled, customThemeColors = customThemeColors) {
-        com.nuvio.app.features.luxo.LuxoTvProviders(content)
+        AppBackgroundHost {
+            com.nuvio.app.features.luxo.LuxoTvProviders(content)
+        }
     }
 }

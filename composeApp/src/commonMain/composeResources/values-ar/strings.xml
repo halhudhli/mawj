@@ -2162,4 +2162,21 @@
     <string name="stream_info_player_engine">المشغل</string>
     <string name="luxo_settings_page_splash">شاشة الدخول</string>
     <string name="luxo_settings_page_fonts">الخطوط</string>
+    <string name="settings_appearance_section_background">خلفية التطبيق</string>
+    <string name="settings_glass_ui_section">الواجهة الزجاجية</string>
+    <string name="settings_app_background">الخلفية</string>
+    <string name="settings_app_background_none">الافتراضية</string>
+    <string name="settings_app_background_local">صورة من المعرض</string>
+    <string name="settings_app_background_url">رابط صورة</string>
+    <string name="settings_app_background_choose_photo">اختيار من المعرض</string>
+    <string name="settings_app_background_use_url">استخدام رابط صورة</string>
+    <string name="settings_app_background_remove">إزالة الخلفية</string>
+    <string name="settings_app_background_url_hint">https://… (JPG أو PNG أو GIF أو WebP)</string>
+    <string name="settings_app_background_error">تعذّر تحميل الصورة.</string>
+    <string name="settings_glass_ui">الواجهة الزجاجية (تجريبية)</string>
+    <string name="settings_glass_ui_description">تتحول البطاقات والنوافذ إلى زجاج مغبّش فوق خلفية التطبيق.</string>
+    <string name="settings_glass_ui_style">درجة الزجاج</string>
+    <string name="settings_glass_ui_style_dark">داكن</string>
+    <string name="settings_glass_ui_style_balanced">متوازن</string>
+    <string name="settings_glass_ui_style_vivid">حيوي</string>
 </resources>

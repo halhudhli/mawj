@@ -1,5 +1,7 @@
 package com.nuvio.app.core.ui
 
+import com.nuvio.app.core.ui.background.appBackgroundCover
+import com.nuvio.app.core.ui.background.appGlassBackdrop
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
@@ -144,7 +146,7 @@ fun NuvioSurfaceCard(
         return
     }
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().appGlassBackdrop(tokens.shapes.card),
         color = tokens.colors.surface,
         shape = tokens.shapes.card,
         tonalElevation = tonalElevation.dp,
@@ -189,7 +191,7 @@ fun NuvioScreenHeader(
         Row(
             modifier = Modifier
                 .matchParentSize()
-                .background(tokens.colors.background)
+                .appBackgroundCover(tokens.colors.background)
                 .nuvioConsumePointerEvents(),
         ) {}
         Row(

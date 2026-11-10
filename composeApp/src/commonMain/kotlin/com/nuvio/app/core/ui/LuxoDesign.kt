@@ -1,5 +1,6 @@
 package com.nuvio.app.core.ui
 
+import com.nuvio.app.core.ui.background.appGlassBackdrop
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -88,6 +89,8 @@ fun Modifier.luxoGlass(shape: Shape, glowScale: Float = 1f): Modifier {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     return this
         .clip(shape)
+        // Glass UI: the blurred app background shows through the (now translucent) card.
+        .appGlassBackdrop(shape)
         .background(
             Brush.verticalGradient(
                 listOf(
