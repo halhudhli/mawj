@@ -397,16 +397,18 @@ internal fun settingsSearchEntries(
         page = SettingsPage.Appearance,
         key = "app-background",
         title = stringResource(Res.string.settings_app_background),
-        pageLabel = appearancePage,
+        pageLabel = layoutPage,
         section = stringResource(Res.string.settings_glass_ui_section),
+        icon = Icons.Rounded.Palette,
     )
     addRow(
         page = SettingsPage.Appearance,
         key = "glass-ui",
         title = stringResource(Res.string.settings_glass_ui),
         description = stringResource(Res.string.settings_glass_ui_description),
-        pageLabel = appearancePage,
+        pageLabel = layoutPage,
         section = stringResource(Res.string.settings_glass_ui_section),
+        icon = Icons.Rounded.Palette,
     )
     addRow(
         page = SettingsPage.Appearance,
