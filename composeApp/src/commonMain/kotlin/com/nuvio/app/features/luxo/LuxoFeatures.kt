@@ -221,6 +221,8 @@ data class LuxoFeatures(
     val subtitleFromFile: Boolean = true,
     /** «أفضل 10»: popular / trending rows show their first ten with big rank numbers. */
     val top10Rank: Boolean = true,
+    /** Profile page cover: wide picture, photo, numbers and «قوائمي» rows. */
+    val profileCover: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

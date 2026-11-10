@@ -190,6 +190,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("غلاف الملف الشخصي 🖼️", "Profile cover 🖼️"),
+            lx("أعلى صفحة الملف الشخصي: غلاف عريض من الأعمال المشاهدة، والصورة والاسم، وأرقام المشاهدة، وصفوف «قوائمي»", "Top of the profile page: a wide cover, photo, numbers and your lists"),
+            { it.profileCover }, { f, v -> f.copy(profileCover = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أفضل 10 بالأرقام 🔟", "Top 10 numbers 🔟"),
             lx("صفوف الأكثر شعبية والرائج تعرض أول عشرة أعمال برقم كبير خلف كل بوستر", "Popular and trending rows show their first ten with a big rank number"),
             { it.top10Rank }, { f, v -> f.copy(top10Rank = v) },

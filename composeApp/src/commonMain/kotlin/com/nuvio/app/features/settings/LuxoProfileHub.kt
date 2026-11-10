@@ -189,6 +189,15 @@ internal fun LazyListScope.luxoProfileHubContent(
     onCheckForUpdatesClick: (() -> Unit)?,
     onLicensesAttributionsClick: () -> Unit,
 ) {
+    item(key = "luxo_profile_cover") {
+        if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().profileCover) {
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.widthIn(max = 900.dp).fillMaxWidth()) {
+                    LuxoProfileCover(isTablet = isTablet)
+                }
+            }
+        }
+    }
     item(key = "luxo_pass") {
         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
             LuxoPassCard(
