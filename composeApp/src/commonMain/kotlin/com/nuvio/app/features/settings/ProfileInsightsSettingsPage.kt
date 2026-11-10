@@ -1,5 +1,6 @@
 package com.nuvio.app.features.settings
 
+import com.nuvio.app.core.ui.background.appGlassBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
@@ -547,7 +548,12 @@ private fun ProfileInsightsHeroBounded(
             .border(1.dp, Color.White.copy(alpha = 0.12f), shape),
     ) {
         if (profile != null) {
-            ProfileBackgroundBackdrop(profile = profile, modifier = Modifier.matchParentSize())
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .appGlassBackdrop(shape)
+                    .background(tokens.colors.surface, shape),
+            )
         } else {
             Box(
                 modifier = Modifier
@@ -664,10 +670,6 @@ private fun ProfileInsightsHeroCinematic(
                     .offset(x = -leftInset, y = -topExtension),
             ) {
                 if (profile != null) {
-                    ProfileBackgroundBackdrop(
-                        profile = profile,
-                        modifier = Modifier.matchParentSize(),
-                    )
                 } else {
                     Box(
                         modifier = Modifier
@@ -1839,7 +1841,6 @@ private fun buildProfileInsightsCore(
         episodesWatchedCount = watchedItems.profileWatchedEpisodeCount(),
         ongoingSeriesCount = ongoingSeriesItems.size,
         libraryCount = libraryItems.size,
-        // Resolved against title facts in ProfileInsightsCore.resolveStats().
         trackedDurationMs = 0L,
         recentActivityCount = recentActivityCount,
         upcomingCount = upcomingLibraryCount,
@@ -2595,8 +2596,6 @@ private fun buildProfileWatchedTitleGenreSegments(
         }
 }
 
-// Addons and TMDB name genres differently ("Sci-Fi" vs "Science Fiction", TV-only combined
-// genres such as "Action & Adventure"). Normalize so every device and source counts alike.
 private val profileGenreAliases = mapOf(
     "sci-fi" to "Science Fiction",
     "sci fi" to "Science Fiction",
@@ -2617,8 +2616,6 @@ private class ProfileTitleFacts(
     val runtimeMinutes: Int?,
     val episodeRuntimeMinutes: Map<Long, Int>,
     val resolvedAtEpochMs: Long,
-    // Seeded from the shared meta cache: runtimes only. Its genres may be TMDB-enriched or
-    // localized, so it is still fetched from the addon to keep genres consistent across devices.
     val partial: Boolean = false,
 )
 
@@ -2782,7 +2779,6 @@ private object ProfileTitleFactsStore {
         _facts.value = emptyMap()
         failures.clear()
         attemptedFetchKeys.clear()
-        // A clear should visibly start over; the clear itself is limited to once an hour.
         budgetWindowStartedAtEpochMs = WatchedClock.nowEpochMs()
         fetchesInWindow = 0
         syncFailedKeys()
@@ -2861,7 +2857,6 @@ private object ProfileTitleFactsStore {
                 targets.forEach { key ->
                     launch {
                         permits.withPermit {
-                            // An addon started rate-limiting while we waited for a permit.
                             if (WatchedClock.nowEpochMs() < pausedUntilEpochMs) return@withPermit
                             val (kind, id) = key.profileSplitTitleKey() ?: return@withPermit
                             if (!attemptedFetchKeys.add(key)) return@withPermit
@@ -2877,7 +2872,6 @@ private object ProfileTitleFactsStore {
                                         if (pending.size >= PUBLISH_BATCH_SIZE) publish(pending)
                                     }
                                     is MetaLookupOutcome.Throttled -> {
-                                        // Not the title's fault: retry it once the addon allows.
                                         attemptedFetchKeys.remove(key)
                                         pausedUntilEpochMs = maxOf(pausedUntilEpochMs, outcome.retryAtEpochMs)
                                     }
@@ -2891,7 +2885,6 @@ private object ProfileTitleFactsStore {
                                 recordFailure(key)
                                 profileInsightsLog.w(error) { "Failed to hydrate title facts for $kind/$id" }
                             } finally {
-                                // Cancelled mid-flight (e.g. the tab was left): allow a retry next time.
                                 if (!settled) attemptedFetchKeys.remove(key)
                             }
                         }
@@ -2974,7 +2967,6 @@ private object ProfileTitleFactsStore {
     }
 }
 
-// How far genre/runtime hydration has got, so partial numbers are not mistaken for final ones.
 private class ProfileTitleFactsProgress(
     val detailsResolved: Int,
     val detailsTotal: Int,
