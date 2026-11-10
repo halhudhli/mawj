@@ -228,7 +228,7 @@ internal fun MainTabsDestination(
                             .then(if (tabsRouteActive && navBarStyleSetting == NavBarStyle.ADAPTIVE) Modifier.nestedScroll(navBarScrollState.nestedScrollConnection) else Modifier)
                             .then(if (luxoNav.hideOnScroll) Modifier.nestedScroll(navHide.connection) else Modifier)
                             .padding(innerPadding)
-                            .padding(start = if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp)
+                            .padding(start = if (useSideRail) com.nuvio.app.features.luxo.luxoRailInset(luxoNav) else 0.dp)
                             .then(
                                 Modifier.luxoTwoFingerSwipeIf(
                                     luxoNav.barStyle == com.nuvio.app.features.luxo.LuxoBarStyle.GESTURE.id && !useSideRail,
@@ -316,7 +316,16 @@ internal fun MainTabsDestination(
                 if (useSideRail) {
                     // Luxo TV (like Nuvio TV): the remote's Back goes to the side menu first, and only
                     // a second Back (while the menu is focused) does the usual back/exit.
-                    com.nuvio.app.features.luxo.LuxoSideRail(
+                    if (luxoNav.railStyle == "slim") com.nuvio.app.features.luxo.LuxoSlimRail(
+                        items = floatingNavigationItems,
+                        hidden = navHidden,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .onFocusChanged { railHasFocus = it.hasFocus }
+                            .focusRequester(railFocus)
+                            .focusRestorer()
+                            .focusGroup(),
+                    ) else com.nuvio.app.features.luxo.LuxoSideRail(
                         items = floatingNavigationItems,
                         expanded = luxoNav.railExpanded,
                         onExpandedChange = { open ->
@@ -601,7 +610,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
         com.nuvio.app.features.luxo.LuxoNavPlacement.AUTO -> isWideLandscape
         com.nuvio.app.features.luxo.LuxoNavPlacement.BAR -> false
     }
-    SideEffect { onStartOverlayChanged(if (useSideRail) com.nuvio.app.features.luxo.LuxoRailInset else 0.dp) }
+    SideEffect { onStartOverlayChanged(if (useSideRail) com.nuvio.app.features.luxo.luxoRailInset(luxoNav) else 0.dp) }
 
     when {
         useSideRail -> {

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -123,6 +124,130 @@ class LuxoNavHideState {
 
 /** Width the content keeps clear for the collapsed rail. */
 val LuxoRailInset: Dp = 88.dp
+
+/** Width kept clear for the rail in the chosen look. */
+fun luxoRailInset(settings: LuxoNavSettings): Dp = if (settings.railStyle == "slim") LuxoSlimRailWidth else LuxoRailInset
+
+val LuxoSlimRailWidth: Dp = 64.dp
+
+/**
+ * The slim rail: a thin strip along the reading-start edge, top to bottom, icons only. The
+ * profile picture sits at the top; the selected tab is tinted with the accent and marked by a
+ * short bar on the outer edge, the others stay muted so the rail never pulls the eye.
+ * A long press shows the tab's name.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun LuxoSlimRail(
+    items: List<FloatingNavigationItem>,
+    hidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = MaterialTheme.nuvio
+    val accent = tokens.colors.accent
+    val muted = tokens.colors.textMuted
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val tv = rememberLuxoTvRemote()
+    val hide by animateFloatAsState(if (hidden && !tv) 1f else 0f, tween(240), label = "slim_rail_hide")
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val tabs = items.filter { it.content == null }
+    val profile = items.firstOrNull { it.content != null }
+    var nameShown by remember { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(nameShown) {
+        if (nameShown != null) {
+            kotlinx.coroutines.delay(1_400L)
+            nameShown = null
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .graphicsLayer {
+                translationX = (if (isRtl) 1f else -1f) * size.width * hide
+                alpha = 1f - hide
+            },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(LuxoSlimRailWidth)
+                .background(tokens.colors.background.copy(alpha = 0.96f))
+                .padding(top = topInset + 14.dp, bottom = bottomInset + 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (profile != null) {
+                Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                    profile.content?.invoke(profile.onClick, null)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            tabs.forEach { item ->
+                val selected = item.selected
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (selected) {
+                        Box(
+                            Modifier
+                                .align(Alignment.CenterStart)
+                                .width(3.dp)
+                                .height(22.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(accent),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .luxoTvFocus(14.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) accent.copy(alpha = 0.14f) else Color.Transparent)
+                            .combinedClickable(
+                                onClick = item.onClick,
+                                onLongClick = { nameShown = item.label; item.onLongClick?.invoke() },
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val tint = if (selected) accent else muted
+                        when {
+                            item.icon != null -> Icon(item.icon, item.label, Modifier.size(23.dp), tint = tint)
+                            item.drawable != null -> Icon(painterResource(item.drawable), item.label, Modifier.size(23.dp), tint = tint)
+                        }
+                        LuxoNavBadge(item.badge, Modifier.align(Alignment.TopEnd))
+                    }
+                }
+            }
+        }
+        // The outer-edge hairline that separates the rail from the page.
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(1.dp)
+                .background(Color.White.copy(alpha = 0.06f)),
+        )
+        val name = nameShown
+        if (name != null) {
+            Text(
+                name,
+                color = tokens.colors.textPrimary,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = if (isRtl) (-74).dp else 74.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(tokens.colors.surface)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
+    }
+}
+
+
 
 /**
  * A side rail on the reading-start edge (right in Arabic, left in English, thanks to RTL).

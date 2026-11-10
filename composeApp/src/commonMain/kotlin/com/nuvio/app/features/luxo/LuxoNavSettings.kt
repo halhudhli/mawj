@@ -68,6 +68,10 @@ data class LuxoNavSettings(
     /** 0 small, 1 normal, 2 large. */
     val barSize: Int = 1,
     val barOpacity: Float = 0.94f,
+    /** Side rail look: "slim" (thin, edge to edge, icons only) or "floating" (the rounded rail that opens with names). */
+    val railStyle: String = "slim",
+    /** One-time switch to the automatic side rail on wide screens (Mawj rail v2). */
+    val railV2Applied: Boolean = false,
 ) {
     val placementValue: LuxoNavPlacement get() = LuxoNavPlacement.of(placement)
 
@@ -89,9 +93,23 @@ object LuxoNavSettingsRepository {
     fun ensureLoaded() {
         if (loaded) return
         loaded = true
-        val payload = LuxoPrefsStorage.load(storageKey) ?: return
+        val payload = LuxoPrefsStorage.load(storageKey)
+        if (payload == null) {
+            _state.value = _state.value.copy(placement = LuxoNavPlacement.AUTO.id, railV2Applied = true)
+            return
+        }
         runCatching { json.decodeFromString(LuxoNavSettings.serializer(), payload) }
             .onSuccess { _state.value = it }
+        // Mawj rail v2: once, wide landscape screens move to the new slim side rail.
+        if (!_state.value.railV2Applied) {
+            val migrated = _state.value.copy(
+                placement = if (_state.value.placement == LuxoNavPlacement.BAR.id) LuxoNavPlacement.AUTO.id else _state.value.placement,
+                railStyle = "slim",
+                railV2Applied = true,
+            )
+            _state.value = migrated
+            LuxoPrefsStorage.save(storageKey, json.encodeToString(LuxoNavSettings.serializer(), migrated))
+        }
     }
 
     fun update(transform: (LuxoNavSettings) -> LuxoNavSettings) {

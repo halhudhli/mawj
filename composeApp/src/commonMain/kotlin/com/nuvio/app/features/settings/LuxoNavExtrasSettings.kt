@@ -64,6 +64,32 @@ internal fun LuxoNavExtrasControls(isTablet: Boolean) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+    if (nav.placementValue != LuxoNavPlacement.BAR) {
+        SettingsGroupDivider(isTablet = isTablet)
+        LuxoBlock(isTablet) {
+            LuxoLabel(lx("شكل الشريط الجانبي", "Side rail look"))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("slim" to lx("نحيف", "Slim"), "floating" to lx("عائم بالأسماء", "Floating with names")).forEach { (id, label) ->
+                    FilterChip(
+                        selected = nav.railStyle == id,
+                        onClick = { LuxoNavSettingsRepository.update { it.copy(railStyle = id) } },
+                        label = { Text(label) },
+                    )
+                }
+            }
+            Text(
+                text = if (nav.railStyle == "slim") lx(
+                    "شريط رفيع بطول الشاشة، أيقونات فقط والمحدد ملوّن. الضغط المطوّل على الأيقونة يُظهر اسمها.",
+                    "A thin full-height strip, icons only. Long-press an icon to see its name.",
+                ) else lx(
+                    "شريط عائم بحواف دائرية، يفتح بالسهم أو بالسحب ويُظهر الأسماء.",
+                    "A rounded floating rail that opens with the arrow or a swipe.",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
     SettingsGroupDivider(isTablet = isTablet)
     LuxoBlock(isTablet) {
         LuxoLabel(lx("شكل الشريط", "Bar style"))

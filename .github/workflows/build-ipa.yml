@@ -2,10 +2,8 @@ name: Build Mawj iPhone and iPad IPA
 
 # نسخة الآيفون: ملف IPA بدون توقيع، يوقّعه Zeus / SideStore على الجوال.
 # تُنشر دائماً في إصدار ثابت اسمه «iphone» بملف واحد: Mawj-iPhone.ipa
+# Manual only for now: started from Actions → «Build Mawj iPhone and iPad IPA» → Run workflow.
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore: [ "AGENTS.md", "README.md", "docs/**" ]
   workflow_dispatch:
 
 # A running iPhone build is never cancelled (it takes ~2 hours); the newest push waits its turn.
