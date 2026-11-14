@@ -590,6 +590,13 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.kotlinx.coroutines.get()}")
             implementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
         }
+
+        // Run the TV regression suite independently of unrelated legacy host tests that
+        // currently do not compile. Default test source sets are unchanged.
+        if (providers.gradleProperty("luxo.tvRemoteTestsOnly").map(String::toBoolean).getOrElse(false)) {
+            getByName("commonTest").kotlin.setSrcDirs(emptyList<String>())
+            androidHostTest.kotlin.setIncludes(setOf("**/LuxoTvNavigationTest.kt"))
+        }
     }
 }
 

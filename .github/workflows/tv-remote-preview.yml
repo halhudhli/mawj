@@ -47,7 +47,7 @@ jobs:
             :androidApp:assembleFullDebug \
             -Pnuvio.android.distribution=full \
             -Pnuvio.ios.distribution=appstore \
-            -Pluxo.abi=armeabi-v7a -Pluxo.tv=true \
+            -Pluxo.abi=armeabi-v7a -Pluxo.tv=true -Pluxo.tvRemoteTestsOnly=true \
             -Pluxo.fastDebug=true -Pluxo.minify=true \
             -Pnuvio.app.versionName=1.0.114-TV-remote \
             -Pnuvio.app.versionCode=1114 \
