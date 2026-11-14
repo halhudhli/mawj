@@ -56,7 +56,7 @@ jobs:
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace
           mkdir -p tv-preview
-          cp androidApp/build/outputs/apk/full/debug/*armeabi-v7a*.apk tv-preview/Mawj-1.0.114-TV-remote-armeabi-v7a.apk
+          cp androidApp/build/outputs/apk/full/debug/*.apk tv-preview/Mawj-1.0.114-TV-remote-armeabi-v7a.apk
       - name: Verify remote navigation
         run: |
           ./gradlew :composeApp:testAndroidHostTest \
