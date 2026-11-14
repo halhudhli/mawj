@@ -7,7 +7,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -72,10 +71,10 @@ fun LuxoTvProviders(content: @Composable () -> Unit) {
     )
 }
 
-/** Keep horizontal navigation in a shelf and return to its last focused card on re-entry. */
+/** LazyRow already groups its children; restore its last focused card on re-entry. */
 @Composable
 fun Modifier.luxoTvRowFocus(enabled: Boolean = rememberLuxoTvRemote()): Modifier =
-    if (enabled) this.focusRestorer().focusGroup() else this
+    if (enabled) this.focusRestorer() else this
 
 /** Material buttons keep their own ripple; on TV its focus layer is made clearly visible. */
 @OptIn(ExperimentalMaterial3Api::class)

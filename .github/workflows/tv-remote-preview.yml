@@ -37,7 +37,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Configure build memory
         run: |
-          sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8/' gradle.properties
+          sudo fallocate -l 4G /mnt/mawj-tv-swap
+          sudo chmod 600 /mnt/mawj-tv-swap
+          sudo mkswap /mnt/mawj-tv-swap
+          sudo swapon /mnt/mawj-tv-swap
+          sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8 -XX:+UseParallelGC/' gradle.properties
           echo 'org.gradle.workers.max=2' >> gradle.properties
           touch local.properties
       - name: Build TV APK
