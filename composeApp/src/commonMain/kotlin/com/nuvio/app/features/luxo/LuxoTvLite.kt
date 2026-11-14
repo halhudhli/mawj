@@ -7,6 +7,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.interaction.FocusInteraction
@@ -31,13 +33,9 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import kotlinx.coroutines.delay
 
 /*
@@ -73,6 +71,11 @@ fun LuxoTvProviders(content: @Composable () -> Unit) {
         content = content,
     )
 }
+
+/** Keep horizontal navigation in a shelf and return to its last focused card on re-entry. */
+@Composable
+fun Modifier.luxoTvRowFocus(enabled: Boolean = rememberLuxoTvRemote()): Modifier =
+    if (enabled) this.focusRestorer().focusGroup() else this
 
 /** Material buttons keep their own ripple; on TV its focus layer is made clearly visible. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,14 +186,14 @@ fun luxoTvIndicationOrNull(): androidx.compose.foundation.Indication? =
 fun Modifier.luxoTvAutoFocus(key: Any? = Unit, enabled: Boolean = true): Modifier {
     if (!rememberLuxoTvRemote()) return this
     val requester = remember { FocusRequester() }
-    var focused by remember { mutableStateOf(false) }
+    // Once acquired, never request again: a delayed retry must not pull focus back
+    // after the user has already moved to another button with the remote.
     LaunchedEffect(key, enabled) {
         if (!enabled) return@LaunchedEffect
         repeat(12) {
             delay(150)
-            if (focused) return@LaunchedEffect
-            runCatching { requester.requestFocus() }
+            if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
         }
     }
-    return this.onFocusChanged { focused = it.isFocused || it.hasFocus }.focusRequester(requester)
+    return this.focusRequester(requester)
 }

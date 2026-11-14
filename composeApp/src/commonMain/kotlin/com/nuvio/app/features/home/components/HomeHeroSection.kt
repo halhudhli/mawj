@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -237,6 +238,7 @@ internal fun HomeHeroSection(
 
     // Luxo TV: while the remote's focus is on the hero it stays on the same title, so the focused
     // card never slides away under the remote.
+    val tvRemote = com.nuvio.app.features.luxo.rememberLuxoTvRemote()
     var luxoHeroFocused by remember { mutableStateOf(false) }
     ScreenActivityEffect(autoScrollPage, items.size, effectiveTrailerPlaybackEnabled, luxoHeroFocused) { active ->
         if (!active || items.size <= 1 || effectiveTrailerPlaybackEnabled || luxoHeroFocused) return@ScreenActivityEffect
@@ -563,6 +565,9 @@ internal fun HomeHeroSection(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                // The backdrop is a touch shortcut. On TV, focus the visible
+                                // title/actions instead of this screen-sized invisible target.
+                                .focusProperties { canFocus = !tvRemote }
                                 .clickable(enabled = onItemClick != null) {
                                     onItemClick?.invoke(currentItem)
                                 },
@@ -571,6 +576,9 @@ internal fun HomeHeroSection(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                // The backdrop is a touch shortcut. On TV, focus the visible
+                                // title/actions instead of this screen-sized invisible target.
+                                .focusProperties { canFocus = !tvRemote }
                                 .clickable(enabled = onItemClick != null) {
                                     onItemClick?.invoke(currentItem)
                                 },

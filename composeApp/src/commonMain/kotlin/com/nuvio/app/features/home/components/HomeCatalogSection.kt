@@ -95,6 +95,9 @@ private fun HomeCatalogRowSectionContent(
             LuxoRankNumber(rank)
             HomePosterCard(
                 item = item,
+                modifier = Modifier.onFocusChanged { focusState ->
+                    if (focusState.hasFocus) onPosterFocused?.invoke(item)
+                },
                 useLandscapeBackdropMode = false,
                 isWatched = WatchingState.isPosterWatched(watchedKeys = watchedKeys, item = item, fullyWatchedSeriesKeys = fullyWatchedSeriesKeys),
                 onClick = onPosterClick?.let { { it(item) } },

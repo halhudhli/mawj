@@ -1,0 +1,71 @@
+name: TV remote preview APK
+
+on:
+  push:
+    branches: [codex/tv-remote-navigation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tv-remote-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Configure build memory
+        run: |
+          sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8/' gradle.properties
+          echo 'org.gradle.workers.max=2' >> gradle.properties
+          touch local.properties
+      - name: Test remote navigation and build TV APK
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+          TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
+          SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+          MDBLIST_CLIENT_ID: ${{ secrets.MDBLIST_CLIENT_ID }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+          PREMIUMIZE_CLIENT_ID: ${{ secrets.PREMIUMIZE_CLIENT_ID }}
+          INTRODB_API_URL: ${{ secrets.INTRODB_API_URL }}
+          LUXO_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN }}
+          LUXO_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY }}
+        run: |
+          ./gradlew :composeApp:testAndroidHostTest \
+            --tests com.nuvio.app.features.luxo.LuxoTvNavigationTest \
+            :androidApp:assembleFullDebug \
+            -Pnuvio.android.distribution=full \
+            -Pnuvio.ios.distribution=appstore \
+            -Pluxo.abi=armeabi-v7a -Pluxo.tv=true \
+            -Pluxo.fastDebug=true -Pluxo.minify=true \
+            -Pnuvio.app.versionName=1.0.114-TV-remote \
+            -Pnuvio.app.versionCode=1114 \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --stacktrace
+          mkdir -p tv-preview
+          cp androidApp/build/outputs/apk/full/debug/*armeabi-v7a*.apk tv-preview/Mawj-1.0.114-TV-remote-armeabi-v7a.apk
+      - name: Upload TV APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mawj-TV-remote-armeabi-v7a
+          path: tv-preview/*.apk
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TV-remote-test-results
+          path: composeApp/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,6 +1,7 @@
 package com.nuvio.app.core.ui
 
 import com.nuvio.app.features.luxo.luxoPosterMotion
+import com.nuvio.app.features.luxo.luxoTvRowFocus
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -96,7 +97,7 @@ fun <T> NuvioShelfSection(
             )
         }
         LazyRow(
-            modifier = rowModifier,
+            modifier = rowModifier.luxoTvRowFocus(),
             state = state,
             contentPadding = rowContentPadding,
             horizontalArrangement = Arrangement.spacedBy(itemSpacing),
