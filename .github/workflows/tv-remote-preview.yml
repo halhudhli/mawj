@@ -28,7 +28,7 @@ jobs:
           sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8/' gradle.properties
           echo 'org.gradle.workers.max=2' >> gradle.properties
           touch local.properties
-      - name: Test remote navigation and build TV APK
+      - name: Build TV APK
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
@@ -42,9 +42,7 @@ jobs:
           LUXO_UPDATE_TOKEN: ${{ secrets.LUXO_UPDATE_TOKEN }}
           LUXO_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY }}
         run: |
-          ./gradlew :composeApp:testAndroidHostTest \
-            --tests com.nuvio.app.features.luxo.LuxoTvNavigationTest \
-            :androidApp:assembleFullDebug \
+          ./gradlew :androidApp:assembleFullDebug \
             -Pnuvio.android.distribution=full \
             -Pnuvio.ios.distribution=appstore \
             -Pluxo.abi=armeabi-v7a -Pluxo.tv=true -Pluxo.tvRemoteTestsOnly=true \
@@ -55,7 +53,17 @@ jobs:
             --no-daemon --stacktrace
           mkdir -p tv-preview
           cp androidApp/build/outputs/apk/full/debug/*armeabi-v7a*.apk tv-preview/Mawj-1.0.114-TV-remote-armeabi-v7a.apk
+      - name: Verify remote navigation
+        run: |
+          ./gradlew :composeApp:testAndroidHostTest \
+            --tests com.nuvio.app.features.luxo.LuxoTvNavigationTest \
+            -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore \
+            -Pluxo.abi=armeabi-v7a -Pluxo.tv=true -Pluxo.tvRemoteTestsOnly=true \
+            -Pluxo.fastDebug=true -Pluxo.minify=true \
+            -Pnuvio.app.versionName=1.0.114-TV-remote -Pnuvio.app.versionCode=1114 \
+            -Pkotlin.compiler.execution.strategy=in-process --no-daemon --stacktrace
       - name: Upload TV APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Mawj-TV-remote-armeabi-v7a

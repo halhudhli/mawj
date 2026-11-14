@@ -534,6 +534,7 @@ kotlin {
             }
         }
         val androidHostTest by getting {
+            kotlin.srcDir(project.file("src/tvRemoteHostTest/kotlin"))
             dependencies {
                 implementation("org.robolectric:robolectric:4.16")
                 implementation("androidx.compose.ui:ui-test-junit4:${libs.versions.composeMultiplatform.get()}")
@@ -595,7 +596,7 @@ kotlin {
         // currently do not compile. Default test source sets are unchanged.
         if (providers.gradleProperty("luxo.tvRemoteTestsOnly").map(String::toBoolean).getOrElse(false)) {
             getByName("commonTest").kotlin.setSrcDirs(emptyList<String>())
-            androidHostTest.kotlin.setIncludes(setOf("**/LuxoTvNavigationTest.kt"))
+            androidHostTest.kotlin.setSrcDirs(listOf("src/tvRemoteHostTest/kotlin"))
         }
     }
 }
