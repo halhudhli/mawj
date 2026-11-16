@@ -1,0 +1,2 @@
+wave_0x.flac: "beach ocean waves" by jasinski (freesound 18363), via OpenGameArt (qubodup), CC0.
+sea_0266/0267.mp3: BigSoundBank (Denis Chardonnet), CC0.
