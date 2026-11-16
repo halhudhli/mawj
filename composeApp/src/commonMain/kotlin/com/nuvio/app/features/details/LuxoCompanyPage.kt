@@ -69,8 +69,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 
-private val CAccent1 = Color(0xFF6F8FBF)
-private val CAccent2 = Color(0xFF9DB1CF)
+private val CAccent1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val CAccent2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 private enum class CompanyTab(val label: String, val media: String) { MOVIES("أفلام", "movie"), SERIES("مسلسلات", "tv") }
 private enum class CompanySort(val label: String) { POPULAR("الأشهر"), RATING("الأعلى تقييماً"), NEWEST("الأحدث"), OLDEST("الأقدم") }
@@ -209,6 +209,9 @@ internal fun LuxoCompanyPage(
                     Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), MaterialTheme.colorScheme.background.copy(alpha = 0.9f), MaterialTheme.colorScheme.background)),
                 ),
             )
+            if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                com.nuvio.app.core.ui.MawjWave(Modifier.padding(top = 330.dp), alpha = 0.4f)
+            }
         }
         LazyVerticalGrid(
             columns = GridCells.Adaptive(if (wide) 138.dp else 112.dp),
@@ -226,7 +229,7 @@ internal fun LuxoCompanyPage(
                             .height(110.dp)
                             .clip(RoundedCornerShape(26.dp))
                             .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.04f))))
-                            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(26.dp))
+                            .border(1.dp, if (com.nuvio.app.core.ui.rememberMawjStageOn()) CAccent1.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.15f), RoundedCornerShape(26.dp))
                             .padding(18.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -235,7 +238,13 @@ internal fun LuxoCompanyPage(
                         else Text(header?.name ?: fallbackName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black)
                     }
                     Spacer(Modifier.height(14.dp))
-                    Text(header?.name ?: fallbackName, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(
+                        header?.name ?: fallbackName,
+                        color = Color.White,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null,
+                    )
                     val facts = listOfNotNull(
                         header?.country?.let { "${luxoFlag(it)} $it" },
                         header?.headquarters,

@@ -54,8 +54,8 @@ import com.nuvio.app.features.luxo.LuxoTmdbLite.s
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-private val CAccent1 = Color(0xFF6F8FBF)
-private val CAccent2 = Color(0xFF9DB1CF)
+private val CAccent1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val CAccent2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 data class LuxoCompareSide(
     val tmdbId: String,

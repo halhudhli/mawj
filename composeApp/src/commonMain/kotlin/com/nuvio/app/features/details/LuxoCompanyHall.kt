@@ -120,7 +120,7 @@ import kotlinx.serialization.json.intOrNull
 
 private val HGold = Color(0xFFEDCB78)
 private val HCard = Color(0xFF10131C)
-private val HDefaultAccent = Color(0xFF6F8FBF)
+private val HDefaultAccent: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
 
 private data class HallInfo(
     val name: String,

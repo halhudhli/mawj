@@ -86,8 +86,8 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val I1 = Color(0xFF6F8FBF)
-private val I2 = Color(0xFF9DB1CF)
+private val I1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val I2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 private val IBg = Color(0xFF14161C)
 private val ijson = Json { ignoreUnknownKeys = true }
 

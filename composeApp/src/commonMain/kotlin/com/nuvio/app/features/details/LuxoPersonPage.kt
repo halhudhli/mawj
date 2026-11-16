@@ -65,8 +65,8 @@ import com.nuvio.app.features.tmdb.TmdbMetadataService
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
 import kotlinx.coroutines.launch
 
-private val PAccent1 = Color(0xFF6F8FBF)
-private val PAccent2 = Color(0xFF9DB1CF)
+private val PAccent1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val PAccent2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 private enum class LuxoCreditKind(val label: String) { ALL("الكل"), MOVIES("أفلام"), SERIES("مسلسلات") }
 private enum class LuxoCreditSort(val label: String) { FAME("الأشهر"), RATING("الأعلى تقييماً"), NEWEST("الأحدث"), OLDEST("الأقدم") }
@@ -179,6 +179,9 @@ internal fun LuxoPersonPage(
                     ),
                 ),
             )
+            if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                com.nuvio.app.core.ui.MawjWave(Modifier.padding(top = if (wide) 470.dp else 380.dp), alpha = 0.4f)
+            }
         }
 
         LazyVerticalGrid(
@@ -394,7 +397,7 @@ private fun PersonHero(
                 .aspectRatio(2f / 3f)
                 .clip(RoundedCornerShape(28.dp))
                 .background(Color.White.copy(alpha = 0.06f))
-                .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(28.dp))
+                .border(1.dp, if (com.nuvio.app.core.ui.rememberMawjStageOn()) PAccent1.copy(alpha = 0.55f) else Color.White.copy(alpha = 0.18f), RoundedCornerShape(28.dp))
                 .clickable(enabled = photos.isNotEmpty()) { onPhoto(photos, 0) },
         ) {
             AsyncImage(model = photo, contentDescription = name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
@@ -411,7 +414,14 @@ private fun PersonHero(
     }
     val info: @Composable () -> Unit = {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(name, color = Color.White, fontSize = if (wide) 34.sp else 28.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 40.sp)
+            Text(
+                name,
+                color = Color.White,
+                fontSize = if (wide) 36.sp else 29.sp,
+                fontWeight = if (com.nuvio.app.core.ui.rememberMawjStageOn()) FontWeight.Bold else FontWeight.ExtraBold,
+                fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null,
+                lineHeight = 42.sp,
+            )
             secondName?.let { Text(it, color = Color.White.copy(alpha = 0.55f), fontSize = 15.sp) }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 person.knownFor?.let { Fact(departmentArabic(it)) }

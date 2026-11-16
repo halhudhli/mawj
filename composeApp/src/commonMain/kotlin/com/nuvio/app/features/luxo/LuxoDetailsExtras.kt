@@ -53,8 +53,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
-private val X1 = Color(0xFF6F8FBF)
-private val X2 = Color(0xFF9DB1CF)
+private val X1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val X2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 @Composable
 private fun XChip(text: String, onClick: () -> Unit) {

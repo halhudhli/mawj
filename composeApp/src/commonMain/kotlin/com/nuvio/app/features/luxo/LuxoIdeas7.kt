@@ -110,7 +110,7 @@ fun LuxoTimeBudgetDialog(onDismiss: () -> Unit) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(25, 45, 60, 90, 120, 150, 180).forEach { m ->
                 Box(
-                    Modifier.clip(RoundedCornerShape(50)).background(if (minutes == m) Color(0xFF6F8FBF) else Color.White.copy(alpha = 0.08f))
+                    Modifier.clip(RoundedCornerShape(50)).background(if (minutes == m) com.nuvio.app.core.ui.luxoAccentColors().first() else Color.White.copy(alpha = 0.08f))
                         .clickable { minutes = m }.padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text(if (m < 60) "$m دقيقة" else if (m % 60 == 0) "${m / 60} ساعة" else "${m / 60} ساعة و${m % 60} د", color = Color.White, fontSize = 13.sp) }
             }
@@ -352,7 +352,7 @@ fun LuxoWatchTogetherDialog(onDismiss: () -> Unit) {
             profiles.forEach { p ->
                 val on = p.profileIndex in chosen
                 Box(
-                    Modifier.clip(RoundedCornerShape(50)).background(if (on) Color(0xFF6F8FBF) else Color.White.copy(alpha = 0.08f))
+                    Modifier.clip(RoundedCornerShape(50)).background(if (on) com.nuvio.app.core.ui.luxoAccentColors().first() else Color.White.copy(alpha = 0.08f))
                         .clickable { if (on) chosen.remove(p.profileIndex) else chosen.add(p.profileIndex) }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text((if (on) "✓ " else "") + p.name.ifBlank { "ملف ${p.profileIndex}" }, color = Color.White, fontSize = 13.sp) }

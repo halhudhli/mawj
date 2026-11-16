@@ -107,7 +107,9 @@ internal fun LuxoProfileCover(isTablet: Boolean) {
             if (cover != null) {
                 AsyncImage(model = cover, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)))))
+            val stageOn = com.nuvio.app.core.ui.rememberMawjStageOn()
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, if (stageOn) tokens.colors.background.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.75f)))))
+            if (stageOn) com.nuvio.app.core.ui.MawjWave(Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp), alpha = 0.45f)
             if (covers.size > 1) {
                 Text(
                     lx("يُضغط لتغيير الغلاف", "Tap to change the cover"),
@@ -124,7 +126,7 @@ internal fun LuxoProfileCover(isTablet: Boolean) {
             ) {
                 Box(
                     Modifier.size(if (isTablet) 76.dp else 64.dp).clip(CircleShape).background(accent)
-                        .border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape),
+                        .border(2.dp, if (com.nuvio.app.core.ui.rememberMawjStageOn()) tokens.colors.accent else Color.White.copy(alpha = 0.85f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     val url = profile?.avatarUrl
@@ -135,7 +137,7 @@ internal fun LuxoProfileCover(isTablet: Boolean) {
                     }
                 }
                 Column {
-                    Text(profile?.name?.ifBlank { null } ?: lx("ملفي", "My profile"), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(profile?.name?.ifBlank { null } ?: lx("ملفي", "My profile"), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
                         lx("${stats.movies} فيلم · ${stats.episodes} حلقة · ${stats.hours} ساعة", "${stats.movies} films · ${stats.episodes} episodes · ${stats.hours} h"),
                         color = Color.White.copy(alpha = 0.8f),

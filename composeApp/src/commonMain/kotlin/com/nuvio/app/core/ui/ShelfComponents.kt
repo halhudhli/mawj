@@ -317,7 +317,11 @@ private fun NuvioShelfSectionHeader(
             horizontalArrangement = Arrangement.spacedBy(tokens.spacing.controlGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val luxoTitleStyle = com.nuvio.app.features.luxo.luxoShimmerTitleStyle(title, MaterialTheme.typography.titleLarge, tokens.colors.textPrimary)
+            val luxoTitleStyle = com.nuvio.app.features.luxo.luxoShimmerTitleStyle(
+                title,
+                if (rememberMawjStageOn()) MaterialTheme.typography.titleLarge.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif) else MaterialTheme.typography.titleLarge,
+                tokens.colors.textPrimary,
+            )
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),

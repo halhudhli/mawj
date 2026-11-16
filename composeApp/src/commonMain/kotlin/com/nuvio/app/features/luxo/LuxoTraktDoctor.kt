@@ -171,7 +171,7 @@ private fun DoctorButton(text: String, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(50))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF))))
+            .background(Brush.horizontalGradient(com.nuvio.app.core.ui.luxoAccentColors().take(2)))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 9.dp),
     ) { Text(text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp) }

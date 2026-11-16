@@ -252,7 +252,7 @@ fun LuxoKidsTimeLimitRow(pin: String, onWrongPin: () -> Unit) {
         listOf(0 to "بلا حد", 30 to "30 دقيقة", 60 to "ساعة", 90 to "ساعة ونصف", 120 to "ساعتان", 180 to "3 ساعات").forEach { (m, label) ->
             Box(
                 Modifier.clip(RoundedCornerShape(50))
-                    .background(if (m == current) Color(0xFF6F8FBF) else Color.White.copy(alpha = 0.08f))
+                    .background(if (m == current) com.nuvio.app.core.ui.luxoAccentColors().first() else Color.White.copy(alpha = 0.08f))
                     .clickable { if (LuxoKids.checkPin(pin)) LuxoKidsTime.setLimit(m) else onWrongPin() }
                     .padding(horizontal = 14.dp, vertical = 8.dp),
             ) { Text(label, color = Color.White, fontSize = 13.sp) }

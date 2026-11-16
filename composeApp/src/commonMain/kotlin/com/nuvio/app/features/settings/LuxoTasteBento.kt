@@ -69,8 +69,8 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.time.Instant
 
-private val B1 = Color(0xFF6F8FBF)
-private val B2 = Color(0xFF9DB1CF)
+private val B1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val B2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 private val B3 = Color(0xFF5ED6C9)
 private val BTile = Color(0xFF17151F)
 

@@ -76,8 +76,8 @@ private enum class LuxoMediaTab(val label: String) {
     SOUNDTRACK("الموسيقى 🎵"),
 }
 
-private val Accent1 = Color(0xFF6F8FBF)
-private val Accent2 = Color(0xFF9DB1CF)
+private val Accent1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val Accent2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 /**
  * «الوسائط»: everything TMDB has for the title (backdrops, posters, logos, every video kind) and the

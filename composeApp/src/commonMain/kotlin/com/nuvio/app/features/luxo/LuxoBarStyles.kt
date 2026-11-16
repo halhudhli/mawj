@@ -111,8 +111,8 @@ enum class LuxoBarStyle(val id: String, val ar: String) {
     }
 }
 
-private val BA1 = Color(0xFF6F8FBF)
-private val BA2 = Color(0xFF9DB1CF)
+private val BA1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val BA2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 private val FloatingNavigationItem.isProfile: Boolean get() = content != null
 private val FloatingNavigationItem.isSearch: Boolean get() = id == LuxoNavTabIds.SEARCH

@@ -215,6 +215,7 @@ fun NuvioScreenHeader(
                     }
                 }
                 val luxoLook = luxoDesignOn()
+                val mawjSerif = if (rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null
                 AnimatedContent(
                     targetState = title,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -225,6 +226,7 @@ fun NuvioScreenHeader(
                             Text(
                                 text = currentTitle,
                                 style = MaterialTheme.typography.displayLarge.copy(
+                                    fontFamily = mawjSerif ?: MaterialTheme.typography.displayLarge.fontFamily,
                                     brush = Brush.linearGradient(listOf(tokens.colors.textPrimary, tokens.colors.textPrimary) + luxoAccentColors()),
                                 ),
                             )
@@ -233,7 +235,7 @@ fun NuvioScreenHeader(
                     } else {
                         Text(
                             text = currentTitle,
-                            style = MaterialTheme.typography.displayLarge,
+                            style = MaterialTheme.typography.displayLarge.copy(fontFamily = mawjSerif ?: MaterialTheme.typography.displayLarge.fontFamily),
                             color = tokens.colors.textPrimary,
                         )
                     }

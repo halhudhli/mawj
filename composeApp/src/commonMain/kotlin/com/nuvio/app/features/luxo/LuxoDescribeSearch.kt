@@ -63,8 +63,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 
-private val DAccent1 = Color(0xFF6F8FBF)
-private val DAccent2 = Color(0xFF9DB1CF)
+private val DAccent1: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().first()
+private val DAccent2: Color @androidx.compose.runtime.Composable get() = com.nuvio.app.core.ui.luxoAccentColors().let { it.getOrElse(1) { _ -> it.last() } }
 
 data class LuxoDescribeHit(val preview: MetaPreview, val year: String?, val why: String)
 

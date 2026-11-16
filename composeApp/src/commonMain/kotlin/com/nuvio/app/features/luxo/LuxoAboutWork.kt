@@ -366,7 +366,7 @@ private fun OutsideView(w: LuxoWork) {
         listOf("🎬 في السينما", "📱 منصة أخرى", "📺 على التلفزيون", "✈️ في رحلة").forEach { p ->
             Box(
                 Modifier.clip(RoundedCornerShape(50))
-                    .background(if (place == p) Color(0xFF6F8FBF) else Color.White.copy(alpha = 0.08f))
+                    .background(if (place == p) com.nuvio.app.core.ui.luxoAccentColors().first() else Color.White.copy(alpha = 0.08f))
                     .clickable {
                         place = p
                         LuxoOutside.set(w.metaId, p, w.title)

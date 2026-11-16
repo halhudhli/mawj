@@ -269,7 +269,7 @@ internal fun LuxoGuessGameDialog(onDismiss: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (round != null) {
                     Box(
-                        Modifier.clip(RoundedCornerShape(50)).background(Brush.horizontalGradient(listOf(Color(0xFF6F8FBF), Color(0xFF9DB1CF))))
+                        Modifier.clip(RoundedCornerShape(50)).background(Brush.horizontalGradient(com.nuvio.app.core.ui.luxoAccentColors().take(2)))
                             .clickable { next() }.padding(horizontal = 20.dp, vertical = 10.dp),
                     ) { Text(if (picked == null) "تخطٍّ" else "التالي", color = Color.White, fontWeight = FontWeight.Bold) }
                 }

@@ -235,7 +235,7 @@ private fun ProgressDialog(credits: List<LuxoCredit>, isWatched: (LuxoCredit) ->
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(true to "✓ تمت مشاهدته (${watched.size})", false to "○ لم يُشاهَد بعد (${rest.size})").forEach { (k, label) ->
                 Text(label, color = Color.White, fontSize = 14.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).background(if (showWatched == k) Color(0xFF6F8FBF) else Color.White.copy(alpha = 0.08f))
+                    modifier = Modifier.clip(RoundedCornerShape(50)).background(if (showWatched == k) com.nuvio.app.core.ui.luxoAccentColors().first() else Color.White.copy(alpha = 0.08f))
                         .clickable { showWatched = k }.padding(horizontal = 14.dp, vertical = 8.dp))
             }
         }
