@@ -190,6 +190,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("واجهة موج الجديدة 🌊", "New Mawj look 🌊"),
+            lx("مسرح سينمائي أعلى الصفحات، وموجة ذهبية متحركة، وألوان «بحر موج». تُختار ألوان أخرى من قائمة الثيمات", "Cinematic stage on top of pages and the gold wave"),
+            { it.mawjStage }, { f, v -> f.copy(mawjStage = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("غلاف الملف الشخصي 🖼️", "Profile cover 🖼️"),
             lx("أعلى صفحة الملف الشخصي: غلاف عريض من الأعمال المشاهدة، والصورة والاسم، وأرقام المشاهدة، وصفوف «قوائمي»", "Top of the profile page: a wide cover, photo, numbers and your lists"),
             { it.profileCover }, { f, v -> f.copy(profileCover = v) },

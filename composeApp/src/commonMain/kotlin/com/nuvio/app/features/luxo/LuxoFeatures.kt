@@ -223,6 +223,8 @@ data class LuxoFeatures(
     val top10Rank: Boolean = true,
     /** Profile page cover: wide picture, photo, numbers and «قوائمي» rows. */
     val profileCover: Boolean = true,
+    /** «واجهة موج الجديدة»: the cinematic stage and gold wave across the pages. */
+    val mawjStage: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

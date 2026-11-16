@@ -105,6 +105,21 @@ object ThemeColors {
         backgroundCard = Color(0xFF241A1A),
     )
 
+    /** «بحر موج»: the sea at night (#070D14) and the moon's gold (#D6B36A). */
+    val MawjSea = ThemeColorPalette(
+        secondary = Color(0xFFD6B36A),
+        secondaryVariant = Color(0xFFA9843F),
+        accentGradient = listOf(Color(0xFFA9843F), Color(0xFFD6B36A), Color(0xFFF1DDA6)),
+        nativeAccentHex = "#D6B36A",
+        onSecondary = Color(0xFF070D14),
+        onSecondaryVariant = Color(0xFF070D14),
+        focusRing = Color(0xFFD6B36A),
+        focusBackground = Color(0xFF1A2632),
+        background = Color(0xFF070D14),
+        backgroundElevated = Color(0xFF0D1620),
+        backgroundCard = Color(0xFF121C26),
+    )
+
     val Ocean = ThemeColorPalette(
         secondary = Color(0xFF1E88E5),
         secondaryVariant = Color(0xFF1565C0),
@@ -190,5 +205,6 @@ object ThemeColors {
         AppTheme.AMBER -> Amber
         AppTheme.ROSE -> Rose
         AppTheme.WHITE -> White
+        AppTheme.MAWJ_SEA -> MawjSea
     }
 }

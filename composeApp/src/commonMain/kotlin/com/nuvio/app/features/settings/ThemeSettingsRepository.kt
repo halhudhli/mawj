@@ -147,7 +147,13 @@ object ThemeSettingsRepository {
         } else {
             null
         }
-        _selectedThemePreference.value = theme
+        // Mawj's new look: once, every profile moves to «بحر موج» (it can be changed back in the theme list).
+        val migrated = if (com.nuvio.app.features.luxo.LuxoPrefsStorage.load("mawj_sea_applied") != "1") {
+            com.nuvio.app.features.luxo.LuxoPrefsStorage.save("mawj_sea_applied", "1")
+            ThemeSettingsStorage.saveSelectedTheme(AppTheme.MAWJ_SEA.name)
+            AppTheme.MAWJ_SEA
+        } else theme
+        _selectedThemePreference.value = migrated
         _customThemePreference.value = CustomThemeColors.decode(ThemeSettingsStorage.loadCustomThemeColors())
         applyEffectiveTheme()
         _amoledEnabled.value = ThemeSettingsStorage.loadAmoledEnabled() ?: false

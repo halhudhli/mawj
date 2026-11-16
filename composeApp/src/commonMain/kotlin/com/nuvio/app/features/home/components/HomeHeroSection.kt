@@ -557,6 +557,11 @@ internal fun HomeHeroSection(
                                     drawRect(Brush.verticalGradient(colors = listOf(fade.copy(alpha = 0f), fade)))
                                 },
                         )
+                        if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                            com.nuvio.app.core.ui.MawjWave(
+                                Modifier.align(Alignment.BottomCenter).padding(bottom = layout.bottomFadeHeight * 0.42f),
+                            )
+                        }
                     }
 
                     if (isCardStyle) {

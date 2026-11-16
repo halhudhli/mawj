@@ -224,6 +224,11 @@ fun DetailHero(
                             ),
                         ),
                 )
+                if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                    com.nuvio.app.core.ui.MawjWave(
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = if (isTablet) 150.dp else 132.dp),
+                    )
+                }
 
                 Column(
                     modifier = Modifier

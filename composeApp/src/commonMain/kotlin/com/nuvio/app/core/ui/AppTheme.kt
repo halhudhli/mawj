@@ -30,6 +30,8 @@ enum class AppTheme {
     AMBER,
     ROSE,
     WHITE,
+    /** Mawj's own: deep night-sea blue with the moon's gold. */
+    MAWJ_SEA,
 }
 
 val AppTheme.labelRes: StringResource
@@ -47,4 +49,5 @@ val AppTheme.labelRes: StringResource
         AppTheme.AMBER -> Res.string.theme_amber
         AppTheme.ROSE -> Res.string.theme_rose
         AppTheme.WHITE -> Res.string.theme_white
+        AppTheme.MAWJ_SEA -> Res.string.theme_mawj_sea
     }
