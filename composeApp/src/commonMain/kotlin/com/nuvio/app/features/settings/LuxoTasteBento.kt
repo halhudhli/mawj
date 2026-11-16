@@ -307,6 +307,7 @@ private fun ClockTile(s: LuxoBentoStats, modifier: Modifier) {
     }
     Tile(modifier, "ساعة المشاهدة") {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            val b1Local = B1; val b2Local = B2
             Canvas(Modifier.fillMaxHeight().aspectRatio(1f)) {
                 val maxV = (s.hourBins.maxOrNull() ?: 1).coerceAtLeast(1)
                 val c = Offset(size.width / 2, size.height / 2)
@@ -317,7 +318,7 @@ private fun ClockTile(s: LuxoBentoStats, modifier: Modifier) {
                     val a = (h / 24.0 * 2 * PI - PI / 2).toFloat()
                     val len = r0 + (r1 - r0) * (s.hourBins[h].toFloat() / maxV).coerceAtLeast(0.04f)
                     drawLine(
-                        brush = Brush.linearGradient(listOf(B1, B2)),
+                        brush = Brush.linearGradient(listOf(b1Local, b2Local)),
                         start = Offset(c.x + cos(a) * r0, c.y + sin(a) * r0),
                         end = Offset(c.x + cos(a) * len, c.y + sin(a) * len),
                         strokeWidth = size.minDimension * 0.045f,
@@ -355,6 +356,7 @@ private val centroids = mapOf(
 private fun MapTile(s: LuxoBentoStats, modifier: Modifier) {
     Tile(modifier, "خريطة العالم · ${s.countries.size} دولة") {
         Box(Modifier.fillMaxWidth().weight(1f)) {
+            val b1Local = B1; val b2Local = B2
             Canvas(Modifier.fillMaxSize()) {
                 val dot = 2.dp.toPx()
                 // Faint lat/lon dot grid.
@@ -370,8 +372,8 @@ private fun MapTile(s: LuxoBentoStats, modifier: Modifier) {
                     val px = ((lon + 180) / 360 * size.width).toFloat()
                     val py = ((75 - lat) / 135 * size.height).toFloat()
                     val r = (4.dp.toPx() + 14.dp.toPx() * (n.toFloat() / maxV))
-                    drawCircle(B2.copy(alpha = 0.22f), r * 1.6f, Offset(px, py))
-                    drawCircle(Brush.radialGradient(listOf(B2, B1), Offset(px, py), r), r, Offset(px, py))
+                    drawCircle(b2Local.copy(alpha = 0.22f), r * 1.6f, Offset(px, py))
+                    drawCircle(Brush.radialGradient(listOf(b2Local, b1Local), Offset(px, py), r), r, Offset(px, py))
                 }
             }
         }

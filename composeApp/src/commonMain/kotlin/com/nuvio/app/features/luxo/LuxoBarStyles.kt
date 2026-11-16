@@ -647,11 +647,12 @@ private fun LiquidBar(items: List<FloatingNavigationItem>, labels: String, alpha
             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(50))
             .padding(6.dp),
     ) {
+        val ba1Local = BA1; val ba2Local = BA2
         Box(
             Modifier.matchParentSize().drawBehind {
                 if (right.value > left.value) {
                     drawRoundRect(
-                        brush = Brush.horizontalGradient(listOf(BA1, BA2), startX = left.value, endX = right.value),
+                        brush = Brush.horizontalGradient(listOf(ba1Local, ba2Local), startX = left.value, endX = right.value),
                         topLeft = Offset(left.value, 0f),
                         size = androidx.compose.ui.geometry.Size(right.value - left.value, size.height),
                         cornerRadius = CornerRadius(size.height / 2f),

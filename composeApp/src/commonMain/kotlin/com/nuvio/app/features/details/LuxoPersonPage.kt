@@ -695,6 +695,7 @@ private fun RatingCurve(points: Map<String, Double>) {
     ) {
         best?.let { Text("أقوى سنة: ${it.key} · ★ ${(it.value * 10).toInt() / 10.0}", color = Color.White.copy(alpha = 0.75f), fontSize = 13.sp) }
         Spacer(Modifier.height(10.dp))
+        val paccent1Local = PAccent1; val paccent2Local = PAccent2
         androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(140.dp)) {
             val minV = 4.0
             val maxV = 9.5
@@ -706,9 +707,9 @@ private fun RatingCurve(points: Map<String, Double>) {
             }
             val path = androidx.compose.ui.graphics.Path()
             entries.forEachIndexed { i, e -> if (i == 0) path.moveTo(x(i), y(e.value)) else path.lineTo(x(i), y(e.value)) }
-            drawPath(path, Brush.horizontalGradient(listOf(PAccent1, PAccent2)), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+            drawPath(path, Brush.horizontalGradient(listOf(paccent1Local, paccent2Local)), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
             entries.forEachIndexed { i, e ->
-                drawCircle(if (e == best) PAccent2 else Color.White, radius = if (e == best) 8f else 4.5f, center = androidx.compose.ui.geometry.Offset(x(i), y(e.value)))
+                drawCircle(if (e == best) paccent2Local else Color.White, radius = if (e == best) 8f else 4.5f, center = androidx.compose.ui.geometry.Offset(x(i), y(e.value)))
             }
         }
         Spacer(Modifier.height(6.dp))
