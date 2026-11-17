@@ -191,7 +191,7 @@ private fun LuxoListRow(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (com.nuvio.app.core.ui.rememberMawjStageOn()) MaterialTheme.typography.titleLarge.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif) else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -213,7 +213,7 @@ private fun LuxoListRow(
         }
         if (items.isEmpty()) {
             Text(
-                text = lx("فاضية · الإضافة من صفحة أي عمل", "Empty · add titles from any title page"),
+                text = lx("قائمة فارغة · تُضاف الأعمال من صفحة أي عمل", "Empty · add titles from any title page"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -227,7 +227,7 @@ private fun LuxoListRow(
                     LuxoSavedPoster(
                         item = item,
                         badge = badges[LuxoUserData.key(item.type, item.id)],
-                        modifier = Modifier.width(112.dp),
+                        modifier = Modifier.width(if (com.nuvio.app.core.ui.rememberMawjStageOn()) 134.dp else 112.dp),
                         onClick = { onPosterClick?.invoke(item.toPreview()) },
                     )
                 }

@@ -38,6 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.core.i18n.localizedByteUnit
 import com.nuvio.app.core.ui.NuvioScreen
@@ -133,6 +136,34 @@ fun DownloadsScreen(
             )
         }
 
+        if (selectedShowId == null && uiState.items.isNotEmpty() && com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage) {
+            item(key = "mawj_storage") {
+                // «المخزن»: how much the saved titles take, at a glance.
+                val used = uiState.items.sumOf { it.downloadedBytes }
+                val count = uiState.items.size
+                androidx.compose.foundation.layout.Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                        .background(androidx.compose.ui.graphics.Color(0xFF0D1620))
+                        .padding(18.dp),
+                ) {
+                    Text(
+                        "المحفوظ للمشاهدة بدون إنترنت",
+                        color = androidx.compose.ui.graphics.Color(0xFFA9B6C4),
+                        fontSize = 13.sp,
+                    )
+                    Text(
+                        "${formatBytes(used)} · $count",
+                        color = tokens.colors.accent,
+                        fontSize = 26.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    )
+                }
+            }
+        }
         if (selectedShowId == null) {
             downloadsRootContent(
                 uiState = uiState,
