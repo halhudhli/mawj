@@ -81,7 +81,7 @@ private fun HomeCatalogRowSectionContent(
     val shownEntries = if (ranked) entries.take(10) else entries
 
     NuvioShelfSection(
-        itemSpacing = if (com.nuvio.app.core.ui.rememberMawjStageOn()) 22.dp else 10.dp,
+        itemSpacing = if (com.nuvio.app.core.ui.rememberMawjStageOn()) 22.0.let { androidx.compose.ui.unit.Dp(it.toFloat()) } else androidx.compose.ui.unit.Dp(10f),
         title = section.title,
         entries = shownEntries,
         modifier = modifier,
