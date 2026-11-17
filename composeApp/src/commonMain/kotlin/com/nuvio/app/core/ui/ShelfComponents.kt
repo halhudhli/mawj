@@ -212,18 +212,25 @@ fun NuvioPosterCard(
                         imageUrl
                     }
                 }
-                var imageArrived by remember(imageUrl) { mutableStateOf(false) }
+                var imageArrived by remember(title) { mutableStateOf(false) }
                 if (!imageArrived && !imageFailed && rememberMawjStageOn()) {
                     Box(Modifier.matchParentSize().mawjShimmer())
                 }
-                AsyncImage(
-                    model = imageModel,
-                    contentDescription = title,
-                    modifier = Modifier.matchParentSize().luxoPosterMotion(title.hashCode()),
-                    contentScale = ContentScale.Crop,
-                    onError = { imageFailed = true },
-                    onSuccess = { imageFailed = false; imageArrived = true },
-                )
+                androidx.compose.animation.Crossfade(
+                    targetState = imageModel,
+                    animationSpec = androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.CubicBezierEasing(0.4f, 0f, 0.2f, 1f)),
+                    modifier = Modifier.matchParentSize(),
+                    label = "mawj_poster_turn",
+                ) { model ->
+                    AsyncImage(
+                        model = model,
+                        contentDescription = title,
+                        modifier = Modifier.fillMaxSize().luxoPosterMotion(title.hashCode()),
+                        contentScale = ContentScale.Crop,
+                        onError = { imageFailed = true },
+                        onSuccess = { imageFailed = false; imageArrived = true },
+                    )
+                }
             }
 
             if (!bottomLeftLogoUrl.isNullOrBlank() || !bottomLeftText.isNullOrBlank()) {

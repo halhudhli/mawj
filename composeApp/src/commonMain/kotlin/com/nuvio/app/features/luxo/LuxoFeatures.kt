@@ -225,6 +225,8 @@ data class LuxoFeatures(
     val profileCover: Boolean = true,
     /** «واجهة موج الجديدة»: the cinematic stage and gold wave across the pages. */
     val mawjStage: Boolean = true,
+    /** Titles with several posters show them in turn, softly (Arabic posters first). */
+    val posterRotate: Boolean = true,
     /** Sea sound when Mawj opens. */
     val mawjOpeningSound: Boolean = false,
     /** Short sea cues when opening and leaving pages, adding, and on errors. */

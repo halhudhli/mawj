@@ -354,3 +354,44 @@ internal fun urlEncode(s: String): String = buildString {
         }
     }
 }
+
+/**
+ * Poster variants for one title, for the gentle poster rotation: Arabic posters first, then English,
+ * then textless and other languages. Each list holds up to four different posters; cached per title.
+ */
+object MawjPosterVariants {
+    private val cache = mutableMapOf<String, List<String>>()
+    private val gate = kotlinx.coroutines.sync.Semaphore(3)
+
+    fun cached(id: String, type: String): List<String>? = cache["$type:$id"]
+
+    suspend fun load(id: String, type: String): List<String> = withContext(Dispatchers.Default) {
+        val key = "$type:$id"
+        cache[key]?.let { return@withContext it }
+        val mediaType = TmdbService.normalizeMediaType(if (type == "anime") "series" else type)
+        if (mediaType != "movie" && mediaType != "tv") return@withContext emptyList<String>().also { cache[key] = it }
+        val apiKey = TmdbSettingsRepository.effectiveApiKey().takeIf { it.isNotBlank() } ?: return@withContext emptyList()
+        val result = gate.withPermit {
+            runCatching {
+                val tmdbId = TmdbService.ensureTmdbId(id, mediaType, null) ?: return@runCatching emptyList<String>()
+                val raw = httpGetText(buildTmdbUrl("$mediaType/$tmdbId/images", apiKey, mapOf("include_image_language" to "ar,en,null")))
+                val root = kotlinx.serialization.json.Json.parseToJsonElement(raw) as? kotlinx.serialization.json.JsonObject
+                val posters = (root?.get("posters") as? kotlinx.serialization.json.JsonArray).orEmpty()
+                    .mapNotNull { it as? kotlinx.serialization.json.JsonObject }
+                    .mapNotNull { o ->
+                        val path = (o["file_path"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+                        val lang = (o["iso_639_1"] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull
+                        val votes = (o["vote_average"] as? kotlinx.serialization.json.JsonPrimitive)?.doubleOrNull ?: 0.0
+                        Triple(path, lang, votes)
+                    }
+                val rank = { lang: String? -> when (lang) { "ar" -> 0; "en" -> 1; null -> 2; else -> 3 } }
+                posters.sortedWith(compareBy<Triple<String, String?, Double>> { rank(it.second) }.thenByDescending { it.third })
+                    .distinctBy { it.first }
+                    .take(4)
+                    .map { "https://image.tmdb.org/t/p/w342${it.first}" }
+            }.getOrDefault(emptyList())
+        }
+        cache[key] = result
+        result
+    }
+}

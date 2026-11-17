@@ -190,6 +190,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("تبديل البوسترات", "Rotating posters"),
+            lx("إذا كان للعمل أكثر من بوستر تتناوب بهدوء، العربية أولاً ثم غيرها", "Titles with several posters show them in turn"),
+            { it.posterRotate }, { f, v -> f.copy(posterRotate = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أصوات التنقل", "Navigation sounds"),
             lx("موجة قصيرة عند فتح الصفحات، وانسحاب الماء عند الرجوع، ولمعة عند الإضافة", "Short sea cues while moving around"),
             { it.mawjUiSounds }, { f, v -> f.copy(mawjUiSounds = v) },

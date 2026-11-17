@@ -1,6 +1,8 @@
 package com.nuvio.app.features.home.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.nuvio.app.core.format.formatReleaseDateForDisplay
 import com.nuvio.app.core.ui.NuvioPosterCard
@@ -41,9 +43,29 @@ fun HomePosterCard(
         portraitFallback
     }
 
+    // Mawj: when a title has several posters, they take turns softly (Arabic first, then others).
+    val rotating = !isLandscapeMode && com.nuvio.app.features.luxo.rememberLuxoFeatures().posterRotate
+    val variants by androidx.compose.runtime.produceState(
+        initialValue = com.nuvio.app.features.luxo.MawjPosterVariants.cached(item.id, item.type).orEmpty(),
+        key1 = item.id, key2 = rotating,
+    ) {
+        if (rotating && value.isEmpty()) value = com.nuvio.app.features.luxo.MawjPosterVariants.load(item.id, item.type)
+    }
+    var turn by androidx.compose.runtime.remember(item.id) { androidx.compose.runtime.mutableIntStateOf(0) }
+    if (rotating && variants.size > 1) {
+        androidx.compose.runtime.LaunchedEffect(item.id, variants.size) {
+            kotlinx.coroutines.delay(2_500L + (item.id.hashCode().toLong() and 0x1FFF) % 5_000L)
+            while (true) {
+                kotlinx.coroutines.delay(8_000L)
+                turn = (turn + 1) % variants.size
+            }
+        }
+    }
+    val shownUrl = if (rotating && variants.isNotEmpty()) variants[turn % variants.size] else imageUrl
+
     NuvioPosterCard(
         title = item.name,
-        imageUrl = imageUrl,
+        imageUrl = shownUrl,
         modifier = modifier,
         fallbackImageUrl = fallbackImageUrl,
         shape = if (isLandscapeMode) NuvioPosterShape.Landscape else item.posterShape.toNuvioPosterShape(),
