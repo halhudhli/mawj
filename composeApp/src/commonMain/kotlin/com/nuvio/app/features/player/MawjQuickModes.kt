@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -89,6 +90,37 @@ fun MawjQuickModes(modifier: Modifier = Modifier) {
                     Text(mode.label, color = if (on) tokens.colors.background else tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Text(mode.hint, color = if (on) tokens.colors.background.copy(alpha = 0.8f) else Color(0xFFA9B6C4), fontSize = 12.sp, lineHeight = 17.sp)
                 }
+            }
+        }
+    }
+}
+
+/** «حجم البوسترات»: four sizes for every poster in Mawj, as on the approved home page. */
+@Composable
+fun MawjPosterSizePicker(modifier: Modifier = Modifier) {
+    if (!rememberMawjStageOn()) return
+    val tokens = MaterialTheme.nuvio
+    remember { com.nuvio.app.core.ui.PosterCardStyleRepository.ensureLoaded() }
+    val style by com.nuvio.app.core.ui.PosterCardStyleRepository.uiState.collectAsState()
+    val sizes = listOf("صغير" to 150, "متوسط" to 170, "كبير" to 200, "كبير جداً" to 236)
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("حجم البوسترات", color = tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            sizes.forEach { (label, width) ->
+                val on = style.widthDp == width
+                Text(
+                    label,
+                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .then(
+                            if (on) Modifier.background(tokens.colors.accent)
+                            else Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50)),
+                        )
+                        .clickable { com.nuvio.app.core.ui.PosterCardStyleRepository.setWidthDp(width) }
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                )
             }
         }
     }

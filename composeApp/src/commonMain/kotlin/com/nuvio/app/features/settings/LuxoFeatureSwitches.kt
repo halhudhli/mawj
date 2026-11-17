@@ -190,11 +190,6 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
-            lx("صوت الافتتاحية 🌊", "Opening sound 🌊"),
-            lx("صوت بحر وموجة حقيقية عند فتح موج", "Real sea and wave when Mawj opens"),
-            { it.mawjOpeningSound }, { f, v -> f.copy(mawjOpeningSound = v) },
-        ),
-        LuxoFeatureSwitch(
             lx("أصوات التنقل", "Navigation sounds"),
             lx("موجة قصيرة عند فتح الصفحات، وانسحاب الماء عند الرجوع، ولمعة عند الإضافة", "Short sea cues while moving around"),
             { it.mawjUiSounds }, { f, v -> f.copy(mawjUiSounds = v) },

@@ -8,7 +8,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal const val DefaultPosterCardWidthDp = 150
+internal const val DefaultPosterCardWidthDp = 200
 internal const val DefaultPosterCardHeightDp = 189
 internal const val DefaultPosterCardCornerRadiusDp = 16
 
@@ -122,9 +122,12 @@ object PosterCardStyleRepository {
             var heightDp = stored.heightDp.takeIf { it > 0 } ?: ((widthDp * 3) / 2)
             // Mawj: posters were made larger once (126 → 150 dp); a size the user picked above the old
             // default stays as it is.
-            if (com.nuvio.app.features.luxo.LuxoPrefsStorage.load("poster_size_v2") == null) {
+            // Mawj: posters were made larger again for the new home (→ 200 dp, as on the approved page);
+            // a size picked above 150 stays as it is.
+            if (com.nuvio.app.features.luxo.LuxoPrefsStorage.load("poster_size_v3") == null) {
+                com.nuvio.app.features.luxo.LuxoPrefsStorage.save("poster_size_v3", "1")
                 com.nuvio.app.features.luxo.LuxoPrefsStorage.save("poster_size_v2", "1")
-                if (widthDp <= 126) {
+                if (widthDp <= 150) {
                     widthDp = DefaultPosterCardWidthDp
                     heightDp = (widthDp * 3) / 2
                     migrated = true

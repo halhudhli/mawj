@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -158,6 +160,82 @@ fun MawjCollectionChips(
                         .clickable { onFolderClick?.invoke(collection.id, folder.id) }
                         .padding(horizontal = 18.dp, vertical = 12.dp),
                 )
+            }
+        }
+    }
+}
+
+/**
+ * «الجزر»: every home collection in one section. The collections are tabs; the chosen one shows its
+ * folders as cards (their cover art faint behind the name), instead of a separate row per collection.
+ */
+@Composable
+fun MawjIslands(
+    collections: List<com.nuvio.app.features.collection.Collection>,
+    onFolderClick: ((collectionId: String, folderId: String) -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    if (collections.isEmpty()) return
+    val tokens = MaterialTheme.nuvio
+    var chosen by rememberSaveable { mutableStateOf(collections.first().id) }
+    val current = collections.firstOrNull { it.id == chosen } ?: collections.first()
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("الجزر", color = tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            collections.forEach { c ->
+                val on = c.id == current.id
+                Text(
+                    c.title,
+                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .then(
+                            if (on) Modifier.background(tokens.colors.accent)
+                            else Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50)),
+                        )
+                        .clickable { chosen = c.id }
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                )
+            }
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(current.folders, key = { current.id + ":" + it.id }) { folder ->
+                androidx.compose.foundation.layout.Box(
+                    Modifier
+                        .width(200.dp)
+                        .height(104.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color(0xFF0D1620))
+                        .border(1.dp, tokens.colors.accent.copy(alpha = 0.2f), RoundedCornerShape(18.dp))
+                        .clickable { onFolderClick?.invoke(current.id, folder.id) },
+                ) {
+                    if (!folder.coverImageUrl.isNullOrBlank()) {
+                        coil3.compose.AsyncImage(
+                            model = folder.coverImageUrl,
+                            contentDescription = null,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.matchParentSize(),
+                            alpha = 0.45f,
+                        )
+                    }
+                    androidx.compose.foundation.layout.Box(
+                        Modifier.matchParentSize().background(
+                            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6070D14))),
+                        ),
+                    )
+                    Text(
+                        listOfNotNull(folder.coverEmoji?.takeIf { it.isNotBlank() }, folder.title).joinToString(" "),
+                        color = Color(0xFFF6F1E4),
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 19.sp,
+                        maxLines = 2,
+                        modifier = Modifier.align(Alignment.BottomStart).padding(14.dp),
+                    )
+                }
             }
         }
     }

@@ -43,8 +43,11 @@ fun DynamicArtworkBackground(
     // Luxo: the screen only takes a poster's colour with the "ambient" poster effect, and then a
     // darkened, faint version of it — bright posters used to wash the whole screen grey/white.
     val focusStyle = com.nuvio.app.features.luxo.rememberLuxoLookSettings().posterFocusStyle
+    // Under «واجهة موج الجديدة» the home page sits on the sea like every other page, so the
+    // artwork wash (an opaque colour over the whole screen) stays off.
     val active = rememberDynamicArtworkBackgroundEnabled() &&
-        focusStyle == com.nuvio.app.features.luxo.LuxoPosterFocusStyle.AMBIENT
+        focusStyle == com.nuvio.app.features.luxo.LuxoPosterFocusStyle.AMBIENT &&
+        !rememberMawjStageOn()
     if (!active) {
         CompositionLocalProvider(LocalDynamicArtworkBackgroundActive provides false) {
             content()

@@ -1235,13 +1235,7 @@ fun HomeScreen(
                             if (settingsItem.isCollection) {
                                 val collection = collectionsMap[settingsItem.key]
                                 if (collection != null) {
-                                    if (mawjHome) item(key = keyedSettingsItem.lazyKey) {
-                                        com.nuvio.app.features.luxo.MawjCollectionChips(
-                                            collection = collection,
-                                            onFolderClick = onFolderClick,
-                                            modifier = Modifier.padding(horizontal = homeSectionPadding).padding(top = 8.dp, bottom = 28.dp),
-                                        )
-                                    } else item(key = keyedSettingsItem.lazyKey) {
+                                    if (!mawjHome) item(key = keyedSettingsItem.lazyKey) {
                                         HomeCollectionRowSection(
                                             collection = collection,
                                             modifier = Modifier.padding(bottom = 12.dp),
@@ -1275,6 +1269,18 @@ fun HomeScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+                        if (mawjHome) {
+                            val islands = keyedEnabledHomeItems.mapNotNull { k ->
+                                k.value.takeIf { it.isCollection }?.let { collectionsMap[it.key] }
+                            }.filter { it.folders.isNotEmpty() }
+                            if (islands.isNotEmpty()) item(key = "mawj_islands") {
+                                com.nuvio.app.features.luxo.MawjIslands(
+                                    collections = islands,
+                                    onFolderClick = onFolderClick,
+                                    modifier = Modifier.padding(horizontal = homeSectionPadding).padding(top = 10.dp, bottom = 30.dp),
+                                )
                             }
                         }
                         if (mawjHome) item(key = "mawj_next") {

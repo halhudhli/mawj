@@ -201,7 +201,10 @@ internal fun LazyListScope.luxoProfileHubContent(
     item(key = "mawj_quick_modes") {
         Box(Modifier.fillMaxWidth().padding(top = 18.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.widthIn(max = 900.dp).fillMaxWidth().padding(horizontal = if (isTablet) 0.dp else 16.dp)) {
-                com.nuvio.app.features.player.MawjQuickModes()
+                androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(22.dp)) {
+                    com.nuvio.app.features.player.MawjQuickModes()
+                    com.nuvio.app.features.player.MawjPosterSizePicker()
+                }
             }
         }
     }

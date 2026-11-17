@@ -81,10 +81,15 @@ internal fun LuxoTonightCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF7B5CFF).copy(alpha = 0.35f), Color(0xFFFF4F7B).copy(alpha = 0.25f), Color(0xFFFFC46B).copy(alpha = 0.18f)),
-                ),
+                if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                    Brush.horizontalGradient(listOf(Color(0xFFD6B36A).copy(alpha = 0.16f), Color(0xFF070D14).copy(alpha = 0.35f)))
+                } else {
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF7B5CFF).copy(alpha = 0.35f), Color(0xFFFF4F7B).copy(alpha = 0.25f), Color(0xFFFFC46B).copy(alpha = 0.18f)),
+                    )
+                },
             )
+            .then(if (com.nuvio.app.core.ui.rememberMawjStageOn()) Modifier.border(1.dp, Color(0xFFD6B36A).copy(alpha = 0.45f), RoundedCornerShape(18.dp)) else Modifier)
             .clickable { open = true }
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
