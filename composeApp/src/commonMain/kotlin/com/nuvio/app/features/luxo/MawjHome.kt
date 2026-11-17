@@ -88,7 +88,7 @@ fun MawjMoodCompass(
                 val on = m == mood
                 Text(
                     m.label,
-                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    color = if (on) Color(0xFF070D14) else Color(0xFFC3CCD6),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -189,7 +189,7 @@ fun MawjIslands(
                 val on = c.id == current.id
                 Text(
                     c.title,
-                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    color = if (on) Color(0xFF070D14) else Color(0xFFC3CCD6),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))

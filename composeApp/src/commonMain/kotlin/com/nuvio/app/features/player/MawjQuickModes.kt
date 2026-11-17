@@ -87,8 +87,8 @@ fun MawjQuickModes(modifier: Modifier = Modifier) {
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(mode.label, color = if (on) tokens.colors.background else tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text(mode.hint, color = if (on) tokens.colors.background.copy(alpha = 0.8f) else Color(0xFFA9B6C4), fontSize = 12.sp, lineHeight = 17.sp)
+                    Text(mode.label, color = if (on) Color(0xFF070D14) else tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(mode.hint, color = if (on) Color(0xCC070D14) else Color(0xFFA9B6C4), fontSize = 12.sp, lineHeight = 17.sp)
                 }
             }
         }
@@ -110,7 +110,7 @@ fun MawjPosterSizePicker(modifier: Modifier = Modifier) {
                 val on = style.widthDp == width
                 Text(
                     label,
-                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    color = if (on) Color(0xFF070D14) else Color(0xFFC3CCD6),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
