@@ -198,6 +198,13 @@ internal fun LazyListScope.luxoProfileHubContent(
             }
         }
     }
+    item(key = "mawj_quick_modes") {
+        Box(Modifier.fillMaxWidth().padding(top = 18.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.widthIn(max = 900.dp).fillMaxWidth().padding(horizontal = if (isTablet) 0.dp else 16.dp)) {
+                com.nuvio.app.features.player.MawjQuickModes()
+            }
+        }
+    }
     item(key = "luxo_pass") {
         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
             LuxoPassCard(

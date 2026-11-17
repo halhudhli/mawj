@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -826,6 +827,45 @@ internal fun StreamList(
         ),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
+        // Mawj: «اختيار موج» — the best-scored stream of everything found so far, on top in gold.
+        if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage && sharedStream == null) {
+            val best = filteredGroups.asSequence()
+                .flatMap { it.streams.asSequence() }
+                .filterNot { LuxoStreamRanking.isCam(it) }
+                .maxByOrNull { LuxoStreamRanking.score(it) }
+            if (best != null) {
+                item(key = "mawj_best_stream") {
+                    val accent = com.nuvio.app.core.ui.luxoAccentColors().first()
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                            .background(accent.copy(alpha = 0.08f))
+                            .border(1.dp, accent.copy(alpha = 0.5f), androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            "اختيار موج لهذا الجهاز",
+                            color = accent,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 6.dp, bottom = 8.dp),
+                        )
+                        StreamCard(
+                            stream = best,
+                            enabled = true,
+                            appendInstantServiceToDefaultName = appendInstantServiceToDefaultName,
+                            showFileSizeBadges = streamBadgeSettings.showFileSizeBadges,
+                            showAddonLogo = streamBadgeSettings.showAddonLogo,
+                            badgePlacement = streamBadgeSettings.badgePlacement,
+                            onClick = { onStreamSelected(best, resumePositionMs, resumeProgressFraction) },
+                            outlined = true,
+                        )
+                    }
+                }
+            }
+        }
         sharedStream?.let { shared ->
             item(key = "shared_stream") {
                 Column {

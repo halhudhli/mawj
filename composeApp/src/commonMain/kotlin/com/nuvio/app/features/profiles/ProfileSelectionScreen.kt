@@ -192,6 +192,11 @@ fun ProfileSelectionScreen(
             profile = backgroundProfile,
             modifier = Modifier.fillMaxSize(),
         )
+        if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+            // «الشاطئ»: two slow gold waves near the bottom of the picker.
+            com.nuvio.app.core.ui.MawjWave(Modifier.align(Alignment.BottomCenter).padding(bottom = 92.dp), alpha = 0.6f)
+            com.nuvio.app.core.ui.MawjWave(Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp), alpha = 0.25f)
+        }
 
         run {
             Column(
@@ -243,8 +248,9 @@ fun ProfileSelectionScreen(
                 Text(
                     text = stringResource(Res.string.profile_who_is_watching),
                     style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 30.sp,
+                        fontSize = if (com.nuvio.app.core.ui.rememberMawjStageOn()) 40.sp else 30.sp,
                         letterSpacing = 0.sp,
+                        fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null,
                     ),
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,

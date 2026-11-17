@@ -1,0 +1,123 @@
+package com.nuvio.app.features.luxo
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.nuvio.app.core.ui.NuvioPosterCard
+import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.core.ui.rememberMawjStageOn
+import com.nuvio.app.features.home.HomeCatalogSection
+import com.nuvio.app.features.home.MetaPreview
+
+/** One mood of «بوصلة المزاج» and the genres (English and Arabic names) that carry it. */
+private enum class MawjMood(val label: String, val genres: List<String>) {
+    Calm("هادئ", listOf("drama", "romance", "family", "documentary", "دراما", "رومانس", "عائلي", "وثائقي")),
+    Thrilling("مشوّق", listOf("thriller", "action", "mystery", "crime", "إثارة", "أكشن", "حركة", "غموض", "جريمة")),
+    Funny("يضحك", listOf("comedy", "animation", "كوميدي", "رسوم")),
+    Moving("مؤثر", listOf("drama", "romance", "war", "دراما", "رومانس", "حرب")),
+    Thoughtful("يدعو للتفكير", listOf("science fiction", "sci-fi", "mystery", "history", "documentary", "خيال علمي", "غموض", "تاريخ", "وثائقي")),
+}
+
+/**
+ * «بوصلة المزاج»: a row of moods under the hero. Choosing one gathers, from the rows already on the
+ * home page, the titles whose genres fit that mood, in one calm row. Choosing it again closes it.
+ */
+@Composable
+fun MawjMoodCompass(
+    sections: List<HomeCatalogSection>,
+    onOpen: (MetaPreview) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!rememberMawjStageOn()) return
+    val tokens = MaterialTheme.nuvio
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    val mood = MawjMood.entries.firstOrNull { it.name == picked }
+    val matches = remember(sections, mood) {
+        if (mood == null) emptyList() else sections.asSequence()
+            .flatMap { it.items.asSequence() }
+            .filter { item -> item.genres.any { g -> mood.genres.any { k -> g.contains(k, ignoreCase = true) } } }
+            .distinctBy { it.type + ":" + it.id }
+            .take(24)
+            .toList()
+    }
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                "بوصلة المزاج",
+                color = tokens.colors.textPrimary,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Bold,
+                fontSize = 21.sp,
+                modifier = Modifier.padding(end = 6.dp),
+            )
+            MawjMood.entries.forEach { m ->
+                val on = m == mood
+                Text(
+                    m.label,
+                    color = if (on) tokens.colors.background else Color(0xFFC3CCD6),
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .then(
+                            if (on) Modifier.background(tokens.colors.accent)
+                            else Modifier.border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50)),
+                        )
+                        .clickable { picked = if (on) null else m.name }
+                        .padding(horizontal = 18.dp, vertical = 9.dp),
+                )
+            }
+        }
+        AnimatedVisibility(visible = mood != null) {
+            if (matches.isEmpty()) {
+                Text(
+                    "لا توجد أعمال بهذا المزاج في الصفوف الحالية.",
+                    color = Color(0xFF8796A8),
+                    fontSize = 13.sp,
+                )
+            } else {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(end = 8.dp)) {
+                    items(matches, key = { it.type + ":" + it.id }) { item ->
+                        NuvioPosterCard(
+                            title = item.name,
+                            imageUrl = item.poster,
+                            detailLine = item.releaseInfo,
+                            onClick = { onOpen(item) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

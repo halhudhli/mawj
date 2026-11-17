@@ -1190,6 +1190,14 @@ fun HomeScreen(
                         disintegrationRequest = continueWatchingDisintegrationRequest,
                         )
 
+                        // Mawj: «بوصلة المزاج»
+                        item(key = "mawj_mood") {
+                            com.nuvio.app.features.luxo.MawjMoodCompass(
+                                sections = homeUiState.sections,
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(top = 4.dp, bottom = 18.dp),
+                            )
+                        }
                         // Luxo: «وش أشوف الليلة؟»
                         item(key = "luxo_season") {
                             com.nuvio.app.features.luxo.LuxoSeasonBanner(
