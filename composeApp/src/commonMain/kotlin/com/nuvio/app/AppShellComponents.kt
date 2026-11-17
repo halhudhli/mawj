@@ -201,7 +201,7 @@ internal fun AppTabHost(
             AppScreenTab.Home -> {
                 key(state.homeContentGeneration) {
                     val homeDynamicBackground by ThemeSettingsRepository.dynamicArtworkBackgroundEnabled.collectAsStateWithLifecycle()
-                    OpaqueAppSurfaces(enabled = homeDynamicBackground) {
+                    OpaqueAppSurfaces(enabled = homeDynamicBackground && !com.nuvio.app.core.ui.rememberMawjStageOn()) {
                         HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             animateCollectionGifs = state.animateHomeCollectionGifs,
