@@ -181,3 +181,65 @@ fun Modifier.mawjShimmer(): Modifier {
         )
     }
 }
+
+/**
+ * A real-looking sea: several wave layers stacked from the horizon down, each filled with a gradient
+ * that is light at its crest and deepens below, drifting at different speeds. It belongs to the
+ * picture above it, so it scrolls away with the page. The last layer ends in [fill] (the page colour).
+ */
+@Composable
+fun MawjSea(
+    modifier: Modifier = Modifier,
+    fill: Color = MaterialTheme.colorScheme.background,
+    gold: Color = MaterialTheme.nuvio.colors.accent,
+) {
+    val transition = rememberInfiniteTransition(label = "mawj_sea")
+    val t by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(24_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "mawj_sea_t",
+    )
+    Canvas(modifier.fillMaxWidth()) {
+        val layers = 5
+        val tau = (2 * PI).toFloat()
+        for (i in 0 until layers) {
+            val k = i / (layers - 1f)                     // 0 = far (horizon), 1 = near (bottom)
+            val base = size.height * (0.12f + 0.2f * i)
+            val amp = size.height * (0.025f + 0.035f * k)
+            val waves = 3.5f - 1.6f * k
+            val speed = (if (i % 2 == 0) 1f else -1f) * (1f + i)
+            val crestTop = base - amp
+            val path = Path()
+            val steps = 90
+            for (s in 0..steps) {
+                val x = size.width * s / steps
+                val y = base + amp * sin((s.toFloat() / steps) * waves * tau + t * tau * speed) +
+                    amp * 0.35f * sin((s.toFloat() / steps) * waves * 2.3f * tau - t * tau * speed * 1.7f)
+                if (s == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            val crest = Path().apply { addPath(path) }
+            path.lineTo(size.width, size.height)
+            path.lineTo(0f, size.height)
+            path.close()
+            val light = lerpColor(Color(0xFF2E5470), Color(0xFF16293A), k)
+            drawPath(
+                path,
+                Brush.verticalGradient(
+                    0f to light.copy(alpha = 0.55f + 0.45f * k),
+                    1f to fill,
+                    startY = crestTop,
+                    endY = size.height,
+                ),
+            )
+            drawPath(crest, gold.copy(alpha = 0.12f + 0.4f * k), style = Stroke(width = (0.8f + 0.8f * k).dp.toPx()))
+        }
+    }
+}
+
+private fun lerpColor(a: Color, b: Color, f: Float) = Color(
+    a.red + (b.red - a.red) * f,
+    a.green + (b.green - a.green) * f,
+    a.blue + (b.blue - a.blue) * f,
+    1f,
+)

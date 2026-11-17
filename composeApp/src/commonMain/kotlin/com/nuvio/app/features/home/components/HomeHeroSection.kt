@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -576,8 +577,8 @@ internal fun HomeHeroSection(
                                     },
                                 )
                             }
-                            com.nuvio.app.core.ui.MawjWaveEdge(
-                                Modifier.align(Alignment.BottomCenter),
+                            com.nuvio.app.core.ui.MawjSea(
+                                Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.5f),
                                 fill = heroFadeColorState?.value ?: themeBackground,
                             )
                         }
