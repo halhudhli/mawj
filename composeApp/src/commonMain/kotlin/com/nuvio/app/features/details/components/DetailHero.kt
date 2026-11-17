@@ -224,17 +224,16 @@ fun DetailHero(
                             ),
                         ),
                 )
-                if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
-                    com.nuvio.app.core.ui.MawjWave(
-                        Modifier.align(Alignment.BottomCenter).padding(bottom = if (isTablet) 150.dp else 132.dp),
-                    )
+                val mawjStage = com.nuvio.app.core.ui.rememberMawjStageOn()
+                if (mawjStage) {
+                    com.nuvio.app.core.ui.MawjWaveEdge(Modifier.align(Alignment.BottomCenter), fill = bottomGradientColor)
                 }
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = if (isTablet) 32.dp else 18.dp)
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = if (mawjStage) 46.dp else 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (logoUrl != null && !logoLoadError) {

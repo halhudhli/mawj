@@ -180,7 +180,7 @@ internal fun LuxoPersonPage(
                 ),
             )
             if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
-                com.nuvio.app.core.ui.MawjWave(Modifier.padding(top = if (wide) 470.dp else 380.dp), alpha = 0.4f)
+                com.nuvio.app.core.ui.MawjWaveEdge(Modifier.padding(top = (if (wide) 520.dp else 420.dp) - 44.dp))
             }
         }
 

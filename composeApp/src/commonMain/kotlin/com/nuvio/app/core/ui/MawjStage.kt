@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -66,6 +67,47 @@ fun MawjWave(modifier: Modifier = Modifier, color: Color = MaterialTheme.nuvio.c
 }
 
 /**
+ * The lower edge of a stage: the picture ends on a wave, the page below is filled with [fill] (the
+ * page background), and a thin gold line drifts slowly along the crest. Nothing is drawn over the
+ * content, so text and posters never sit on the line.
+ */
+@Composable
+fun MawjWaveEdge(
+    modifier: Modifier = Modifier,
+    fill: Color = MaterialTheme.colorScheme.background,
+    color: Color = MaterialTheme.nuvio.colors.accent,
+    height: Dp = 44.dp,
+) {
+    val transition = rememberInfiniteTransition(label = "mawj_edge")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(16_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "mawj_edge_phase",
+    )
+    Canvas(modifier.fillMaxWidth().height(height)) {
+        val waves = 2.5f
+        val amp = size.height * 0.28f
+        val mid = size.height * 0.45f
+        val steps = 120
+        val crest = Path()
+        for (i in 0..steps) {
+            val x = size.width * i / steps
+            val y = mid + amp * sin(((i.toFloat() / steps) * waves * 2f + phase * 2f) * PI.toFloat())
+            if (i == 0) crest.moveTo(x, y) else crest.lineTo(x, y)
+        }
+        val body = Path().apply {
+            addPath(crest)
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        }
+        drawPath(body, fill)
+        drawPath(crest, color.copy(alpha = 0.8f), style = Stroke(width = 1.4.dp.toPx()))
+    }
+}
+
+/**
  * The «stage» at the top of a page: the subject's picture, melting into the night sea at the
  * bottom and on the reading-start side, with the gold wave along its lower edge. [content] sits at
  * the bottom-start, over the darkest part.
@@ -106,7 +148,36 @@ fun MawjStage(
                 ),
             ),
         )
-        MawjWave(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         content()
+        MawjWaveEdge(Modifier.align(Alignment.BottomCenter), fill = background)
+    }
+}
+
+
+/**
+ * Loading look: a soft light passing over the sea colour, in the exact shape of what is coming, so the
+ * page does not jump when pictures arrive.
+ */
+@Composable
+fun Modifier.mawjShimmer(): Modifier {
+    val transition = rememberInfiniteTransition(label = "mawj_shimmer")
+    val x by transition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart),
+        label = "mawj_shimmer_x",
+    )
+    val dark = Color(0xFF0F1A25)
+    val light = Color(0xFF1D2C3B)
+    return this.drawBehind {
+        drawRect(dark)
+        val w = size.width
+        drawRect(
+            Brush.linearGradient(
+                listOf(dark, light, dark),
+                start = androidx.compose.ui.geometry.Offset(w * x - w * 0.5f, 0f),
+                end = androidx.compose.ui.geometry.Offset(w * x + w * 0.5f, size.height),
+            ),
+        )
     }
 }

@@ -225,6 +225,14 @@ data class LuxoFeatures(
     val profileCover: Boolean = true,
     /** «واجهة موج الجديدة»: the cinematic stage and gold wave across the pages. */
     val mawjStage: Boolean = true,
+    /** Sea sound when Mawj opens. */
+    val mawjOpeningSound: Boolean = true,
+    /** Short sea cues when opening and leaving pages, adding, and on errors. */
+    val mawjUiSounds: Boolean = true,
+    /** A quiet sea in the background of the home page. */
+    val mawjAmbientSea: Boolean = false,
+    /** Volume of Mawj's sounds, 0–100. */
+    val mawjSoundVolume: Int = 70,
 )
 
 object LuxoFeaturesRepository {

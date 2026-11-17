@@ -558,8 +558,27 @@ internal fun HomeHeroSection(
                                 },
                         )
                         if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
-                            com.nuvio.app.core.ui.MawjWave(
-                                Modifier.align(Alignment.BottomCenter).padding(bottom = layout.bottomFadeHeight * 0.42f),
+                            // Reading side: the text sits on a calm dark side, the picture breathes on the other.
+                            if (layout.isTablet) {
+                                val readSide = themeBackground
+                                val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+                                Box(
+                                    Modifier.fillMaxSize().drawBehind {
+                                        drawRect(
+                                            Brush.horizontalGradient(
+                                                0f to readSide.copy(alpha = 0.88f),
+                                                0.36f to readSide.copy(alpha = 0.55f),
+                                                0.7f to readSide.copy(alpha = 0f),
+                                                startX = if (rtl) size.width else 0f,
+                                                endX = if (rtl) 0f else size.width,
+                                            ),
+                                        )
+                                    },
+                                )
+                            }
+                            com.nuvio.app.core.ui.MawjWaveEdge(
+                                Modifier.align(Alignment.BottomCenter),
+                                fill = heroFadeColorState?.value ?: themeBackground,
                             )
                         }
                     }
@@ -585,8 +604,10 @@ internal fun HomeHeroSection(
                                 .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
                                 .padding(
-                                    horizontal = layout.contentHorizontalPadding,
-                                    vertical = layout.contentVerticalPadding,
+                                    start = layout.contentHorizontalPadding,
+                                    end = layout.contentHorizontalPadding,
+                                    top = layout.contentVerticalPadding,
+                                    bottom = layout.contentVerticalPadding + if (com.nuvio.app.core.ui.rememberMawjStageOn()) 40.dp else 0.dp,
                                 ),
                             horizontalAlignment = if (layout.isTablet) Alignment.Start else Alignment.CenterHorizontally,
                         ) {

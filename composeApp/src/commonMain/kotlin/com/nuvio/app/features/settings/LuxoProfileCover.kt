@@ -109,7 +109,7 @@ internal fun LuxoProfileCover(isTablet: Boolean) {
             }
             val stageOn = com.nuvio.app.core.ui.rememberMawjStageOn()
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, if (stageOn) tokens.colors.background.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.75f)))))
-            if (stageOn) com.nuvio.app.core.ui.MawjWave(Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp), alpha = 0.45f)
+            if (stageOn) com.nuvio.app.core.ui.MawjWave(Modifier.align(Alignment.TopCenter).padding(top = 6.dp), alpha = 0.35f)
             if (covers.size > 1) {
                 Text(
                     lx("يُضغط لتغيير الغلاف", "Tap to change the cover"),

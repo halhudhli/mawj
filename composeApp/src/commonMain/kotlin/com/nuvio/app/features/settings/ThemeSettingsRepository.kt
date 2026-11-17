@@ -194,6 +194,7 @@ object ThemeSettingsRepository {
 
     fun setCustomTheme(colors: CustomThemeColors) {
         ensureLoaded()
+        com.nuvio.app.features.luxo.LuxoPrefsStorage.save("theme_user_chosen", "1")
         val selectedColors = resolveCustomThemeColors(
             colors,
             MemberAccessRepository.access.value.tier,
@@ -207,7 +208,7 @@ object ThemeSettingsRepository {
 
     fun setTheme(theme: AppTheme) {
         ensureLoaded()
-        if (_selectedThemePreference.value == theme) return
+        com.nuvio.app.features.luxo.LuxoPrefsStorage.save("theme_user_chosen", "1")
         _selectedThemePreference.value = theme
         ThemeSettingsStorage.saveSelectedTheme(theme.name)
         applyEffectiveTheme()
@@ -414,7 +415,14 @@ object ThemeSettingsRepository {
 
     private fun applyEffectiveTheme() {
         val access = MemberAccessRepository.access.value
-        val effective = resolveAppTheme(
+        // «واجهة موج الجديدة»: «بحر موج» wins over any older or synced choice until a theme is picked
+        // by hand after the new look arrived.
+        val mawjFirst = runCatching {
+            com.nuvio.app.features.luxo.LuxoFeaturesRepository.ensureLoaded()
+            com.nuvio.app.features.luxo.LuxoFeaturesRepository.state.value.mawjStage &&
+                com.nuvio.app.features.luxo.LuxoPrefsStorage.load("theme_user_chosen") != "1"
+        }.getOrDefault(false)
+        val effective = if (mawjFirst) AppTheme.MAWJ_SEA else resolveAppTheme(
             selectedTheme = _selectedThemePreference.value,
             entitlements = access.entitlements,
         )

@@ -114,10 +114,14 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
         AppBackgroundRepository.config
     }.collectAsStateWithLifecycle()
     val suspendCount by AppBackgroundRepository.suspended.collectAsStateWithLifecycle()
-    val model = remember(config.glassEnabled, config.source, config.url, config.localFile) {
-        if (config.glassEnabled) config.imageModel() else null
+    // «واجهة موج الجديدة» is drawn on the plain night sea: the picture background and glass rest while
+    // it is on (they return as they were when it is switched off).
+    val mawjStage = com.nuvio.app.core.ui.rememberMawjStageOn()
+    val glassOn = config.glassEnabled && !mawjStage
+    val model = remember(glassOn, config.source, config.url, config.localFile) {
+        if (glassOn) config.imageModel() else null
     }
-    val glassStyle = if (config.glassEnabled) config.glassPreset.style() else null
+    val glassStyle = if (glassOn) config.glassPreset.style() else null
     val dim = if (glassStyle != null) config.dimPercent.coerceIn(0, 80) / 100f else DefaultBackgroundDim
     val baseTokens = MaterialTheme.nuvio
     val baseScheme = MaterialTheme.colorScheme

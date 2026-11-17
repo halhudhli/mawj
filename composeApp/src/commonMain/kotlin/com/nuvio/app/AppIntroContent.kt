@@ -24,6 +24,8 @@ internal fun AppIntroContent(modifier: Modifier = Modifier) {
 
     // «موج» opener, chosen in Settings → المظهر → شاشة الدخول. A tap skips it.
     val style = com.nuvio.app.features.splash.MawjIdentPrefs.forThisLaunch ?: return
+    // The opener keeps its look; it now opens with the sea (switch: «صوت الافتتاحية»).
+    LaunchedEffect(Unit) { com.nuvio.app.features.luxo.MawjSounds.play(com.nuvio.app.features.luxo.MawjSound.Opening) }
     com.nuvio.app.features.splash.MawjIdent(
         style = style,
         modifier = modifier.then(

@@ -54,7 +54,8 @@ private const val SHEEN_ALPHA = 0.18f
 fun Modifier.luxoPosterMotion(seed: Int): Modifier {
     val features = rememberLuxoFeatures()
     // Tablet first: Android phones and tablets only for now (not the TV, not the iPhone yet).
-    if (!features.posterMotion || !luxoIsAndroidPlatform() || luxoIsTv()) return this
+    // Under «واجهة موج الجديدة» the posters stay still: many moving cards side by side looked busy.
+    if (!features.posterMotion || features.mawjStage || !luxoIsAndroidPlatform() || luxoIsTv()) return this
     val active = LocalScreenActive.current
     val start = remember(seed) { ((seed and 0x7fffffff) % 9000) / 1000f }
     val clock = remember(seed) { mutableFloatStateOf(start) }

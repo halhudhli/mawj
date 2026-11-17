@@ -277,6 +277,22 @@ internal fun MainAppContent(
         val liveTvScrollToTopRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
         val settingsRootActionRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
         val currentRoute = navBackStack.lastOrNull() as? AppRoute
+        // Mawj's sea cues: a short wave when a page opens, the water drawing back when it closes.
+        // The player has its own moment, so moving into or out of it stays silent; the home sea follows
+        // the top page.
+        val mawjDepth = navBackStack.size
+        val mawjPrevious = remember { intArrayOf(-1) }
+        LaunchedEffect(mawjDepth) {
+            val before = mawjPrevious[0]
+            mawjPrevious[0] = mawjDepth
+            if (before >= 0 && currentRoute !is PlayerRoute) {
+                if (mawjDepth > before) com.nuvio.app.features.luxo.MawjSounds.play(com.nuvio.app.features.luxo.MawjSound.Open)
+                else if (mawjDepth < before) com.nuvio.app.features.luxo.MawjSounds.play(com.nuvio.app.features.luxo.MawjSound.Back)
+            }
+        }
+        LaunchedEffect(currentRoute is TabsRoute) {
+            com.nuvio.app.features.luxo.MawjSounds.syncAmbient(currentRoute is TabsRoute)
+        }
         LaunchedEffect(currentRoute, posterNavigationEnabled) {
             val request = posterNavigation.active
             if (!posterNavigationEnabled || (request != null && currentRoute != request.to)) posterNavigation.clear()

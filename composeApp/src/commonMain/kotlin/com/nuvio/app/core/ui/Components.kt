@@ -637,18 +637,28 @@ fun NuvioToastHost(
                 .padding(horizontal = tokens.spacing.screenHorizontal),
             contentAlignment = Alignment.TopCenter,
         ) {
+            val mawj = rememberMawjStageOn()
             Surface(
                 shape = RoundedCornerShape(NuvioTokens.Radius.xl),
-                color = tokens.colors.surfacePopover,
+                color = if (mawj) Color(0xFF13202D) else tokens.colors.surfacePopover,
                 tonalElevation = tokens.elevation.raised,
                 shadowElevation = tokens.elevation.overlay,
+                border = if (mawj) androidx.compose.foundation.BorderStroke(1.dp, tokens.colors.accent.copy(alpha = 0.45f)) else null,
             ) {
-                Text(
-                    text = currentToast.message,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = NuvioTokens.Space.s16, vertical = NuvioTokens.Space.s12),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = tokens.colors.textPrimary,
-                )
+                ) {
+                    if (mawj) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(tokens.colors.accent))
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    Text(
+                        text = currentToast.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.colors.textPrimary,
+                    )
+                }
             }
         }
     }

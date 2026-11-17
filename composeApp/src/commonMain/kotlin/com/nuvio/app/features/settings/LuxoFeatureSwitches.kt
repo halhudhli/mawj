@@ -190,6 +190,21 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.soundPack }, { f, v -> f.copy(soundPack = v) },
         ),
         LuxoFeatureSwitch(
+            lx("صوت الافتتاحية 🌊", "Opening sound 🌊"),
+            lx("صوت بحر وموجة حقيقية عند فتح موج", "Real sea and wave when Mawj opens"),
+            { it.mawjOpeningSound }, { f, v -> f.copy(mawjOpeningSound = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("أصوات التنقل", "Navigation sounds"),
+            lx("موجة قصيرة عند فتح الصفحات، وانسحاب الماء عند الرجوع، ولمعة عند الإضافة", "Short sea cues while moving around"),
+            { it.mawjUiSounds }, { f, v -> f.copy(mawjUiSounds = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("بحر هادئ في الخلفية", "Calm sea in the background"),
+            lx("صوت بحر خافت في الصفحة الرئيسية، يتوقف عند التشغيل", "A faint sea on the home page"),
+            { it.mawjAmbientSea }, { f, v -> f.copy(mawjAmbientSea = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("واجهة موج الجديدة 🌊", "New Mawj look 🌊"),
             lx("مسرح سينمائي أعلى الصفحات، وموجة ذهبية متحركة، وألوان «بحر موج». تُختار ألوان أخرى من قائمة الثيمات", "Cinematic stage on top of pages and the gold wave"),
             { it.mawjStage }, { f, v -> f.copy(mawjStage = v) },

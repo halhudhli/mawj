@@ -143,6 +143,7 @@ internal object LuxoUserData {
                 if (list.items.any { key(it.type, it.id) == k }) {
                     list.copy(items = list.items.filterNot { key(it.type, it.id) == k })
                 } else {
+                    MawjSounds.play(MawjSound.Success)
                     list.copy(items = listOf(title.copy(addedAtMs = now())) + list.items)
                 }
             })

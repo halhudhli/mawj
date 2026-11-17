@@ -210,7 +210,7 @@ internal fun LuxoCompanyPage(
                 ),
             )
             if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
-                com.nuvio.app.core.ui.MawjWave(Modifier.padding(top = 330.dp), alpha = 0.4f)
+                com.nuvio.app.core.ui.MawjWaveEdge(Modifier.padding(top = 336.dp))
             }
         }
         LazyVerticalGrid(

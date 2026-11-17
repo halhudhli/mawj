@@ -212,13 +212,17 @@ fun NuvioPosterCard(
                         imageUrl
                     }
                 }
+                var imageArrived by remember(imageUrl) { mutableStateOf(false) }
+                if (!imageArrived && !imageFailed && rememberMawjStageOn()) {
+                    Box(Modifier.matchParentSize().mawjShimmer())
+                }
                 AsyncImage(
                     model = imageModel,
                     contentDescription = title,
                     modifier = Modifier.matchParentSize().luxoPosterMotion(title.hashCode()),
                     contentScale = ContentScale.Crop,
                     onError = { imageFailed = true },
-                    onSuccess = { imageFailed = false },
+                    onSuccess = { imageFailed = false; imageArrived = true },
                 )
             }
 

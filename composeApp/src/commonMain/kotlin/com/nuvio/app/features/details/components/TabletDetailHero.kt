@@ -277,7 +277,7 @@ fun TabletDetailHero(
                     start = horizontalPadding,
                     end = horizontalPadding,
                     top = TabletHeroTopInset,
-                    bottom = bottomInset + space.s24,
+                    bottom = bottomInset + space.s24 + if (com.nuvio.app.core.ui.rememberMawjStageOn()) 40.dp else 0.dp,
                 ),
         ) {
             if (logoUrl != null && !logoLoadError) {
@@ -383,6 +383,9 @@ fun TabletDetailHero(
                     )
                 }
             }
+        }
+        if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+            com.nuvio.app.core.ui.MawjWaveEdge(Modifier.align(Alignment.BottomCenter), fill = colorScheme.background)
         }
     }
 }
