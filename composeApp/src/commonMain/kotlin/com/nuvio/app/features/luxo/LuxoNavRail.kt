@@ -161,6 +161,7 @@ internal fun LuxoSlimRail(
         }
     }
 
+    val mawjRail = com.nuvio.app.core.ui.rememberMawjStageOn()
     Box(
         modifier = modifier
             .fillMaxHeight()
@@ -173,7 +174,16 @@ internal fun LuxoSlimRail(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(LuxoSlimRailWidth)
-                .background(tokens.colors.background.copy(alpha = 0.96f))
+                .then(
+                    // Under the new look the rail is see-through, so the sea runs behind it; only a
+                    // faint shade on the screen edge keeps the icons readable.
+                    if (mawjRail) Modifier.background(
+                        androidx.compose.ui.graphics.Brush.horizontalGradient(
+                            if (isRtl) listOf(Color.Transparent, tokens.colors.background.copy(alpha = 0.32f))
+                            else listOf(tokens.colors.background.copy(alpha = 0.32f), Color.Transparent),
+                        ),
+                    ) else Modifier.background(tokens.colors.background.copy(alpha = 0.96f)),
+                )
                 .padding(top = topInset + 14.dp, bottom = bottomInset + 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -222,8 +232,8 @@ internal fun LuxoSlimRail(
                 }
             }
         }
-        // The outer-edge hairline that separates the rail from the page.
-        Box(
+        // The outer-edge hairline that separates the rail from the page (not under the new look).
+        if (!mawjRail) Box(
             Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()

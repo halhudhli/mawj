@@ -1,5 +1,6 @@
 package com.nuvio.app
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.nuvio.app.features.luxo.luxoTwoFingerSwipeIf
 import com.nuvio.app.features.luxo.LuxoStyledBar
 import androidx.compose.ui.focus.onFocusChanged
@@ -415,12 +416,17 @@ internal fun mainFloatingNavigationItems(
     val animeLabel = com.nuvio.app.features.luxo.lx("أنمي", "Anime")
     val animeOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().animeSection
     val ids = com.nuvio.app.features.luxo.LuxoNavTabIds
+    // Under the new look the tabs use Gentleface icons: outline when idle, filled when selected.
+    val mawjIcons = com.nuvio.app.core.ui.rememberMawjStageOn()
+    val mi = com.nuvio.app.core.ui.MawjIcons
+    fun pick(tab: AppScreenTab, line: ImageVector, solid: ImageVector, fallback: ImageVector?): ImageVector? =
+        if (mawjIcons) (if (highlightedTab == tab) solid else line) else fallback
     val tabs = buildList {
         add(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Home,
                 onClick = { onTabSelected(AppScreenTab.Home) },
-                icon = Icons.Filled.Home,
+                icon = pick(AppScreenTab.Home, mi.HomeLine, mi.HomeSolid, Icons.Filled.Home),
                 label = homeLabel,
                 id = ids.HOME,
                 onLongClick = longPress(AppScreenTab.Home),
@@ -431,7 +437,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Movies,
                     onClick = { onTabSelected(AppScreenTab.Movies) },
-                    icon = Icons.Filled.Movie,
+                    icon = pick(AppScreenTab.Movies, mi.MoviesLine, mi.MoviesSolid, Icons.Filled.Movie),
                     label = moviesLabel,
                     id = ids.MOVIES,
                     onLongClick = longPress(AppScreenTab.Movies),
@@ -443,7 +449,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Series,
                     onClick = { onTabSelected(AppScreenTab.Series) },
-                    icon = Icons.Filled.VideoLibrary,
+                    icon = pick(AppScreenTab.Series, mi.SeriesLine, mi.SeriesSolid, Icons.Filled.VideoLibrary),
                     label = seriesLabel,
                     id = ids.SERIES,
                     onLongClick = longPress(AppScreenTab.Series),
@@ -455,7 +461,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Anime,
                     onClick = { onTabSelected(AppScreenTab.Anime) },
-                    icon = Icons.Filled.Animation,
+                    icon = pick(AppScreenTab.Anime, mi.AnimeLine, mi.AnimeSolid, Icons.Filled.Animation),
                     label = animeLabel,
                     id = ids.ANIME,
                     onLongClick = longPress(AppScreenTab.Anime),
@@ -467,7 +473,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Lists,
                     onClick = { onTabSelected(AppScreenTab.Lists) },
-                    icon = Icons.Filled.Bookmarks,
+                    icon = pick(AppScreenTab.Lists, mi.ListsLine, mi.ListsSolid, Icons.Filled.Bookmarks),
                     label = listsLabel,
                     id = ids.LISTS,
                     onLongClick = longPress(AppScreenTab.Lists),
@@ -478,6 +484,7 @@ internal fun mainFloatingNavigationItems(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Search,
                 onClick = { onTabSelected(AppScreenTab.Search) },
+                icon = pick(AppScreenTab.Search, mi.SearchLine, mi.SearchSolid, null),
                 drawable = Res.drawable.sidebar_search,
                 label = searchLabel,
                 id = ids.SEARCH,
@@ -488,6 +495,7 @@ internal fun mainFloatingNavigationItems(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Library,
                 onClick = { onTabSelected(AppScreenTab.Library) },
+                icon = pick(AppScreenTab.Library, mi.LibraryLine, mi.LibrarySolid, null),
                 drawable = Res.drawable.sidebar_library,
                 label = libraryLabel,
                 id = ids.LIBRARY,
@@ -500,7 +508,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.LiveTv,
                     onClick = { onTabSelected(AppScreenTab.LiveTv) },
-                    icon = Icons.Filled.Tv,
+                    icon = pick(AppScreenTab.LiveTv, mi.LiveLine, mi.LiveSolid, Icons.Filled.Tv),
                     label = liveLabel,
                     id = ids.LIVE_TV,
                     onLongClick = longPress(AppScreenTab.LiveTv),
