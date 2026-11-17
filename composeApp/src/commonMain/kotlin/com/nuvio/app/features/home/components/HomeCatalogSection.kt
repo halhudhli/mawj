@@ -77,7 +77,7 @@ private fun HomeCatalogRowSectionContent(
 ) {
     val posterCardStyle = rememberPosterCardStyleUiState()
     // Mawj «أفضل 10»: popular / trending rows become a ranked row of ten.
-    val ranked = com.nuvio.app.features.luxo.rememberLuxoFeatures().top10Rank && luxoIsRankedTitle(section.title) && entries.size >= 5
+    val ranked = com.nuvio.app.features.luxo.rememberLuxoFeatures().let { it.top10Rank && !it.mawjStage } && luxoIsRankedTitle(section.title) && entries.size >= 5
     val shownEntries = if (ranked) entries.take(10) else entries
 
     NuvioShelfSection(

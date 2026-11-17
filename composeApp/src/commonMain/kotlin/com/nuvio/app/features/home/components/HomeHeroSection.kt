@@ -69,6 +69,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
@@ -820,6 +821,20 @@ private fun HeroContentBlock(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (layout.isTablet) Alignment.Start else Alignment.CenterHorizontally,
     ) {
+        if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+            // «مدّ الليلة»: a quiet gold line over the title, as on the design.
+            val accent = com.nuvio.app.core.ui.luxoAccentColors().first()
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 12.dp)) {
+                Text("مدّ الليلة", color = accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Box(Modifier.padding(horizontal = 10.dp).size(width = 24.dp, height = 1.dp).background(accent))
+                Text(
+                    item.genres.take(2).joinToString(" · ").ifBlank { item.releaseInfo.orEmpty() },
+                    color = Color(0xFFA9B6C4),
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                )
+            }
+        }
         if (logoUrl != null && !logoLoadError) {
             AsyncImage(
                 model = logoUrl,

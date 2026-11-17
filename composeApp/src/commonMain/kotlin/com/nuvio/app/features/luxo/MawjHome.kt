@@ -121,3 +121,44 @@ fun MawjMoodCompass(
         }
     }
 }
+
+/**
+ * A collection on the new home: its title in serif and its folders as quiet text chips, instead of a
+ * row of large artwork tiles. Tapping a chip opens that folder as before.
+ */
+@Composable
+fun MawjCollectionChips(
+    collection: com.nuvio.app.features.collection.Collection,
+    onFolderClick: ((collectionId: String, folderId: String) -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    if (collection.folders.isEmpty()) return
+    val tokens = MaterialTheme.nuvio
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            collection.title,
+            color = tokens.colors.textPrimary,
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+        )
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            collection.folders.forEach { folder ->
+                Text(
+                    listOfNotNull(folder.coverEmoji?.takeIf { it.isNotBlank() }, folder.title).joinToString(" "),
+                    color = Color(0xFFE6EBF0),
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFF0D1620))
+                        .border(1.dp, tokens.colors.accent.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
+                        .clickable { onFolderClick?.invoke(collection.id, folder.id) }
+                        .padding(horizontal = 18.dp, vertical = 12.dp),
+                )
+            }
+        }
+    }
+}

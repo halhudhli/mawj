@@ -1176,6 +1176,7 @@ fun HomeScreen(
                     }
 
                     else -> {
+                        val mawjHome = com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage
                         homeContinueWatchingSections(
                             preferences = continueWatchingPreferences,
                             continueWatchingItems = continueWatchingItems,
@@ -1199,7 +1200,7 @@ fun HomeScreen(
                             )
                         }
                         // Luxo: «وش أشوف الليلة؟»
-                        item(key = "luxo_season") {
+                        if (!mawjHome) item(key = "luxo_season") {
                             com.nuvio.app.features.luxo.LuxoSeasonBanner(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
                             )
@@ -1210,19 +1211,19 @@ fun HomeScreen(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
                             )
                         }
-                        item(key = "luxo_countdown") {
+                        if (!mawjHome) item(key = "luxo_countdown") {
                             com.nuvio.app.features.luxo.LuxoCountdownStrip(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 14.dp),
                             )
                         }
-                        item(key = "luxo_because") {
+                        if (!mawjHome) item(key = "luxo_because") {
                             com.nuvio.app.features.luxo.LuxoBecauseWatchedRows(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
                             )
                         }
-                        item(key = "luxo_discovery") {
+                        if (!mawjHome) item(key = "luxo_discovery") {
                             com.nuvio.app.features.luxo.LuxoDiscoveryCard(
                                 onOpen = { picked -> onPosterClick?.invoke(picked) },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding).padding(bottom = 12.dp),
@@ -1234,7 +1235,13 @@ fun HomeScreen(
                             if (settingsItem.isCollection) {
                                 val collection = collectionsMap[settingsItem.key]
                                 if (collection != null) {
-                                    item(key = keyedSettingsItem.lazyKey) {
+                                    if (mawjHome) item(key = keyedSettingsItem.lazyKey) {
+                                        com.nuvio.app.features.luxo.MawjCollectionChips(
+                                            collection = collection,
+                                            onFolderClick = onFolderClick,
+                                            modifier = Modifier.padding(horizontal = homeSectionPadding).padding(top = 8.dp, bottom = 28.dp),
+                                        )
+                                    } else item(key = keyedSettingsItem.lazyKey) {
                                         HomeCollectionRowSection(
                                             collection = collection,
                                             modifier = Modifier.padding(bottom = 12.dp),
@@ -1251,7 +1258,7 @@ fun HomeScreen(
                                         HomeCatalogRowSection(
                                             section = section,
                                             entries = section.items.take(HOME_CATALOG_PREVIEW_LIMIT),
-                                            modifier = Modifier.padding(bottom = 12.dp),
+                                            modifier = Modifier.padding(bottom = if (mawjHome) 30.dp else 12.dp),
                                             sectionPadding = homeSectionPadding,
                                             onViewAllClick = if (section.canOpenCatalog(HOME_CATALOG_PREVIEW_LIMIT)) {
                                                 onCatalogClick?.let { { it(section) } }
@@ -1269,6 +1276,12 @@ fun HomeScreen(
                                     }
                                 }
                             }
+                        }
+                        if (mawjHome) item(key = "mawj_next") {
+                            com.nuvio.app.features.luxo.LuxoCountdownStrip(
+                                onOpen = { picked -> onPosterClick?.invoke(picked) },
+                                modifier = Modifier.padding(horizontal = homeSectionPadding).padding(top = 6.dp, bottom = 40.dp),
+                            )
                         }
                     }
                 }
