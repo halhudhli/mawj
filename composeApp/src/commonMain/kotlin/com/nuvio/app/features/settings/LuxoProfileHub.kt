@@ -205,7 +205,7 @@ internal fun LazyListScope.luxoProfileHubContent(
             }
         }
     }
-    item(key = "luxo_pass") {
+    if (!com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage) item(key = "luxo_pass") {
         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
             LuxoPassCard(
                 modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth().padding(horizontal = if (isTablet) 0.dp else 16.dp),
@@ -220,7 +220,7 @@ internal fun LazyListScope.luxoProfileHubContent(
                 .padding(top = 18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
+            if (!com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage) Text(
                 lx("القاعات", "Halls"),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -228,7 +228,7 @@ internal fun LazyListScope.luxoProfileHubContent(
             )
             val halls = buildList {
                 if (onProfileClick != null) {
-                    add(LuxoHall(lx("ذوقي", "My taste"), lx("الإحصائيات والأوسمة وخريطة المشاهدة", "Stats, badges and your watch map"), Icons.Rounded.AutoAwesome, Color(0xFF8FB0DA), onProfileClick, wide = true))
+                    add(LuxoHall(lx("ذوقي", "My taste"), lx("الإحصائيات والأوسمة وخريطة المشاهدة", "Stats, badges and your watch map"), Icons.Rounded.AutoAwesome, Color(0xFF8FB0DA), onProfileClick, wide = true, group = 1))
                 }
                 if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().franchises) {
                     add(LuxoHall(lx("السلاسل", "Franchises"), lx("الأجزاء بترتيب المشاهدة", "Parts in watch order"), Icons.Rounded.Movie, Color(0xFFFF9A5C), { com.nuvio.app.features.luxo.LuxoOverlays.franchise = "" }))
@@ -278,23 +278,27 @@ internal fun LazyListScope.luxoProfileHubContent(
                         { com.nuvio.app.features.luxo.LuxoPrivateMode.toggle() },
                     ))
                 }
-                add(LuxoHall(lx("الحساب", "Account"), lx("نوفيو والمزامنة", "Nuvio and sync"), Icons.Rounded.AccountCircle, Color(0xFF5CC8FF), onAccountClick))
+                add(LuxoHall(lx("الحساب", "Account"), lx("نوفيو والمزامنة", "Nuvio and sync"), Icons.Rounded.AccountCircle, Color(0xFF5CC8FF), onAccountClick, group = 3))
                 if (onWatchPartyClick != null) {
                     add(LuxoHall(lx("سهرة جماعية", "Watch party"), lx("شاهد مع الأصدقاء", "Watch together"), Icons.Rounded.Groups, Color(0xFFFF7BA9), onWatchPartyClick))
                 }
-                add(LuxoHall(lx("المظهر", "Appearance"), lx("الثيمات والخطوط والشريط وإضافات موج", "Themes, fonts, the bar and Mawj extras"), Icons.Rounded.Palette, Color(0xFFFFB95C), onAppearanceClick, wide = true))
-                add(LuxoHall(lx("المحتوى", "Content"), lx("الإضافات والكتالوج", "Addons and catalogs"), Icons.Rounded.Extension, Color(0xFF7BE0A3), onContentDiscoveryClick))
-                add(LuxoHall(lx("التشغيل", "Playback"), lx("المشغل والترجمة", "Player and subtitles"), Icons.Rounded.PlayArrow, Color(0xFFFF6B6B), onPlaybackClick))
-                add(LuxoHall(lx("التكاملات", "Integrations"), lx("الخدمات المرتبطة", "Linked services"), Icons.Rounded.Link, Color(0xFF8C9EFF), onIntegrationsClick))
-                add(LuxoHall(lx("الإشعارات", "Notifications"), lx("تنبيهات الحلقات", "Episode alerts"), Icons.Rounded.Notifications, Color(0xFFFFD86B), onNotificationsClick))
-                add(LuxoHall(lx("التتبّع", "Tracking"), "Trakt", Icons.Rounded.Sync, Color(0xFFED1C24), onTrackingClick))
-                add(LuxoHall(lx("متقدم", "Advanced"), lx("النسخ الاحتياطي وكل الخيارات", "Backup and every option"), Icons.Rounded.Tune, Color(0xFF9AA3AD), onAdvancedClick))
+                add(LuxoHall(lx("المظهر", "Appearance"), lx("الثيمات والخطوط والشريط وإضافات موج", "Themes, fonts, the bar and Mawj extras"), Icons.Rounded.Palette, Color(0xFFFFB95C), onAppearanceClick, wide = true, group = 1))
+                add(LuxoHall(lx("المحتوى", "Content"), lx("الإضافات والكتالوج", "Addons and catalogs"), Icons.Rounded.Extension, Color(0xFF7BE0A3), onContentDiscoveryClick, group = 2))
+                add(LuxoHall(lx("التشغيل", "Playback"), lx("المشغل والترجمة", "Player and subtitles"), Icons.Rounded.PlayArrow, Color(0xFFFF6B6B), onPlaybackClick, group = 2))
+                add(LuxoHall(lx("التكاملات", "Integrations"), lx("الخدمات المرتبطة", "Linked services"), Icons.Rounded.Link, Color(0xFF8C9EFF), onIntegrationsClick, group = 2))
+                add(LuxoHall(lx("الإشعارات", "Notifications"), lx("تنبيهات الحلقات", "Episode alerts"), Icons.Rounded.Notifications, Color(0xFFFFD86B), onNotificationsClick, group = 1))
+                add(LuxoHall(lx("التتبّع", "Tracking"), "Trakt", Icons.Rounded.Sync, Color(0xFFED1C24), onTrackingClick, group = 2))
+                add(LuxoHall(lx("متقدم", "Advanced"), lx("النسخ الاحتياطي وكل الخيارات", "Backup and every option"), Icons.Rounded.Tune, Color(0xFF9AA3AD), onAdvancedClick, group = 3))
                 if (onCheckForUpdatesClick != null) {
-                    add(LuxoHall(lx("التحديثات", "Updates"), lx("آخر إصدار من موج", "Latest Mawj release"), Icons.Rounded.NewReleases, Color(0xFF6BE3FF), onCheckForUpdatesClick))
+                    add(LuxoHall(lx("التحديثات", "Updates"), lx("آخر إصدار من موج", "Latest Mawj release"), Icons.Rounded.NewReleases, Color(0xFF6BE3FF), onCheckForUpdatesClick, group = 3))
                 }
-                add(LuxoHall(lx("حول", "About"), lx("التراخيص والشكر", "Licenses and credits"), Icons.Rounded.Info, Color(0xFFC9B6FF), onLicensesAttributionsClick))
+                add(LuxoHall(lx("حول", "About"), lx("التراخيص والشكر", "Licenses and credits"), Icons.Rounded.Info, Color(0xFFC9B6FF), onLicensesAttributionsClick, group = 3))
             }
-            LuxoHallGrid(halls = halls, columns = if (isTablet) 4 else 2)
+            if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().mawjStage) {
+                MawjSettingsGroups(halls = halls, isTablet = isTablet)
+            } else {
+                LuxoHallGrid(halls = halls, columns = if (isTablet) 4 else 2)
+            }
         }
     }
 }
@@ -306,6 +310,8 @@ private class LuxoHall(
     val tint: Color,
     val onClick: () -> Unit,
     val wide: Boolean = false,
+    /** Mawj settings groups: 0 = tools, 1 = السطح, 2 = العمق, 3 = القاع. */
+    val group: Int = 0,
 )
 
 @Composable
@@ -663,3 +669,83 @@ private fun LuxoBarcode(seed: Int, modifier: Modifier) {
     }
 }
 
+
+
+/**
+ * The new settings page: three groups named for the sea (السطح ما يُرى، العمق ما يُسمع ويُقرأ، القاع ما
+ * يعمل خلف الستار), each a calm list, and Mawj's tools as one group of chips beneath them.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun MawjSettingsGroups(halls: List<LuxoHall>, isTablet: Boolean) {
+    val tokens = MaterialTheme.nuvio
+    val accent = tokens.colors.accent
+    val groups = listOf(
+        Triple(1, "السطح", "ما يُرى"),
+        Triple(2, "العمق", "ما يُسمع ويُقرأ"),
+        Triple(3, "القاع", "ما يعمل خلف الستار"),
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(26.dp)) {
+        val columns: @Composable (content: @Composable (Modifier) -> Unit) -> Unit = { content ->
+            if (isTablet) Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) { content(Modifier.weight(1f)) }
+            else Column(verticalArrangement = Arrangement.spacedBy(20.dp)) { content(Modifier.fillMaxWidth()) }
+        }
+        columns { cell ->
+            groups.forEachIndexed { index, (id, title, sub) ->
+                Column(cell, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(accent.copy(alpha = 1f - index * 0.32f)))
+                        Spacer(Modifier.width(10.dp))
+                        Text(title, color = tokens.colors.textPrimary, fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(sub, color = Color(0xFF8796A8), fontSize = 12.sp)
+                    }
+                    Column(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color(0xFF0D1620))
+                            .border(1.dp, accent.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
+                    ) {
+                        halls.filter { it.group == id }.forEach { hall ->
+                            Row(
+                                Modifier.fillMaxWidth().clickable(onClick = hall.onClick).padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp)) }
+                                Spacer(Modifier.width(14.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(hall.title, color = tokens.colors.textPrimary, fontSize = 15.sp)
+                                    Text(hall.subtitle, color = Color(0xFF8796A8), fontSize = 12.sp, maxLines = 1)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        val tools = halls.filter { it.group == 0 }
+        if (tools.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("أدوات موج", color = tokens.colors.textPrimary, fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    tools.forEach { hall ->
+                        Row(
+                            Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFF0D1620))
+                                .border(1.dp, accent.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
+                                .clickable(onClick = hall.onClick).padding(horizontal = 14.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(hall.title, color = tokens.colors.textPrimary, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
