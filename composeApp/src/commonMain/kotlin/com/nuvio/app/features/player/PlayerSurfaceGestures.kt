@@ -258,9 +258,12 @@ internal fun Modifier.playerSurfacePinchGestures(
     pointerInput(playbackGesturesEnabled) {
         if (!playbackGesturesEnabled) return@pointerInput
         awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
+            awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
             do {
-                val event = awaitPointerEvent()
+                // Initial pass: the pinch claims the touch before the tap / long-press / swipe detectors see
+                // it, so spreading two fingers no longer counts as a tap (which hid the controls) or as a
+                // hold (which sped the video up).
+                val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
                 val multiTouch = event.changes.count { it.pressed } > 1
                 if (multiTouch && !playerControlsLockedState.value && touchGesturesEnabledState.value) {
                     val zoom = event.calculateZoom()
