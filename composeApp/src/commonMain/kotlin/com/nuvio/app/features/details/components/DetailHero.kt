@@ -226,7 +226,7 @@ fun DetailHero(
                 )
                 val mawjStage = com.nuvio.app.core.ui.rememberMawjStageOn()
                 if (mawjStage) {
-                    com.nuvio.app.core.ui.MawjSea(Modifier.align(Alignment.BottomCenter).height(220.dp), fill = bottomGradientColor)
+                    Unit
                 }
 
                 Column(

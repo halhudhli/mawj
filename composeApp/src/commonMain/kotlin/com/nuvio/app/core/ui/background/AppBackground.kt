@@ -3,6 +3,8 @@ package com.nuvio.app.core.ui.background
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -128,7 +130,10 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
     val geometry = remember { AppBackgroundGeometry() }
     val blurred = rememberBlurredBackground(model)
 
-    val hasImage = model != null
+    // «واجهة موج الجديدة»: the sea itself is the app background (behind every page), so pages let it
+    // show through the same way they do for a picture background.
+    val seaOn = mawjStage && suspendCount == 0
+    val hasImage = model != null || seaOn
     val tokens = remember(baseTokens, hasImage, glassStyle) { baseTokens.withAppBackground(hasImage, glassStyle) }
     val scheme = remember(baseScheme, hasImage, glassStyle) { baseScheme.withAppBackground(hasImage, glassStyle) }
     val glass = remember(blurred, dim, glassStyle, geometry, hasImage) {
@@ -148,8 +153,8 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
     val original = remember(baseTokens, baseScheme, baseTypography) {
         OriginalTheme(baseTokens, baseScheme, baseTypography)
     }
-    val typography = remember(baseTypography, hasImage) {
-        if (hasImage) baseTypography.withTextShadow() else baseTypography
+    val typography = remember(baseTypography, hasImage, seaOn) {
+        if (hasImage && !seaOn) baseTypography.withTextShadow() else baseTypography
     }
 
     Box(
@@ -160,6 +165,14 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
                 geometry.size = it.size
             },
     ) {
+        if (seaOn) {
+            Box(Modifier.fillMaxSize().background(baseTokens.colors.background)) {
+                com.nuvio.app.core.ui.MawjSea(
+                    Modifier.align(androidx.compose.ui.Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.62f),
+                    fill = baseTokens.colors.background,
+                )
+            }
+        }
         if (model != null && suspendCount == 0) {
             Box(
                 modifier = Modifier

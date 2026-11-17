@@ -577,10 +577,7 @@ internal fun HomeHeroSection(
                                     },
                                 )
                             }
-                            com.nuvio.app.core.ui.MawjSea(
-                                Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.5f),
-                                fill = heroFadeColorState?.value ?: themeBackground,
-                            )
+
                         }
                     }
 

@@ -385,7 +385,7 @@ fun TabletDetailHero(
             }
         }
         if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
-            com.nuvio.app.core.ui.MawjSea(Modifier.align(Alignment.BottomCenter).height(220.dp), fill = colorScheme.background)
+            Unit
         }
     }
 }
