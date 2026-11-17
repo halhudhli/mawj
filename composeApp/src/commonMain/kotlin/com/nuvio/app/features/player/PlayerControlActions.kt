@@ -368,6 +368,12 @@ internal fun PlayerControlActions(
     )
     val hasOverflow = secondaryActions.isNotEmpty()
     var expanded by remember(hasOverflow) { mutableStateOf(false) }
+    // While the extra actions are open the controls stay on screen (like the rest of the strip) until
+    // the screen is tapped; before, the 3.5 s auto-hide closed them mid-choice.
+    androidx.compose.runtime.DisposableEffect(expanded) {
+        LuxoPlayerActionsState.expanded = expanded
+        onDispose { LuxoPlayerActionsState.expanded = false }
+    }
     val scrollState = rememberScrollState()
     LaunchedEffect(expanded, scrollState.maxValue) {
         if (expanded) scrollState.animateScrollTo(scrollState.maxValue) else scrollState.scrollTo(0)
@@ -485,3 +491,9 @@ private data class PlayerControlAction(
     val iconSize: Dp = 24.dp,
     val popup: (@Composable () -> Unit)? = null,
 )
+
+
+/** Whether the player's extra actions ("more") are open; the auto-hide waits while they are. */
+internal object LuxoPlayerActionsState {
+    var expanded by androidx.compose.runtime.mutableStateOf(false)
+}

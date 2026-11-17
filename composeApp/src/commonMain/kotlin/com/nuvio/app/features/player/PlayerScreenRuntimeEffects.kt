@@ -430,9 +430,11 @@ private fun PlayerScreenRuntime.BindPlayerUiVisibilityEffects() {
         showParentalGuide,
         showSpeedPanel,
         errorMessage,
+        LuxoPlayerActionsState.expanded,
     ) {
         if (
             !controlsVisible ||
+            LuxoPlayerActionsState.expanded ||
             isScrubbingTimeline ||
             isTouchingTimeline ||
             !playbackSnapshot.isPlaying ||
