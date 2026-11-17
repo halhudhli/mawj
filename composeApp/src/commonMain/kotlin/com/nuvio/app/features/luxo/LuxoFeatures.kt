@@ -227,6 +227,8 @@ data class LuxoFeatures(
     val mawjStage: Boolean = true,
     /** Titles with several posters show them in turn, softly (Arabic posters first). */
     val posterRotate: Boolean = true,
+    /** Gentleface animated icons: rail tabs and settings move once when chosen or shown. */
+    val mawjAnimatedIcons: Boolean = true,
     /** Sea sound when Mawj opens. */
     val mawjOpeningSound: Boolean = false,
     /** Short sea cues when opening and leaving pages, adding, and on errors. */

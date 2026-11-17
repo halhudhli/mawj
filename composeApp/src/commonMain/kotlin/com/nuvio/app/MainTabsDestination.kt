@@ -420,12 +420,13 @@ internal fun mainFloatingNavigationItems(
     val mawjIcons = com.nuvio.app.core.ui.rememberMawjStageOn()
     val mi = com.nuvio.app.core.ui.MawjIcons
     fun pick(tab: AppScreenTab, line: ImageVector, solid: ImageVector, fallback: ImageVector?): ImageVector? =
-        if (mawjIcons) (if (highlightedTab == tab) solid else line) else fallback
+        if (mawjIcons) line else fallback
     val tabs = buildList {
         add(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Home,
                 onClick = { onTabSelected(AppScreenTab.Home) },
+                motion = if (mawjIcons) "home-write" else null,
                 icon = pick(AppScreenTab.Home, mi.HomeLine, mi.HomeSolid, Icons.Filled.Home),
                 label = homeLabel,
                 id = ids.HOME,
@@ -437,6 +438,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Movies,
                     onClick = { onTabSelected(AppScreenTab.Movies) },
+                motion = if (mawjIcons) "clapperboard-clap" else null,
                     icon = pick(AppScreenTab.Movies, mi.MoviesLine, mi.MoviesSolid, Icons.Filled.Movie),
                     label = moviesLabel,
                     id = ids.MOVIES,
@@ -449,6 +451,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Series,
                     onClick = { onTabSelected(AppScreenTab.Series) },
+                motion = if (mawjIcons) "tv-channel" else null,
                     icon = pick(AppScreenTab.Series, mi.SeriesLine, mi.SeriesSolid, Icons.Filled.VideoLibrary),
                     label = seriesLabel,
                     id = ids.SERIES,
@@ -461,6 +464,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Anime,
                     onClick = { onTabSelected(AppScreenTab.Anime) },
+                motion = if (mawjIcons) "sparkles-spark" else null,
                     icon = pick(AppScreenTab.Anime, mi.AnimeLine, mi.AnimeSolid, Icons.Filled.Animation),
                     label = animeLabel,
                     id = ids.ANIME,
@@ -473,6 +477,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.Lists,
                     onClick = { onTabSelected(AppScreenTab.Lists) },
+                motion = if (mawjIcons) "bookmarks-cycle" else null,
                     icon = pick(AppScreenTab.Lists, mi.ListsLine, mi.ListsSolid, Icons.Filled.Bookmarks),
                     label = listsLabel,
                     id = ids.LISTS,
@@ -484,6 +489,7 @@ internal fun mainFloatingNavigationItems(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Search,
                 onClick = { onTabSelected(AppScreenTab.Search) },
+                motion = if (mawjIcons) "search-scan" else null,
                 icon = pick(AppScreenTab.Search, mi.SearchLine, mi.SearchSolid, null),
                 drawable = Res.drawable.sidebar_search,
                 label = searchLabel,
@@ -495,6 +501,7 @@ internal fun mainFloatingNavigationItems(
             FloatingNavigationItem(
                 selected = highlightedTab == AppScreenTab.Library,
                 onClick = { onTabSelected(AppScreenTab.Library) },
+                motion = if (mawjIcons) "book-open-turn" else null,
                 icon = pick(AppScreenTab.Library, mi.LibraryLine, mi.LibrarySolid, null),
                 drawable = Res.drawable.sidebar_library,
                 label = libraryLabel,
@@ -508,6 +515,7 @@ internal fun mainFloatingNavigationItems(
                 FloatingNavigationItem(
                     selected = highlightedTab == AppScreenTab.LiveTv,
                     onClick = { onTabSelected(AppScreenTab.LiveTv) },
+                motion = if (mawjIcons) "radio-tower-broadcast" else null,
                     icon = pick(AppScreenTab.LiveTv, mi.LiveLine, mi.LiveSolid, Icons.Filled.Tv),
                     label = liveLabel,
                     id = ids.LIVE_TV,

@@ -195,6 +195,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.posterRotate }, { f, v -> f.copy(posterRotate = v) },
         ),
         LuxoFeatureSwitch(
+            lx("أيقونات متحركة", "Animated icons"),
+            lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
+            { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أصوات التنقل", "Navigation sounds"),
             lx("موجة قصيرة عند فتح الصفحات، وانسحاب الماء عند الرجوع، ولمعة عند الإضافة", "Short sea cues while moving around"),
             { it.mawjUiSounds }, { f, v -> f.copy(mawjUiSounds = v) },

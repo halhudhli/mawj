@@ -88,6 +88,8 @@ internal class FloatingNavigationItem(
     val onLongClick: (() -> Unit)? = null,
     /** Luxo: small count shown on the icon; 0 hides it. */
     val badge: Int = 0,
+    /** Mawj: Gentleface animated icon (files/motion/<name>.svg) used on the rail under the new look. */
+    val motion: String? = null,
 )
 
 /**

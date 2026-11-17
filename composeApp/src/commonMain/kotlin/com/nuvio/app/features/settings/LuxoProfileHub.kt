@@ -315,6 +315,8 @@ private class LuxoHall(
     val wide: Boolean = false,
     /** Mawj settings groups: 0 = tools, 1 = السطح, 2 = العمق, 3 = القاع. */
     val group: Int = 0,
+    /** Gentleface animated icon for this hall, if there is one. */
+    val motion: String? = com.nuvio.app.core.ui.MawjMotion.forHall(title),
 )
 
 @Composable
@@ -715,7 +717,13 @@ private fun MawjSettingsGroups(halls: List<LuxoHall>, isTablet: Boolean) {
                                 Box(
                                     Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp)) }
+                                ) {
+                                    val m = hall.motion
+                                    if (m != null) com.nuvio.app.core.ui.MawjMotionIcon(
+                                        name = m, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp),
+                                        playOnAppear = true, startDelayMs = 250L + 140L * (halls.indexOf(hall) % 12), fallback = hall.icon,
+                                    ) else Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+                                }
                                 Spacer(Modifier.width(14.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(hall.title, color = tokens.colors.textPrimary, fontSize = 15.sp)
@@ -742,7 +750,11 @@ private fun MawjSettingsGroups(halls: List<LuxoHall>, isTablet: Boolean) {
                                 .clickable(onClick = hall.onClick).padding(horizontal = 14.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                            val m = hall.motion
+                            if (m != null) com.nuvio.app.core.ui.MawjMotionIcon(
+                                name = m, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp),
+                                playOnAppear = true, startDelayMs = 900L + 120L * (tools.indexOf(hall) % 14), fallback = hall.icon,
+                            ) else Icon(hall.icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(hall.title, color = tokens.colors.textPrimary, fontSize = 14.sp)
                         }

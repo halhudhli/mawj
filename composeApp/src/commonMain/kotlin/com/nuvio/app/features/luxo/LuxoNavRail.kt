@@ -224,6 +224,15 @@ internal fun LuxoSlimRail(
                     ) {
                         val tint = if (selected) accent else muted
                         when {
+                            mawjRail && item.motion != null -> com.nuvio.app.core.ui.MawjMotionIcon(
+                                name = item.motion,
+                                contentDescription = item.label,
+                                tint = tint,
+                                modifier = Modifier.size(23.dp),
+                                playKey = selected,
+                                active = selected,
+                                fallback = item.icon,
+                            )
                             item.icon != null -> Icon(item.icon, item.label, Modifier.size(23.dp), tint = tint)
                             item.drawable != null -> Icon(painterResource(item.drawable), item.label, Modifier.size(23.dp), tint = tint)
                         }

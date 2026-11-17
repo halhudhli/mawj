@@ -154,6 +154,10 @@ The approved home, top to bottom: hero («مدّ الليلة» line, serif titl
 
 Calm and premium, no bounce. Signature curve `cubic-bezier(0.4, 0, 0.2, 1)`; quick 150 ms, standard 300 ms, slow 500 ms; the sea drifts over 14–24 s. Posters do not move at rest. Respect reduced motion. Details in the `mawj-motion` skill.
 
+## Icons
+
+Gentleface (MIT): line-round icons; the rail and settings use its animated set (files/motion), which rests still and moves once when a tab is chosen or a settings group appears. Switch: «أيقونات متحركة». Player icons stay as they are.
+
 ## Sound
 
 Short sea cues on page open (a small wave), back (water drawing back), add (gold sparkle) and error, each behind a switch. No opening sound for now.
