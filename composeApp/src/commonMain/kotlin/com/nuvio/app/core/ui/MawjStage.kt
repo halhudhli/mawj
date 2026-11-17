@@ -222,7 +222,7 @@ fun MawjSea(
             path.lineTo(size.width, size.height)
             path.lineTo(0f, size.height)
             path.close()
-            val light = lerpColor(Color(0xFF2E5470), Color(0xFF16293A), k)
+            val light = mawjMix(Color(0xFF2E5470), Color(0xFF16293A), k)
             drawPath(
                 path,
                 Brush.verticalGradient(
@@ -237,7 +237,7 @@ fun MawjSea(
     }
 }
 
-private fun lerpColor(a: Color, b: Color, f: Float) = Color(
+private fun mawjMix(a: Color, b: Color, f: Float) = Color(
     a.red + (b.red - a.red) * f,
     a.green + (b.green - a.green) * f,
     a.blue + (b.blue - a.blue) * f,
