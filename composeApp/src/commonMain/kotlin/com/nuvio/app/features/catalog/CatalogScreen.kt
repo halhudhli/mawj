@@ -1,5 +1,6 @@
 package com.nuvio.app.features.catalog
 
+import androidx.compose.foundation.layout.width
 import com.nuvio.app.core.ui.background.appBackgroundCover
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -274,6 +275,26 @@ private fun CatalogHeader(
             iconSize = 24.dp,
         )
         Spacer(modifier = Modifier.height(16.dp))
+        val mawjCatalog = com.nuvio.app.core.ui.rememberMawjStageOn()
+        if (mawjCatalog) {
+            // «عرض الكل — الشبكة»: the source in gold over a serif title and the gold wave.
+            if (subtitle.isNotBlank()) {
+                Text(subtitle, color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            Text(
+                text = title,
+                color = androidx.compose.ui.graphics.Color(0xFFF6F1E4),
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                fontWeight = FontWeight.Bold,
+                fontSize = 44.sp,
+                lineHeight = 50.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            com.nuvio.app.core.ui.MawjGoldWaveLine(Modifier.padding(top = 4.dp).width(220.dp))
+            return@Column
+        }
         Text(
             text = title,
             style = MaterialTheme.typography.displaySmall,
