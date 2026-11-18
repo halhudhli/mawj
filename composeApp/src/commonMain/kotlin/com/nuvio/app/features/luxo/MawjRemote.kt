@@ -228,6 +228,15 @@ internal fun mawjHandleRemoteCommand(type: String?, o: JsonObject): Boolean {
         "subBg" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBackground?.invoke(it) }
         "subBold" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBold?.invoke(it) }
         "subPos" -> i("v")?.let { acts?.subtitlePosition?.invoke(it) }
+        // Viewing settings kept on the TV, changed from the tablet so the TV never needs its own menus.
+        "prefArabic" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { on ->
+            com.nuvio.app.features.player.PlayerSettingsRepository.setPreferredSubtitleLanguage(if (on) "ar" else com.nuvio.app.features.player.SubtitleLanguageOption.NONE)
+        }
+        "prefSkip" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { on ->
+            com.nuvio.app.features.player.PlayerSettingsRepository.setAutoSkipSegmentTypeEnabled(com.nuvio.app.features.player.skip.AutoSkipSegmentType.INTRO, on)
+            com.nuvio.app.features.player.PlayerSettingsRepository.setAutoSkipSegmentTypeEnabled(com.nuvio.app.features.player.skip.AutoSkipSegmentType.RECAP, on)
+        }
+        "prefPerTitle" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { on -> LuxoFeaturesRepository.update { it.copy(subtitleDelayPerTitle = on) } }
         "next" -> acts?.next?.invoke()
         "skip" -> acts?.skip?.invoke()
         else -> return false
@@ -332,6 +341,11 @@ private class RemoteNow(o: JsonObject?) {
     val subBg = (r?.get("bg") as? JsonPrimitive)?.booleanOrNull ?: false
     val subBold = (r?.get("bold") as? JsonPrimitive)?.booleanOrNull ?: false
     val subPos = i("pos", r) ?: 20
+    private val prefs = o?.get("prefs") as? JsonObject
+    val prefArabic = (prefs?.get("ar") as? JsonPrimitive)?.booleanOrNull ?: false
+    val prefSkip = (prefs?.get("skip") as? JsonPrimitive)?.booleanOrNull ?: false
+    val prefPerTitle = (prefs?.get("perTitle") as? JsonPrimitive)?.booleanOrNull ?: true
+    val hasPrefs = prefs != null
     val playingSomething get() = title != null && dur > 0
 }
 
@@ -810,7 +824,7 @@ private fun TideVolume(volume: Int, send: (String, Int) -> Unit) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SettingsPanel(modifier: Modifier, now: RemoteNow, scroll: Boolean, cmd: (String?, kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) -> Unit) {
-    if (!now.playingSomething) { Box(modifier); return }
+    if (!now.playingSomething) { Column(modifier) { ViewingPrefs(now, cmd) }; return }
     var tab by remember { mutableIntStateOf(0) }
     Column(if (scroll) modifier.verticalScroll(rememberScrollState()) else modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Segmented(listOf("الصوت", "الترجمة", "شكلها", "الصورة", "السرعة"), tab, fill = true) { tab = it }
@@ -929,6 +943,35 @@ private fun SettingsPanel(modifier: Modifier, now: RemoteNow, scroll: Boolean, c
                     }
                 }
             }
+        }
+        ViewingPrefs(now, cmd)
+    }
+}
+
+/** Viewing settings stored on the TV, changed from here (shown whether or not something is playing). */
+@Composable
+private fun ViewingPrefs(now: RemoteNow, cmd: (String?, kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) -> Unit) {
+    if (!now.hasPrefs) return
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Color(0xE00D1620)).border(1.dp, RLine, RoundedCornerShape(22.dp)).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text("إعدادات المشاهدة على الشاشة", color = RInkStrong, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        PrefRow("ترجمة عربية تلقائية", "يُختار العربي من الملف أو من الإضافات عند بدء أي عمل", now.prefArabic) { cmd(if (now.prefArabic) "إيقاف الترجمة العربية التلقائية" else "ترجمة عربية تلقائية") { put("t", "prefArabic"); put("on", !now.prefArabic) } }
+        PrefRow("تخطي المقدمة تلقائياً", "المقدمة والملخص يُتخطيان دون ضغط", now.prefSkip) { cmd(if (now.prefSkip) "إيقاف التخطي التلقائي" else "تخطي المقدمة تلقائياً") { put("t", "prefSkip"); put("on", !now.prefSkip) } }
+        PrefRow("حفظ توقيت الترجمة لكل عمل", "تعديل التوقيت في حلقة يبقى لباقي الحلقات", now.prefPerTitle) { cmd(if (now.prefPerTitle) "إيقاف حفظ التوقيت" else "حفظ توقيت الترجمة لكل عمل") { put("t", "prefPerTitle"); put("on", !now.prefPerTitle) } }
+    }
+}
+
+@Composable
+private fun PrefRow(title: String, sub: String, on: Boolean, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = RInk, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(sub, color = RFaint, fontSize = 12.sp)
+        }
+        Box(Modifier.width(46.dp).height(26.dp).clip(CircleShape).background(if (on) RGold else Color(0x24EEF2F6)), contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart) {
+            Box(Modifier.padding(3.dp).size(20.dp).clip(CircleShape).background(if (on) ROnGold else RMuted))
         }
     }
 }

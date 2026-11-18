@@ -89,6 +89,14 @@ object LuxoNowPlaying {
             if (remote.length > 2) append("\"remote\":").append(remote)
             val vol = runCatching { mawjRemoteVolume("get") }.getOrDefault(-1)
             if (vol >= 0) { if (isNotEmpty()) append(','); append("\"vol\":").append(vol) }
+            runCatching {
+                val ps = com.nuvio.app.features.player.PlayerSettingsRepository.uiState.value
+                val ar = ps.preferredSubtitleLanguage == "ar"
+                val skip = com.nuvio.app.features.player.skip.AutoSkipSegmentType.INTRO in ps.autoSkipSegmentTypes
+                val perTitle = LuxoFeaturesRepository.current().subtitleDelayPerTitle
+                if (isNotEmpty()) append(',')
+                append("\"prefs\":{\"ar\":$ar,\"skip\":$skip,\"perTitle\":$perTitle}")
+            }
         }
         if (extra.isEmpty()) return base
         return if (base == "{}") "{$extra}" else base.dropLast(1) + "," + extra + "}"
