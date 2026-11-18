@@ -79,7 +79,7 @@ fun App(
 }
 
 @Composable
-internal fun AppEnvironment(content: @Composable () -> Unit) {
+internal fun AppEnvironment(paintSea: Boolean = true, content: @Composable () -> Unit) {
     if (!platformProvidesImageLoader) {
         setSingletonImageLoaderFactory { context ->
             ImageLoader.Builder(context)
@@ -110,7 +110,7 @@ internal fun AppEnvironment(content: @Composable () -> Unit) {
     val customThemeColors by ThemeSettingsRepository.customThemeColors.collectAsStateWithLifecycle()
 
     NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled, customThemeColors = customThemeColors) {
-        AppBackgroundHost {
+        AppBackgroundHost(paintSea = paintSea) {
             com.nuvio.app.features.luxo.LuxoTvProviders(content)
         }
     }

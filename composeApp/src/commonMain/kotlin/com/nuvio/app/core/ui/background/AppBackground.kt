@@ -110,7 +110,7 @@ private data class OriginalTheme(
 private val LocalOriginalTheme = staticCompositionLocalOf<OriginalTheme?> { null }
 
 @Composable
-internal fun AppBackgroundHost(content: @Composable () -> Unit) {
+internal fun AppBackgroundHost(paintSea: Boolean = true, content: @Composable () -> Unit) {
     val config by remember {
         AppBackgroundRepository.ensureLoaded()
         AppBackgroundRepository.config
@@ -119,7 +119,7 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
     // «واجهة موج الجديدة» is drawn on the plain night sea: the picture background and glass rest while
     // it is on (they return as they were when it is switched off).
     val mawjStage = com.nuvio.app.core.ui.rememberMawjStageOn()
-    val glassOn = config.glassEnabled && !mawjStage
+    val glassOn = config.glassEnabled && !mawjStage && paintSea
     val model = remember(glassOn, config.source, config.url, config.localFile) {
         if (glassOn) config.imageModel() else null
     }
@@ -132,7 +132,9 @@ internal fun AppBackgroundHost(content: @Composable () -> Unit) {
 
     // «واجهة موج الجديدة»: the sea itself is the app background (behind every page), so pages let it
     // show through the same way they do for a picture background.
-    val seaOn = mawjStage && suspendCount == 0
+    // On iPhone/iPad the launch gate is a see-through layer above the native screens: it must never
+    // paint the sea (or anything opaque) there, or it hides the whole app.
+    val seaOn = mawjStage && suspendCount == 0 && paintSea
     val hasImage = model != null || seaOn
     val tokens = remember(baseTokens, hasImage, glassStyle) { baseTokens.withAppBackground(hasImage, glassStyle) }
     val scheme = remember(baseScheme, hasImage, glassStyle) { baseScheme.withAppBackground(hasImage, glassStyle) }
