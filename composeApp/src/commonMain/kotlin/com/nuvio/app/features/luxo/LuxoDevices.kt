@@ -80,6 +80,19 @@ object LuxoNowPlaying {
     }
 
     fun clear() { json = "{}" }
+
+    /** What the TV answers a paired controller: now playing, the player's tracks and settings, the volume. */
+    fun reply(): String {
+        val base = json.trim().ifEmpty { "{}" }
+        val extra = buildString {
+            val remote = MawjRemotePlayer.state
+            if (remote.length > 2) append("\"remote\":").append(remote)
+            val vol = runCatching { mawjRemoteVolume("get") }.getOrDefault(-1)
+            if (vol >= 0) { if (isNotEmpty()) append(','); append("\"vol\":").append(vol) }
+        }
+        if (extra.isEmpty()) return base
+        return if (base == "{}") "{$extra}" else base.dropLast(1) + "," + extra + "}"
+    }
 }
 
 // ---------------------------------------------------------------- hosts

@@ -488,6 +488,71 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
             }
             onDispose { LuxoPlayerBridge.onTranslateSubtitlesClick = null }
         }
+        // «ريموت موج»: the tracks and settings the paired tablet shows, and what it may change.
+        if (com.nuvio.app.features.luxo.luxoIsTv()) {
+            val remoteAudio = serverAudioTracks.ifEmpty { audioTracks }
+            val remoteSubs = serverSubtitleTracks.ifEmpty { subtitleTracks }
+            com.nuvio.app.features.luxo.MawjRemotePlayer.publish(
+                poster = metaUiState.meta?.takeIf { it.id == parentMetaId }?.let { it.background ?: it.poster },
+                episodeTitle = activeEpisodeTitle,
+                audio = remoteAudio.map { it.index to it.label },
+                audioSelected = serverAudioTracks.firstOrNull { it.isSelected }?.index ?: selectedAudioIndex,
+                subtitles = remoteSubs.map { it.index to it.label },
+                subtitleSelected = when {
+                    serverSubtitleTracks.isNotEmpty() -> serverSubtitleTracks.firstOrNull { it.isSelected }?.index ?: -1
+                    useCustomSubtitles -> -2
+                    else -> selectedSubtitleIndex
+                },
+                subtitleDelayMs = subtitleDelayMs,
+                subtitleSizeSp = subtitleStyle.fontSizeSp,
+                speed = playbackSnapshot.playbackSpeed,
+                resize = resizeMode.name,
+                hasNext = nextEpisodeInfo?.hasAired == true,
+                hasSkip = activeSkipInterval != null && !skipIntervalDismissed,
+            )
+            com.nuvio.app.features.luxo.MawjRemotePlayer.actions = com.nuvio.app.features.luxo.MawjRemotePlayer.Actions(
+                audio = { index ->
+                    if (serverAudioTracks.isNotEmpty()) {
+                        selectServerAudioTrack(index)
+                    } else {
+                        selectedAudioIndex = index
+                        persistAudioPreference(audioTracks.firstOrNull { it.index == index })
+                        playerController?.selectAudioTrack(index)
+                    }
+                },
+                subtitle = { index ->
+                    clearAutoSubtitleState()
+                    if (serverSubtitleTracks.isNotEmpty() && index >= 0) {
+                        selectServerSubtitleTrack(index)
+                    } else {
+                        val wasCustom = useCustomSubtitles
+                        isUserExplicitSubtitleSelection = true
+                        preferredSubtitleSelectionApplied = true
+                        selectedSubtitleIndex = index
+                        selectedAddonSubtitleId = null
+                        useCustomSubtitles = false
+                        persistInternalSubtitlePreference(subtitleTracks.firstOrNull { it.index == index })
+                        if (wasCustom) playerController?.clearExternalSubtitleAndSelect(index) else playerController?.selectSubtitleTrack(index)
+                        if (hasBurnedInServerSubtitle) clearServerSubtitleTrack()
+                    }
+                },
+                subtitleDelay = { ms -> setSubtitleDelay(ms) },
+                subtitleSize = { sp -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(fontSizeSp = sp)) },
+                speed = { v -> if (!isLiveTvPlayback) setPlaybackSpeedFromPicker(v) },
+                resize = { mode -> repeat(3) { if (resizeMode.name != mode) cycleResizeMode() } },
+                next = if (nextEpisodeInfo?.hasAired == true) ({ if (!partyBlocksControl()) playNextEpisode() }) else null,
+                skip = activeSkipInterval?.let { interval ->
+                    {
+                        interval.internalSkipAction(skipIntervals, playbackSnapshot.durationMs)?.let { action ->
+                            val d = playbackSnapshot.durationMs
+                            val target = if (d > 0L) action.targetMs.coerceAtMost(d - 1) else action.targetMs
+                            playerController?.seekTo(target)
+                            skipIntervalDismissed = true
+                        }
+                    }
+                },
+            )
+        }
         LuxoPlayerExtrasHost(
             controller = playerController,
             title = title,

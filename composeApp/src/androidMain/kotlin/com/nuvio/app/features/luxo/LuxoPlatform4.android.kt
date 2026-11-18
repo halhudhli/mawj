@@ -209,10 +209,18 @@ actual object LuxoRemoteNet {
                             s.soTimeout = 5000
                             val reader = BufferedReader(InputStreamReader(s.getInputStream(), Charsets.UTF_8))
                             val line = reader.readLine().orEmpty()
+                            if (line.startsWith("PAIR|")) {
+                                // «ريموت موج»: a tablet picked this TV, so the code shows here by itself.
+                                s.getOutputStream().write("pair\n".toByteArray(Charsets.UTF_8))
+                                val from = line.substring(5).take(40)
+                                main.post { runCatching { MawjRemotePair.onRequest(from) } }
+                                runCatching { s.close() }
+                                return@runCatching
+                            }
                             val sep = line.indexOf('|')
                             val ok = sep > 0 && line.substring(0, sep) == code
                             // "ok|<now playing JSON>" lets the second screen follow what the TV shows.
-                            s.getOutputStream().write((if (ok) "ok|${LuxoNowPlaying.json.replace('\n', ' ')}\n" else "denied\n").toByteArray(Charsets.UTF_8))
+                            s.getOutputStream().write((if (ok) "ok|${LuxoNowPlaying.reply().replace('\n', ' ')}\n" else "denied\n").toByteArray(Charsets.UTF_8))
                             if (ok) {
                                 val payload = line.substring(sep + 1)
                                 main.post { runCatching { onCommand(payload) } }

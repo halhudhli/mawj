@@ -531,6 +531,17 @@ internal fun MainAppContent(
         }
     }
 
+    // «ريموت موج»: the tablet's «الرئيسية» key.
+    val remoteTabClick = androidx.compose.runtime.rememberUpdatedState<(AppScreenTab) -> Unit>({ handleRootTabClick(it) })
+    LaunchedEffect(Unit) {
+        com.nuvio.app.features.luxo.MawjRemoteNav.requests.collect { to ->
+            when (to) {
+                "home" -> remoteTabClick.value(AppScreenTab.Home)
+                "search" -> remoteTabClick.value(AppScreenTab.Search)
+            }
+        }
+    }
+
     LaunchedEffect(
         nativeTabHomeTitle,
         nativeTabSearchTitle,

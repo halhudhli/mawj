@@ -689,16 +689,19 @@ internal fun LuxoRemoteServerHost() {
         LuxoRemoteNet.startServer(LuxoRemote.code, "موج · الشاشة") { raw ->
             val o = runCatching { ijson.parseToJsonElement(raw) as? JsonObject }.getOrNull() ?: return@startServer
             val c = com.nuvio.app.features.player.LuxoPlayerBridge.remoteController
-            when ((o["t"] as? JsonPrimitive)?.contentOrNull) {
+            when (val type = (o["t"] as? JsonPrimitive)?.contentOrNull) {
                 "pp" -> c?.let { if (com.nuvio.app.features.player.LuxoPlayerBridge.remoteIsPlaying) it.pause() else it.play() }
                 "seek" -> (o["d"] as? JsonPrimitive)?.longOrNull?.let { d -> c?.seekBy(d) }
                 "open" -> (o["url"] as? JsonPrimitive)?.contentOrNull?.let { com.nuvio.app.core.deeplink.handleAppUrl(it) }
                 "search" -> (o["q"] as? JsonPrimitive)?.contentOrNull?.let { LuxoRemote.searchQuery = it }
+                // «ريموت موج»: keys, volume, tracks, speed and the rest.
+                else -> mawjHandleRemoteCommand(type, o)
             }
         }
         onDispose { LuxoRemoteNet.stopServer() }
     }
     LuxoRemote.searchQuery?.let { q -> LuxoRemoteSearchDialog(q) { LuxoRemote.searchQuery = null } }
+    MawjPairCodeOverlay()
 }
 
 @Composable
@@ -737,6 +740,11 @@ fun LuxoRemoteDialog(onDismiss: () -> Unit) {
             Text(LuxoRemote.code, color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Black)
             Text("عنوان الجهاز: ${LuxoRemoteNet.localAddress() ?: "غير متصل بالشبكة"}", color = Color.White.copy(alpha = 0.6f))
         }
+        return
+    }
+    // Tablet and phone: «ريموت موج» (pairing with the code shown on the TV by itself, then the moon dial).
+    if (rememberLuxoFeatures().remote) {
+        MawjRemoteScreen(onDismiss)
         return
     }
     val scope = rememberCoroutineScope()

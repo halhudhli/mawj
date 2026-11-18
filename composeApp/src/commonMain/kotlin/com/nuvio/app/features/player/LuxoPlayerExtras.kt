@@ -86,7 +86,7 @@ internal fun LuxoPlayerExtrasHost(
 ) {
     LuxoPlayerBridge.remoteController = controller
     LuxoPlayerBridge.remoteIsPlaying = isPlaying
-    DisposableEffect(Unit) { onDispose { LuxoPlayerBridge.remoteController = null; com.nuvio.app.features.luxo.LuxoNowPlaying.clear() } }
+    DisposableEffect(Unit) { onDispose { LuxoPlayerBridge.remoteController = null; com.nuvio.app.features.luxo.LuxoNowPlaying.clear(); com.nuvio.app.features.luxo.MawjRemotePlayer.clear() } }
     // «الشاشة الثانية»: what the TV is showing, answered to the paired tablet.
     com.nuvio.app.features.luxo.LuxoNowPlaying.update(metaId, metaType, title, seasonNumber, episodeNumber, positionMs, durationMs, isPlaying)
     com.nuvio.app.features.luxo.LuxoPreviouslyOn(metaId, title, seasonNumber, episodeNumber) { controller?.pause() }
