@@ -151,7 +151,8 @@ fun MawjMotionIcon(
     startDelayMs: Long = 0,
 ) {
     val svg by produceState(MawjMotion.cached(name), name) { value = MawjMotion.load(name) }
-    val moving = com.nuvio.app.features.luxo.rememberLuxoFeatures().mawjAnimatedIcons
+    // TV light mode keeps the icons still (they stay drawn, they just do not move).
+    val moving = com.nuvio.app.features.luxo.rememberLuxoFeatures().mawjAnimatedIcons && !com.nuvio.app.features.luxo.rememberLuxoLite()
     val time = remember(name) { Animatable(0f) }
     val shown = remember(name) { BooleanArray(1) }
     LaunchedEffect(svg, playKey, loop, moving) {

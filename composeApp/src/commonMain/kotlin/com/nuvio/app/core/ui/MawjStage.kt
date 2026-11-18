@@ -34,6 +34,23 @@ import com.nuvio.app.features.luxo.rememberLuxoFeatures
 import kotlin.math.PI
 import kotlin.math.sin
 
+/**
+ * The slow drift behind the sea and the gold waves. On a TV in light mode it stands still: the same
+ * picture, drawn once, instead of redrawing a large part of the screen every frame on a weak box.
+ */
+@Composable
+private fun mawjDrift(label: String, durationMs: Int, still: Float = 0.3f): androidx.compose.runtime.State<Float> {
+    if (com.nuvio.app.features.luxo.rememberLuxoLite()) {
+        return androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(still) }
+    }
+    return rememberInfiniteTransition(label = label).animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(durationMs, easing = LinearEasing), RepeatMode.Restart),
+        label = label + "_t",
+    )
+}
+
 /** True while «واجهة موج الجديدة» is on (the stage, the gold wave). */
 @Composable
 fun rememberMawjStageOn(): Boolean = rememberLuxoFeatures().mawjStage
@@ -44,13 +61,7 @@ fun rememberMawjStageOn(): Boolean = rememberLuxoFeatures().mawjStage
  */
 @Composable
 fun MawjWave(modifier: Modifier = Modifier, color: Color = MaterialTheme.nuvio.colors.accent, alpha: Float = 0.55f) {
-    val transition = rememberInfiniteTransition(label = "mawj_wave")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(14_000, easing = LinearEasing), RepeatMode.Restart),
-        label = "mawj_wave_phase",
-    )
+    val phase by mawjDrift("mawj_wave", 14_000)
     Canvas(modifier.fillMaxWidth().height(22.dp)) {
         val waves = 8f
         val amplitude = size.height * 0.32f
@@ -78,13 +89,7 @@ fun MawjWaveEdge(
     color: Color = MaterialTheme.nuvio.colors.accent,
     height: Dp = 44.dp,
 ) {
-    val transition = rememberInfiniteTransition(label = "mawj_edge")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(16_000, easing = LinearEasing), RepeatMode.Restart),
-        label = "mawj_edge_phase",
-    )
+    val phase by mawjDrift("mawj_edge", 16_000)
     Canvas(modifier.fillMaxWidth().height(height)) {
         val waves = 2.5f
         val amp = size.height * 0.28f
@@ -129,7 +134,11 @@ fun MawjStage(
             ),
         )
         if (!imageUrl.isNullOrBlank()) {
-            AsyncImage(model = imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            val lite = com.nuvio.app.features.luxo.rememberLuxoLite()
+            val picture = androidx.compose.runtime.remember(imageUrl, lite) {
+                if (lite) com.nuvio.app.features.luxo.luxoHighResImage(imageUrl, maxBackdrop1080 = true) else imageUrl
+            }
+            AsyncImage(model = picture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
         Box(
             Modifier.fillMaxSize().background(
@@ -160,6 +169,9 @@ fun MawjStage(
  */
 @Composable
 fun Modifier.mawjShimmer(): Modifier {
+    // TV light mode: a plain placeholder in the sea colour, no moving light (dozens of them run at
+    // once while a home screen loads).
+    if (com.nuvio.app.features.luxo.rememberLuxoLite()) return this.background(Color(0xFF13202C))
     val transition = rememberInfiniteTransition(label = "mawj_shimmer")
     val x by transition.animateFloat(
         initialValue = -1f,
@@ -193,13 +205,7 @@ fun MawjSea(
     fill: Color = MaterialTheme.colorScheme.background,
     gold: Color = MaterialTheme.nuvio.colors.accent,
 ) {
-    val transition = rememberInfiniteTransition(label = "mawj_sea")
-    val t by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(24_000, easing = LinearEasing), RepeatMode.Restart),
-        label = "mawj_sea_t",
-    )
+    val t by mawjDrift("mawj_sea", 24_000)
     Canvas(modifier.fillMaxWidth()) {
         val layers = 5
         val tau = (2 * PI).toFloat()

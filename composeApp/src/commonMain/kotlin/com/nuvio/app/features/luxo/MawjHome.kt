@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -178,6 +179,7 @@ fun MawjIslands(
     if (collections.isEmpty()) return
     val tokens = MaterialTheme.nuvio
     var chosen by rememberSaveable { mutableStateOf(collections.first().id) }
+    val lite = rememberLuxoLite()
     val current = collections.firstOrNull { it.id == chosen } ?: collections.first()
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("الجزر", color = tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 26.sp)
@@ -213,7 +215,16 @@ fun MawjIslands(
                         .border(1.dp, tokens.colors.accent.copy(alpha = 0.2f), RoundedCornerShape(18.dp))
                         .clickable { onFolderClick?.invoke(current.id, folder.id) },
                 ) {
-                    if (!folder.coverImageUrl.isNullOrBlank()) {
+                    if (!folder.coverImageUrl.isNullOrBlank() && lite) {
+                        // TV light mode: an animated (GIF) cover is shown as a still picture.
+                        com.nuvio.app.core.ui.NuvioAsyncImage(
+                            imageUrl = folder.coverImageUrl!!,
+                            contentDescription = "",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.matchParentSize().alpha(0.45f),
+                            animateIfPossible = false,
+                        )
+                    } else if (!folder.coverImageUrl.isNullOrBlank()) {
                         coil3.compose.AsyncImage(
                             model = folder.coverImageUrl,
                             contentDescription = null,

@@ -24,7 +24,7 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
     val tvSwitches = if (!com.nuvio.app.features.luxo.luxoIsTv()) emptyList() else listOf(
         LuxoFeatureSwitch(
             lx("وضع الشاشة الخفيف 📺", "TV light mode 📺"),
-            lx("للشاشات الضعيفة: صور بحجم الشاشة، بدون إعلان يشتغل تلقائي في الرئيسية وبدون حركات خلفية. يشتغل بالكامل بعد إعادة فتح التطبيق", "For slower TVs: screen-sized pictures, no autoplay trailer on Home, no background animations. Fully applies after reopening the app"),
+            lx("للشاشات الضعيفة: صور بحجم الشاشة، دون إعلان يعمل تلقائياً في الرئيسية، والموج والأيقونات ثابتة دون حركة. يعمل بالكامل بعد إعادة فتح التطبيق", "For slower TVs: screen-sized pictures, no autoplay trailer on Home, the sea and icons stay still. Fully applies after reopening the app"),
             { it.tvLite }, { f, v -> f.copy(tvLite = v) },
         ),
         LuxoFeatureSwitch(

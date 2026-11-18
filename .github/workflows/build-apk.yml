@@ -86,8 +86,8 @@ jobs:
           # نسخة التابلت (arm64) نحفظها، وبعدين نبني نسخة الشاشات 32-bit (armeabi-v7a)
           mkdir -p luxo-out
           cp "$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)" luxo-out/arm64-v8a.apk
-          # The TV build is paused for now (Android tablet and phone first); set LUXO_BUILD_TV to "true" to bring it back.
-          if [ "${LUXO_BUILD_TV:-false}" != "true" ]; then exit 0; fi
+          # TV build (32-bit, shrunk by R8, always in TV mode) is back on; set LUXO_BUILD_TV to "false" to skip it.
+          if [ "${LUXO_BUILD_TV:-true}" != "true" ]; then exit 0; fi
           ./gradlew :androidApp:assembleFullDebug \
             -Pnuvio.android.distribution=full \
             -Pnuvio.ios.distribution=appstore \
