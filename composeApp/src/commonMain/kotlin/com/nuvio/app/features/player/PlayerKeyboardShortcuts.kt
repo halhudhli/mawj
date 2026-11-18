@@ -26,6 +26,12 @@ enum class PlayerKeyboardShortcut(val wireCode: String) {
     Exit("exit"),
     // Luxo (TV remote): up/down/OK on the bare video show the controls so the remote can reach them.
     ShowControls("show_controls"),
+    // Mawj (TV remote): colour keys and a long press on OK.
+    OpenSubtitles("open_subtitles"),
+    OpenAudio("open_audio"),
+    OpenSubtitleTiming("open_subtitle_timing"),
+    OpenSpeed("open_speed"),
+    OpenQuickPanel("open_quick_panel"),
     ;
 
     companion object {
@@ -45,6 +51,12 @@ enum class PlayerKeyboardShortcut(val wireCode: String) {
  * returns false, leaving the keys to whatever overlay currently owns them (a subtitle search
  * field, for instance).
  */
+/** The OK key being held on the TV remote. */
+private object MawjOkHold {
+    var downAt: kotlin.time.TimeMark? = null
+    var opened = false
+}
+
 internal fun Modifier.playerKeyboardShortcuts(
     focusRequester: FocusRequester,
     enabledState: State<Boolean>,
@@ -59,8 +71,41 @@ internal fun Modifier.playerKeyboardShortcuts(
         .focusRequester(focusRequester)
         .focusable()
         .onPreviewKeyEvent { event ->
-            if (event.type != KeyEventType.KeyDown || !enabledState.value) return@onPreviewKeyEvent false
+            if (!enabledState.value) return@onPreviewKeyEvent false
             val onSurface = selfFocused.value
+            val tvKeys = com.nuvio.app.features.luxo.luxoIsTv() && com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().tvPlayerKeys
+            // Mawj TV: OK on the video plays/pauses when released; held for half a second it opens the quick panel.
+            if (tvKeys && onSurface && (event.key == Key.DirectionCenter || event.key == Key.Enter || event.key == Key.NumPadEnter)) {
+                val now = kotlin.time.TimeSource.Monotonic.markNow()
+                when (event.type) {
+                    KeyEventType.KeyDown -> {
+                        val down = MawjOkHold.downAt
+                        if (down == null) { MawjOkHold.downAt = now; MawjOkHold.opened = false }
+                        else if (!MawjOkHold.opened && down.elapsedNow().inWholeMilliseconds >= 500) {
+                            MawjOkHold.opened = true
+                            onShortcutState.value(PlayerKeyboardShortcut.OpenQuickPanel)
+                        }
+                    }
+                    KeyEventType.KeyUp -> {
+                        if (MawjOkHold.downAt != null && !MawjOkHold.opened) onShortcutState.value(PlayerKeyboardShortcut.TogglePlayback)
+                        MawjOkHold.downAt = null; MawjOkHold.opened = false
+                    }
+                    else -> Unit
+                }
+                return@onPreviewKeyEvent true
+            }
+            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            if (tvKeys) {
+                // Android key codes of the remote's colour keys (red 183, green 184, yellow 185, blue 186).
+                val colour = when (event.key.keyCode ushr 32) {
+                    183L -> PlayerKeyboardShortcut.OpenSubtitles
+                    184L -> PlayerKeyboardShortcut.OpenAudio
+                    185L -> PlayerKeyboardShortcut.OpenSubtitleTiming
+                    186L -> PlayerKeyboardShortcut.OpenSpeed
+                    else -> null
+                }
+                if (colour != null) { onShortcutState.value(colour); return@onPreviewKeyEvent true }
+            }
             val shortcut = when (event.key) {
                 Key.Spacebar, Key.MediaPlayPause, Key.MediaPlay, Key.MediaPause -> PlayerKeyboardShortcut.TogglePlayback
                 Key.MediaFastForward -> PlayerKeyboardShortcut.SeekForward

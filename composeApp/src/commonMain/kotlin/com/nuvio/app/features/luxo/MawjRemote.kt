@@ -184,6 +184,17 @@ object MawjRemotePlayer {
 
 // ============================================================================ TV side
 
+private val mawjRemoteScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main)
+
+/** TV: puts one of Mawj's bundled fonts in the subtitle font folder if it is not there (e.g. deleted earlier). */
+@OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
+private suspend fun mawjEnsureBundledSubtitleFont(file: String) {
+    val bundled = LuxoBundledFont.entries.firstOrNull { it.resourceFile == file } ?: return
+    if (file in com.nuvio.app.features.player.SubtitleFontFiles.listFileNames()) return
+    val bytes = runCatching { nuvio.composeapp.generated.resources.Res.readBytes("font/${bundled.resourceFile}") }.getOrNull() ?: return
+    if (com.nuvio.app.features.player.SubtitleFontFiles.write(bundled.resourceFile, bytes)) com.nuvio.app.features.player.SubtitleFontRepository.refresh()
+}
+
 /** TV: runs one of the new remote commands; false when [type] is not one of them. */
 internal fun mawjHandleRemoteCommand(type: String?, o: JsonObject): Boolean {
     fun s(k: String) = (o[k] as? JsonPrimitive)?.contentOrNull
@@ -204,7 +215,15 @@ internal fun mawjHandleRemoteCommand(type: String?, o: JsonObject): Boolean {
         "resize" -> s("m")?.let { acts?.resize?.invoke(it) }
         "addonSub" -> s("k")?.let { acts?.addonSubtitle?.invoke(it) }
         "fetchSubs" -> acts?.fetchAddonSubtitles?.invoke()
-        "subFont" -> acts?.subtitleFont?.invoke(s("f")?.takeIf { it.isNotBlank() })
+        "subFont" -> {
+            val file = s("f")?.takeIf { it.isNotBlank() }
+            val act = acts?.subtitleFont
+            if (file == null) act?.invoke(null)
+            else mawjRemoteScope.launch {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { mawjEnsureBundledSubtitleFont(file) }
+                act?.invoke(file)
+            }
+        }
         "subColor" -> i("c")?.let { acts?.subtitleColor?.invoke(it) }
         "subBg" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBackground?.invoke(it) }
         "subBold" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBold?.invoke(it) }
@@ -837,10 +856,21 @@ private fun SettingsPanel(modifier: Modifier, now: RemoteNow, scroll: Boolean, c
                     if (now.subDelay != 0) GhostButton("إعادة التوقيت إلى صفر") { cmd("توقيت الترجمة: صفر") { put("t", "subDelay"); put("ms", 0) } }
                 }
                 2 -> {
-                    Label("الخط")
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Chip("الافتراضي", now.font == null) { cmd("خط الترجمة: الافتراضي") { put("t", "subFont"); put("f", "") } }
-                        now.fonts.forEach { (f, l) -> Chip(l, f == now.font) { cmd("خط الترجمة: $l") { put("t", "subFont"); put("f", f) } } }
+                    Label("خطوط موج المدمجة")
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FontRow("الافتراضي", null, now.font == null) { cmd("خط الترجمة: الافتراضي") { put("t", "subFont"); put("f", "") } }
+                        // Arabic faces first; each one is written in its own font so it can be judged at a glance.
+                        LuxoBundledFont.entries.sortedByDescending { it.isArabic }.forEach { bf ->
+                            val name = bf.displayName.substringAfter(" · ", bf.displayName)
+                            FontRow(name, bf, now.font == bf.resourceFile) { cmd("خط الترجمة: $name") { put("t", "subFont"); put("f", bf.resourceFile) } }
+                        }
+                    }
+                    val added = now.fonts.filter { (f, _) -> LuxoBundledFont.entries.none { it.resourceFile == f } }
+                    if (added.isNotEmpty()) {
+                        Label("خطوط مضافة على الشاشة")
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            added.forEach { (f, l) -> Chip(l, f == now.font) { cmd("خط الترجمة: $l") { put("t", "subFont"); put("f", f) } } }
+                        }
                     }
                     Label("الحجم")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -924,6 +954,26 @@ private fun TypeDialog(onDismiss: () -> Unit, onSend: (String) -> Unit) {
 }
 
 // ---------------------------------------------------------------------------- small pieces
+
+/** One subtitle font: its name and a sample line, both drawn in that font. */
+@Composable
+private fun FontRow(name: String, font: LuxoBundledFont?, selected: Boolean, onClick: () -> Unit) {
+    val family = font?.let { FontFamily(org.jetbrains.compose.resources.Font(it.regular)) }
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (selected) Color(0x14D6B36A) else RCard)
+            .border(1.dp, if (selected) RGoldLine else Color.Transparent, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(16.dp).clip(CircleShape).border(1.5.dp, if (selected) RGold else Color(0x4DEEF2F6), CircleShape), contentAlignment = Alignment.Center) {
+            if (selected) Box(Modifier.size(8.dp).clip(CircleShape).background(RGold))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, color = RInk, fontSize = 15.sp, fontFamily = family, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(if (font?.isArabic == false) "The night sea, under the moon" else "البحر في الليل، تحت ضوء القمر", color = RMuted, fontSize = 13.sp, fontFamily = family, maxLines = 1)
+        }
+    }
+}
 
 @Composable
 private fun Label(text: String) = Text(text, color = RFaint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

@@ -188,6 +188,8 @@ internal class PlayerScreenRuntime(
     var showSourcesPanel by mutableStateOf(false)
     var showQualityPanel by mutableStateOf(false)
     var showSpeedPanel by mutableStateOf(false)
+    // Mawj TV: the quick panel opened by holding OK on the remote.
+    var showMawjQuickPanel by mutableStateOf(false)
     var showEpisodesPanel by mutableStateOf(false)
     var showChaptersPanel by mutableStateOf(false)
     var showLiveChannelsPanel by mutableStateOf(false)
@@ -282,6 +284,7 @@ internal class PlayerScreenRuntime(
             showSourcesPanel ||
             showQualityPanel ||
             showSpeedPanel ||
+            showMawjQuickPanel ||
             showEpisodesPanel ||
             showChaptersPanel ||
             showLiveChannelsPanel ||

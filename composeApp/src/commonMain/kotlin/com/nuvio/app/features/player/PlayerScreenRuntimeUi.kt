@@ -491,6 +491,23 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         }
         // «ريموت موج»: the tracks and settings the paired tablet shows, and what it may change.
         if (com.nuvio.app.features.luxo.luxoIsTv()) {
+            // The subtitle fonts the tablet can pick: Mawj's bundled fonts and any added ones.
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    runCatching { com.nuvio.app.features.luxo.installBundledFontsForSubtitles() }
+                    SubtitleFontRepository.ensureLoaded()
+                }
+            }
+            val remoteFonts by SubtitleFontRepository.fonts.collectAsStateWithLifecycle()
+            if (showMawjQuickPanel) {
+                MawjTvQuickPanel(
+                    onDismiss = { showMawjQuickPanel = false },
+                    onSubtitles = { showSubtitleModal = true },
+                    onAudio = { showAudioModal = true },
+                    onTiming = { showSubtitleModal = true },
+                    onSpeed = if (isLiveTvPlayback) null else ({ controlsVisible = true; showSpeedPanel = true }),
+                )
+            }
             val remoteAudio = serverAudioTracks.ifEmpty { audioTracks }
             val remoteSubs = serverSubtitleTracks.ifEmpty { subtitleTracks }
             com.nuvio.app.features.luxo.MawjRemotePlayer.publish(
@@ -516,7 +533,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                     },
                     addonSelected = selectedAddonSubtitleId?.takeIf { useCustomSubtitles },
                     addonLoading = isLoadingAddonSubtitles,
-                    fonts = SubtitleFontRepository.fonts.value.map { it.fileName to it.familyName },
+                    fonts = remoteFonts.map { it.fileName to it.familyName },
                     font = subtitleStyle.customFontFile,
                     color = subtitleStyle.textColor.toArgb(),
                     background = subtitleStyle.backgroundColor.alpha > 0.05f,

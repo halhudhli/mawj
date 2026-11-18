@@ -32,6 +32,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             lx("إطار واضح حول العنصر المحدد، والقوائم تمشي بنعومة مع الأسهم", "A clear frame around the selected item, and lists glide with the arrows"),
             { it.tvRemote }, { f, v -> f.copy(tvRemote = v) },
         ),
+        LuxoFeatureSwitch(
+            lx("أزرار الريموت في المشغل 🔴🟢🟡🔵", "Remote keys in the player"),
+            lx("الأحمر للترجمة، والأخضر للصوت، والأصفر لتوقيت الترجمة، والأزرق للسرعة، والضغط المطوّل على «موافق» يفتح لوحة سريعة", "Red subtitles, green audio, yellow subtitle timing, blue speed; hold OK for a quick panel"),
+            { it.tvPlayerKeys }, { f, v -> f.copy(tvPlayerKeys = v) },
+        ),
     )
     val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(
@@ -193,6 +198,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             lx("تبديل البوسترات", "Rotating posters"),
             lx("إذا كان للعمل أكثر من بوستر تتناوب بهدوء، العربية أولاً ثم غيرها", "Titles with several posters show them in turn"),
             { it.posterRotate }, { f, v -> f.copy(posterRotate = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("حفظ توقيت الترجمة لكل عمل", "Keep subtitle timing per title"),
+            lx("عند تعديل توقيت الترجمة في حلقة يُحفظ لباقي حلقات المسلسل وللفيلم، ويعود تلقائياً في المرة القادمة", "A timing fix is kept for the whole series and comes back next time"),
+            { it.subtitleDelayPerTitle }, { f, v -> f.copy(subtitleDelayPerTitle = v) },
         ),
         LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),

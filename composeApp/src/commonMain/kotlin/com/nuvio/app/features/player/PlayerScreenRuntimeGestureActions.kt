@@ -242,6 +242,13 @@ internal fun PlayerScreenRuntime.handleKeyboardShortcut(shortcut: PlayerKeyboard
             args.onBack()
         }
         PlayerKeyboardShortcut.ShowControls -> controlsVisible = true
+        PlayerKeyboardShortcut.OpenSubtitles, PlayerKeyboardShortcut.OpenSubtitleTiming -> {
+            controlsVisible = false
+            showSubtitleModal = true
+        }
+        PlayerKeyboardShortcut.OpenAudio -> { controlsVisible = false; showAudioModal = true }
+        PlayerKeyboardShortcut.OpenSpeed -> { if (!isLiveTvPlayback) { controlsVisible = true; showSpeedPanel = true } }
+        PlayerKeyboardShortcut.OpenQuickPanel -> { controlsVisible = false; showMawjQuickPanel = true }
     }
 }
 

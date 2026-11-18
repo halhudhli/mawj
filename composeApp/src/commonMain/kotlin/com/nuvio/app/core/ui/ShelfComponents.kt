@@ -168,14 +168,13 @@ fun NuvioPosterCard(
                 ),
         ) {
         var imageFailed by remember(imageUrl, fallbackImageUrl) { mutableStateOf(false) }
-        // TV light mode: a solid card behind the poster and no fade-in, so every poster is fully clear
-        // (a fading or see-through card read as a veil on the TV).
+        // TV light mode: no fade-in, so every poster is fully clear at once (the slow fade read as a veil on the TV).
         val tvLite = com.nuvio.app.features.luxo.rememberLuxoLite()
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .clip(cardShape)
-                .background(if (tvLite) Color(0xFF0D1620) else tokens.colors.surface)
+                .background(tokens.colors.surface)
                 .nuvioCardDepth(
                     shape = cardShape,
                     surface = NuvioCardDepthSurface.Posters,

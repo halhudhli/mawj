@@ -237,6 +237,10 @@ data class LuxoFeatures(
     val mawjAmbientSea: Boolean = false,
     /** Volume of Mawj's sounds, 0–100. */
     val mawjSoundVolume: Int = 70,
+    /** TV player: the remote's colour keys open subtitles, audio, timing and speed; holding OK opens a quick panel. */
+    val tvPlayerKeys: Boolean = true,
+    /** A subtitle timing change is kept for the whole series (and the film), and comes back next time. */
+    val subtitleDelayPerTitle: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

@@ -21,6 +21,10 @@ internal fun PlayerScreenRuntime.setSubtitleDelay(delayMs: Int) {
     val clamped = delayMs.coerceIn(SUBTITLE_DELAY_MIN_MS, SUBTITLE_DELAY_MAX_MS)
     subtitleDelayMs = clamped
     PlayerTrackPreferenceStorage.saveSubtitleDelayMs(playbackSession.videoId, clamped)
+    // Mawj: the same timing for the rest of the series (and the film next time).
+    if (com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().subtitleDelayPerTitle && parentMetaId.isNotBlank()) {
+        PlayerTrackPreferenceStorage.saveSubtitleDelayMs("mawj_title:$parentMetaId", clamped)
+    }
     playerController?.setSubtitleDelayMs(clamped)
 }
 

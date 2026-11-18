@@ -194,7 +194,10 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     }
 
     LaunchedEffect(playbackSession.videoId) {
-        subtitleDelayMs = PlayerTrackPreferenceStorage.loadSubtitleDelayMs(playbackSession.videoId) ?: 0
+        subtitleDelayMs = PlayerTrackPreferenceStorage.loadSubtitleDelayMs(playbackSession.videoId)
+            ?: parentMetaId.takeIf { com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().subtitleDelayPerTitle && it.isNotBlank() }
+                ?.let { PlayerTrackPreferenceStorage.loadSubtitleDelayMs("mawj_title:$it") }
+            ?: 0
         subtitleAutoSyncState = SubtitleAutoSyncUiState()
     }
 
