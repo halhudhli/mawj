@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyListScope
@@ -221,7 +222,20 @@ fun NuvioScreenHeader(
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = "screen_header_title",
                 ) { currentTitle ->
-                    if (luxoLook) {
+                    if (mawjSerif != null) {
+                        // «Mawj — new interface»: a gold eyebrow (the page's sea name), the serif title, a gold wave under it.
+                        Column {
+                            mawjPageEyebrow(currentTitle)?.let {
+                                Text(it, color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp)
+                            }
+                            Text(
+                                text = currentTitle,
+                                style = MaterialTheme.typography.displayLarge.copy(fontFamily = mawjSerif, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                                color = androidx.compose.ui.graphics.Color(0xFFF6F1E4),
+                            )
+                            MawjGoldWaveLine(Modifier.padding(top = 4.dp).width(220.dp))
+                        }
+                    } else if (luxoLook) {
                         Column {
                             Text(
                                 text = currentTitle,
@@ -247,6 +261,39 @@ fun NuvioScreenHeader(
                 content = actions,
             )
         }
+    }
+}
+
+/** The sea name over a page title, as in «Mawj — new interface» (null for pages without one). */
+internal fun mawjPageEyebrow(title: String): String? = when {
+    "بحث" in title -> "المنارة"
+    "مكتب" in title -> "الخزانة"
+    "تحميل" in title || "تنزيل" in title -> "المخزن"
+    "إضاف" in title || "اضاف" in title -> "الأشرعة"
+    "تقويم" in title || "القادم" in title -> "جدول المدّ"
+    "مباشر" in title || "البث" in title -> "الأفق"
+    "مجموع" in title -> "الجزر"
+    "قوائم" in title || "قائمت" in title -> "الخزانة"
+    "استكشاف" in title || "اكتشف" in title -> "المنارة"
+    "ملف" in title -> "الشاطئ"
+    "الجديد" in title -> "مدّ جديد"
+    else -> null
+}
+
+/** A thin gold wave, the line under Mawj page titles. */
+@Composable
+fun MawjGoldWaveLine(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier.height(14.dp)) {
+        val path = androidx.compose.ui.graphics.Path()
+        val mid = size.height / 2f
+        val amp = size.height * 0.36f
+        var x = 0f
+        path.moveTo(0f, mid)
+        while (x <= size.width) {
+            path.lineTo(x, mid + kotlin.math.sin(x / size.width * 4f * kotlin.math.PI.toFloat()) * amp)
+            x += 3f
+        }
+        drawPath(path, androidx.compose.ui.graphics.Color(0xFFD6B36A).copy(alpha = 0.7f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3.dp.toPx()))
     }
 }
 

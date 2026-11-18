@@ -1,5 +1,10 @@
 package com.nuvio.app.features.search
 
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
 import com.nuvio.app.core.ui.background.appBackgroundCover
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -249,12 +254,41 @@ fun SearchScreen(
                 androidx.compose.foundation.layout.Column(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    NuvioScreenHeader(
-                        title = headerTitle,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
+                    val mawjSearch = com.nuvio.app.core.ui.rememberMawjStageOn()
+                    if (mawjSearch) {
+                        // «البحث — المنارة»: one question in serif over a gold-ringed field.
+                        androidx.compose.foundation.layout.Column(
+                            modifier = Modifier.fillMaxWidth().padding(top = androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 28.dp, bottom = 18.dp),
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                        ) {
+                            androidx.compose.material3.Text(
+                                "المنارة", color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp),
+                            )
+                            androidx.compose.material3.Text(
+                                if (query.isBlank()) "عمّ يكون البحث الليلة؟" else headerTitle,
+                                color = androidx.compose.ui.graphics.Color(0xFFF6F1E4),
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontSize = androidx.compose.ui.unit.TextUnit(if (maxWidth > 700.dp) 46f else 32f, androidx.compose.ui.unit.TextUnitType.Sp),
+                            )
+                        }
+                    } else {
+                        NuvioScreenHeader(
+                            title = headerTitle,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                    }
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .then(if (mawjSearch) Modifier.align(androidx.compose.ui.Alignment.CenterHorizontally).widthIn(max = 920.dp) else Modifier)
+                            .padding(horizontal = 16.dp)
+                            .then(
+                                if (mawjSearch) Modifier.border(1.dp, androidx.compose.ui.graphics.Color(0x73D6B36A), androidx.compose.foundation.shape.RoundedCornerShape(32.dp))
+                                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(32.dp))
+                                else Modifier,
+                            ),
+                    ) {
                         NuvioInputField(
                             value = query,
                             onValueChange = { query = it },
