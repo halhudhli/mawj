@@ -360,7 +360,8 @@ internal fun MainAppContent(
         PlayerSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     var visiblePlayerEntries by remember { mutableIntStateOf(0) }
-    val miniPlayerHostEnabled = playerSettingsUiState.miniPlayerEnabled && !isIos
+    // TV: back from the player closes it; a shrunken player playing on top of the app is too heavy for a TV box.
+    val miniPlayerHostEnabled = playerSettingsUiState.miniPlayerEnabled && !isIos && !com.nuvio.app.features.luxo.luxoIsTv()
     val topPlayerRoute = currentRoute as? PlayerRoute
     val hostedPlayerRoute = MiniPlayerController.hostedRoute(topPlayerRoute, miniPlayerHostEnabled)
     var streamLandscapeLoadingVisible by remember(currentRoute) { mutableStateOf(false) }

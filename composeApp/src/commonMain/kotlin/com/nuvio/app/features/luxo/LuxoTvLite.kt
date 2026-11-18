@@ -158,9 +158,18 @@ private class LuxoTvIndicationNode(
         scale(grow) {
             this@draw.drawContent()
             if (pressed) drawRect(Color.Black.copy(alpha = 0.14f))
+            // Only the item under the remote is marked: a gold frame (Mawj's moon gold) with a soft halo.
             val stroke = 3.dp.toPx()
+            val a = p.coerceIn(0f, 1f)
             drawRoundRect(
-                color = Color.White.copy(alpha = p.coerceIn(0f, 1f)),
+                color = Color(0xFFD6B36A).copy(alpha = 0.28f * a),
+                topLeft = Offset(-stroke, -stroke),
+                size = androidx.compose.ui.geometry.Size(size.width + stroke * 2, size.height + stroke * 2),
+                cornerRadius = CornerRadius(16.dp.toPx()),
+                style = Stroke(width = stroke * 2),
+            )
+            drawRoundRect(
+                color = Color(0xFFF1DDA6).copy(alpha = a),
                 topLeft = Offset(stroke / 2f, stroke / 2f),
                 size = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
                 cornerRadius = CornerRadius(14.dp.toPx()),

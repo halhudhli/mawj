@@ -1,5 +1,6 @@
 package com.nuvio.app.features.player
 
+import androidx.compose.ui.graphics.toArgb
 import com.nuvio.app.features.watching.application.WatchingState
 import com.nuvio.app.features.home.MetaPreview
 import androidx.compose.animation.AnimatedVisibility
@@ -509,6 +510,19 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 resize = resizeMode.name,
                 hasNext = nextEpisodeInfo?.hasAired == true,
                 hasSkip = activeSkipInterval != null && !skipIntervalDismissed,
+                extras = com.nuvio.app.features.luxo.MawjRemotePlayer.SubtitleExtras(
+                    addon = visibleAddonSubtitles.map { sub ->
+                        sub.selectionKey to listOfNotNull(sub.display.ifBlank { sub.language }, sub.addonName?.takeIf { it.isNotBlank() }).joinToString(" · ")
+                    },
+                    addonSelected = selectedAddonSubtitleId?.takeIf { useCustomSubtitles },
+                    addonLoading = isLoadingAddonSubtitles,
+                    fonts = SubtitleFontRepository.fonts.value.map { it.fileName to it.familyName },
+                    font = subtitleStyle.customFontFile,
+                    color = subtitleStyle.textColor.toArgb(),
+                    background = subtitleStyle.backgroundColor.alpha > 0.05f,
+                    bold = subtitleStyle.bold,
+                    position = subtitleStyle.bottomOffset,
+                ),
             )
             com.nuvio.app.features.luxo.MawjRemotePlayer.actions = com.nuvio.app.features.luxo.MawjRemotePlayer.Actions(
                 audio = { index ->
@@ -538,6 +552,27 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 },
                 subtitleDelay = { ms -> setSubtitleDelay(ms) },
                 subtitleSize = { sp -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(fontSizeSp = sp)) },
+                addonSubtitle = { key ->
+                    visibleAddonSubtitles.firstOrNull { it.selectionKey == key }?.let { addon ->
+                        clearAutoSubtitleState()
+                        isUserExplicitSubtitleSelection = true
+                        selectedAddonSubtitleId = addon.selectionKey
+                        selectedSubtitleIndex = -1
+                        useCustomSubtitles = true
+                        preferredSubtitleSelectionApplied = true
+                        persistAddonSubtitlePreference(addon)
+                        attachSelectedAddonSubtitleWithAutoSync(addon.url)
+                        if (hasBurnedInServerSubtitle) clearServerSubtitleTrack()
+                    }
+                },
+                fetchAddonSubtitles = { if (!isLoadingAddonSubtitles) fetchAddonSubtitlesForActiveItem() },
+                subtitleFont = { file -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(customFontFile = file)) },
+                subtitleColor = { argb -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(textColor = androidx.compose.ui.graphics.Color(argb))) },
+                subtitleBackground = { on ->
+                    PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(backgroundColor = if (on) androidx.compose.ui.graphics.Color(0xA6000000) else androidx.compose.ui.graphics.Color.Transparent))
+                },
+                subtitleBold = { on -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(bold = on)) },
+                subtitlePosition = { v -> PlayerSettingsRepository.setSubtitleStyle(subtitleStyle.copy(bottomOffset = v)) },
                 speed = { v -> if (!isLiveTvPlayback) setPlaybackSpeedFromPicker(v) },
                 resize = { mode -> repeat(3) { if (resizeMode.name != mode) cycleResizeMode() } },
                 next = if (nextEpisodeInfo?.hasAired == true) ({ if (!partyBlocksControl()) playNextEpisode() }) else null,

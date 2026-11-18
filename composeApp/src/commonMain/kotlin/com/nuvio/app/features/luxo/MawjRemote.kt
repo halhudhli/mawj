@@ -130,6 +130,27 @@ object MawjRemotePlayer {
         val resize: (String) -> Unit,
         val next: (() -> Unit)?,
         val skip: (() -> Unit)?,
+        val addonSubtitle: (String) -> Unit = {},
+        val fetchAddonSubtitles: () -> Unit = {},
+        /** Subtitle look: font (null = default), text colour (ARGB), dark box behind, bold, height from the bottom. */
+        val subtitleFont: (String?) -> Unit = {},
+        val subtitleColor: (Int) -> Unit = {},
+        val subtitleBackground: (Boolean) -> Unit = {},
+        val subtitleBold: (Boolean) -> Unit = {},
+        val subtitlePosition: (Int) -> Unit = {},
+    )
+
+    /** Subtitles from add-ons and the subtitle look, sent next to the built-in tracks. */
+    class SubtitleExtras(
+        val addon: List<Pair<String, String>> = emptyList(),
+        val addonSelected: String? = null,
+        val addonLoading: Boolean = false,
+        val fonts: List<Pair<String, String>> = emptyList(),
+        val font: String? = null,
+        val color: Int = -1,
+        val background: Boolean = false,
+        val bold: Boolean = false,
+        val position: Int = 20,
     )
 
     fun publish(
@@ -138,6 +159,7 @@ object MawjRemotePlayer {
         subtitles: List<Pair<Int, String>>, subtitleSelected: Int,
         subtitleDelayMs: Int, subtitleSizeSp: Int,
         speed: Float, resize: String, hasNext: Boolean, hasSkip: Boolean,
+        extras: SubtitleExtras = SubtitleExtras(),
     ) {
         state = buildJsonObject {
             poster?.let { put("poster", it) }
@@ -148,6 +170,12 @@ object MawjRemotePlayer {
             put("subSel", subtitleSelected)
             put("subDelay", subtitleDelayMs); put("subSize", subtitleSizeSp)
             put("speed", speed); put("resize", resize); put("next", hasNext); put("skip", hasSkip)
+            put("addon", JsonArray(extras.addon.map { (k, l) -> buildJsonObject { put("k", k); put("l", l) } }))
+            extras.addonSelected?.let { put("addonSel", it) }
+            put("addonLoading", extras.addonLoading)
+            put("fonts", JsonArray(extras.fonts.map { (f, l) -> buildJsonObject { put("f", f); put("l", l) } }))
+            extras.font?.let { put("font", it) }
+            put("color", extras.color); put("bg", extras.background); put("bold", extras.bold); put("pos", extras.position)
         }.toString()
     }
 
@@ -174,6 +202,13 @@ internal fun mawjHandleRemoteCommand(type: String?, o: JsonObject): Boolean {
         "subSize" -> i("sp")?.let { acts?.subtitleSize?.invoke(it) }
         "speed" -> (o["v"] as? JsonPrimitive)?.floatOrNull?.let { acts?.speed?.invoke(it) }
         "resize" -> s("m")?.let { acts?.resize?.invoke(it) }
+        "addonSub" -> s("k")?.let { acts?.addonSubtitle?.invoke(it) }
+        "fetchSubs" -> acts?.fetchAddonSubtitles?.invoke()
+        "subFont" -> acts?.subtitleFont?.invoke(s("f")?.takeIf { it.isNotBlank() })
+        "subColor" -> i("c")?.let { acts?.subtitleColor?.invoke(it) }
+        "subBg" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBackground?.invoke(it) }
+        "subBold" -> (o["on"] as? JsonPrimitive)?.booleanOrNull?.let { acts?.subtitleBold?.invoke(it) }
+        "subPos" -> i("v")?.let { acts?.subtitlePosition?.invoke(it) }
         "next" -> acts?.next?.invoke()
         "skip" -> acts?.skip?.invoke()
         else -> return false
@@ -266,6 +301,18 @@ private class RemoteNow(o: JsonObject?) {
     val resize = s("resize", r) ?: "Fit"
     val hasNext = (r?.get("next") as? JsonPrimitive)?.booleanOrNull ?: false
     val hasSkip = (r?.get("skip") as? JsonPrimitive)?.booleanOrNull ?: false
+    private fun pairs(k: String, a: String, b: String) = (r?.get(k) as? JsonArray).orEmpty().mapNotNull { e ->
+        val eo = e as? JsonObject ?: return@mapNotNull null
+        val key = (eo[a] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+        key to ((eo[b] as? JsonPrimitive)?.contentOrNull ?: key)
+    }
+    val addon = pairs("addon", "k", "l"); val addonSel = s("addonSel", r)
+    val addonLoading = (r?.get("addonLoading") as? JsonPrimitive)?.booleanOrNull ?: false
+    val fonts = pairs("fonts", "f", "l"); val font = s("font", r)
+    val color = i("color", r) ?: -1
+    val subBg = (r?.get("bg") as? JsonPrimitive)?.booleanOrNull ?: false
+    val subBold = (r?.get("bold") as? JsonPrimitive)?.booleanOrNull ?: false
+    val subPos = i("pos", r) ?: 20
     val playingSomething get() = title != null && dur > 0
 }
 
@@ -509,7 +556,7 @@ private fun RemoteControls(wide: Boolean, onDismiss: () -> Unit, onChangeTv: () 
                 }
             }
         }
-        val settingsPanel: @Composable (Modifier) -> Unit = { m -> SettingsPanel(m, now) { l, b -> cmd(l, true, b) } }
+        val settingsPanel: @Composable (Modifier) -> Unit = { m -> SettingsPanel(m, now, scroll = wide) { l, b -> cmd(l, true, b) } }
 
         if (wide) {
             Row(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -743,11 +790,11 @@ private fun TideVolume(volume: Int, send: (String, Int) -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SettingsPanel(modifier: Modifier, now: RemoteNow, cmd: (String?, kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) -> Unit) {
+private fun SettingsPanel(modifier: Modifier, now: RemoteNow, scroll: Boolean, cmd: (String?, kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) -> Unit) {
     if (!now.playingSomething) { Box(modifier); return }
     var tab by remember { mutableIntStateOf(0) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Segmented(listOf("الصوت", "الترجمة", "الصورة", "السرعة"), tab, fill = true) { tab = it }
+    Column(if (scroll) modifier.verticalScroll(rememberScrollState()) else modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Segmented(listOf("الصوت", "الترجمة", "شكلها", "الصورة", "السرعة"), tab, fill = true) { tab = it }
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Color(0xE00D1620)).border(1.dp, RLine, RoundedCornerShape(22.dp)).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -759,23 +806,71 @@ private fun SettingsPanel(modifier: Modifier, now: RemoteNow, cmd: (String?, kot
                     now.audio.forEach { (i, l) -> TrackRow(l, i == now.audioSel) { cmd("الصوت: $l") { put("t", "audio"); put("i", i) } } }
                 }
                 1 -> {
-                    Label("الترجمة")
-                    TrackRow("بدون", now.subSel == -1) { cmd("الترجمة: بدون") { put("t", "sub"); put("i", -1) } }
-                    now.subs.forEach { (i, l) -> TrackRow(l, i == now.subSel) { cmd("الترجمة: $l") { put("t", "sub"); put("i", i) } } }
+                    // Add-on subtitles are fetched when this tab opens, as the TV's subtitle panel does.
+                    LaunchedEffect(Unit) { if (now.addon.isEmpty()) cmd(null) { put("t", "fetchSubs") } }
+                    TrackRow("بدون ترجمة", now.subSel == -1 && now.addonSel == null) { cmd("الترجمة: بدون") { put("t", "sub"); put("i", -1) } }
+                    if (now.subs.isNotEmpty()) {
+                        Label("مدمجة في الملف")
+                        now.subs.forEach { (i, l) -> TrackRow(l, now.addonSel == null && i == now.subSel) { cmd("الترجمة: $l") { put("t", "sub"); put("i", i) } } }
+                    }
+                    Label("من الإضافات")
+                    when {
+                        now.addon.isNotEmpty() -> now.addon.forEach { (k, l) -> TrackRow(l, k == now.addonSel) { cmd("الترجمة: $l") { put("t", "addonSub"); put("k", k) } } }
+                        now.addonLoading -> Text("جارٍ جلب الترجمات…", color = RFaint, fontSize = 13.sp)
+                        else -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("لم تُعثر على ترجمات من الإضافات بعد", color = RFaint, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                            GhostButton("جلب الترجمات", gold = true) { cmd("جلب الترجمات") { put("t", "fetchSubs") } }
+                        }
+                    }
                     Label("التوقيت")
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RoundIcon("−") { val v = now.subDelay - 250; cmd("توقيت الترجمة ${v / 1000f} ث") { put("t", "subDelay"); put("ms", v) } }
-                        Text("${if (now.subDelay > 0) "+" else ""}${now.subDelay / 1000f} ث", color = RGoldLight, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                        RoundIcon("+") { val v = now.subDelay + 250; cmd("توقيت الترجمة ${v / 1000f} ث") { put("t", "subDelay"); put("ms", v) } }
+                    val delayText: (Int) -> String = { v -> (if (v > 0) "+" else "") + ((v / 100) / 10f).toString() + " ث" }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(-1000, -100).forEach { d ->
+                            RoundIcon(if (d == -1000) "−1" else "−0.1") { val v = now.subDelay + d; cmd("توقيت الترجمة ${delayText(v)}") { put("t", "subDelay"); put("ms", v) } }
+                        }
+                        Text(delayText(now.subDelay), color = RGoldLight, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                        listOf(100, 1000).forEach { d ->
+                            RoundIcon(if (d == 1000) "+1" else "+0.1") { val v = now.subDelay + d; cmd("توقيت الترجمة ${delayText(v)}") { put("t", "subDelay"); put("ms", v) } }
+                        }
+                    }
+                    Text("الرقم السالب يُظهر الترجمة أبكر، والموجب يؤخرها", color = RFaint, fontSize = 12.sp)
+                    if (now.subDelay != 0) GhostButton("إعادة التوقيت إلى صفر") { cmd("توقيت الترجمة: صفر") { put("t", "subDelay"); put("ms", 0) } }
+                }
+                2 -> {
+                    Label("الخط")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Chip("الافتراضي", now.font == null) { cmd("خط الترجمة: الافتراضي") { put("t", "subFont"); put("f", "") } }
+                        now.fonts.forEach { (f, l) -> Chip(l, f == now.font) { cmd("خط الترجمة: $l") { put("t", "subFont"); put("f", f) } } }
                     }
                     Label("الحجم")
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("صغير" to 15, "متوسط" to 18, "كبير" to 24).forEach { (l, sp) ->
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("صغير" to 15, "متوسط" to 18, "كبير" to 24, "كبير جداً" to 30).forEach { (l, sp) ->
                             Chip(l, abs(now.subSize - sp) <= 1) { cmd("حجم الترجمة: $l") { put("t", "subSize"); put("sp", sp) } }
                         }
                     }
+                    Label("اللون")
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listOf(0xFFFFFFFF.toInt() to "أبيض", 0xFFFFE066.toInt() to "أصفر", 0xFFF1DDA6.toInt() to "ذهبي", 0xFF9FE3FF.toInt() to "سماوي").forEach { (c, l) ->
+                            val on = now.color == c
+                            Box(
+                                Modifier.size(40.dp).clip(CircleShape).background(Color(c)).border(if (on) 3.dp else 1.dp, if (on) RGold else RLine, CircleShape)
+                                    .clickable { cmd("لون الترجمة: $l") { put("t", "subColor"); put("c", c) } },
+                            )
+                        }
+                    }
+                    Label("المظهر")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Chip("خلفية داكنة", now.subBg) { cmd(if (now.subBg) "إزالة خلفية الترجمة" else "خلفية داكنة للترجمة") { put("t", "subBg"); put("on", !now.subBg) } }
+                        Chip("خط عريض", now.subBold) { cmd(if (now.subBold) "خط عادي" else "خط عريض") { put("t", "subBold"); put("on", !now.subBold) } }
+                    }
+                    Label("الارتفاع عن أسفل الشاشة")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RoundIcon("▼") { val v = (now.subPos - 10).coerceAtLeast(0); cmd("خفض الترجمة") { put("t", "subPos"); put("v", v) } }
+                        Text("${now.subPos}", color = RGoldLight, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                        RoundIcon("▲") { val v = (now.subPos + 10).coerceAtMost(200); cmd("رفع الترجمة") { put("t", "subPos"); put("v", v) } }
+                    }
                 }
-                2 -> {
+                3 -> {
                     Label("أبعاد الصورة")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("ملاءمة" to "Fit", "تعبئة" to "Fill", "تكبير" to "Zoom").forEach { (l, m) ->

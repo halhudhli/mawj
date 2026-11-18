@@ -168,11 +168,14 @@ fun NuvioPosterCard(
                 ),
         ) {
         var imageFailed by remember(imageUrl, fallbackImageUrl) { mutableStateOf(false) }
+        // TV light mode: a solid card behind the poster and no fade-in, so every poster is fully clear
+        // (a fading or see-through card read as a veil on the TV).
+        val tvLite = com.nuvio.app.features.luxo.rememberLuxoLite()
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .clip(cardShape)
-                .background(tokens.colors.surface)
+                .background(if (tvLite) Color(0xFF0D1620) else tokens.colors.surface)
                 .nuvioCardDepth(
                     shape = cardShape,
                     surface = NuvioCardDepthSurface.Posters,
@@ -217,7 +220,16 @@ fun NuvioPosterCard(
                 if (!imageArrived && !imageFailed && rememberMawjStageOn()) {
                     Box(Modifier.matchParentSize().mawjShimmer())
                 }
-                androidx.compose.animation.Crossfade(
+                if (tvLite) {
+                    AsyncImage(
+                        model = imageModel,
+                        contentDescription = title,
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop,
+                        onError = { imageFailed = true },
+                        onSuccess = { imageFailed = false; imageArrived = true },
+                    )
+                } else androidx.compose.animation.Crossfade(
                     targetState = imageModel,
                     animationSpec = androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.CubicBezierEasing(0.4f, 0f, 0.2f, 1f)),
                     modifier = Modifier.matchParentSize(),
