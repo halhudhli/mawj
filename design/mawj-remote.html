@@ -1,0 +1,350 @@
+<title>ريموت موج</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a tablet in landscape — the remote on one side, what is playing and its settings on the other; one column on a phone. */
+:root{
+  --sea:#070D14; --raised:#0D1620; --card:#121C26; --crest:#2E5470;
+  --gold:#D6B36A; --gold-deep:#A9843F; --gold-light:#F1DDA6;
+  --ink:#EEF2F6; --ink-strong:#F6F1E4; --muted:#A9B6C4; --faint:#8796A8; --on-gold:#070D14;
+  --ok:#6FC3A5; --line:rgba(238,242,246,.12);
+  --serif:"Amiri","Times New Roman",serif; --sans:"IBM Plex Sans Arabic",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--sea);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.intro h1{font-family:var(--serif);font-size:34px;line-height:1.2;margin:0;color:var(--ink-strong);text-wrap:balance}
+.intro p{margin:6px 0 0;color:var(--muted);max-width:68ch}
+.eyebrow{color:var(--gold);font-size:13px;font-weight:500;letter-spacing:.02em}
+
+.device{position:relative;border-radius:34px;padding:14px;background:#03070B;border:1px solid #1B2836;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.screen{position:relative;overflow:hidden;border-radius:24px;background:var(--sea);min-height:640px;display:flex;flex-direction:column}
+.sea{position:absolute;inset:auto 0 0 0;height:46%;pointer-events:none;opacity:.9}
+.bar{position:relative;display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line)}
+.bar .tv{display:flex;align-items:center;gap:10px;min-width:0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(111,195,165,.16)}
+.bar b{font-family:var(--serif);font-size:20px;color:var(--ink-strong)}
+.bar small{color:var(--faint)}
+.bar .sp{flex:1}
+.pill{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}
+.pill:hover{color:var(--ink);border-color:rgba(238,242,246,.3)}
+.grid{position:relative;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:22px;padding:22px}
+.panel{background:rgba(13,22,32,.88);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel h2{font-family:var(--serif);font-size:22px;margin:0;color:var(--ink-strong);line-height:1.25}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.label{color:var(--faint);font-size:12px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;background:var(--card);border-radius:999px;padding:4px;align-self:flex-start}
+.tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:6px 16px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--gold);color:var(--on-gold)}
+
+/* d-pad */
+.pad{position:relative;width:min(100%,290px);aspect-ratio:1;margin:4px auto 0;border-radius:50%;
+  background:radial-gradient(circle at 50% 40%,#17283A,#0B1520 70%);border:1px solid #22384D;box-shadow:inset 0 2px 0 rgba(255,255,255,.04),0 14px 34px rgba(0,0,0,.4)}
+.pad button{position:absolute;border:0;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:22px}
+.pad button:hover{color:var(--gold-light)}
+.pad .up{top:4%;left:33%;width:34%;height:28%} .pad .down{bottom:4%;left:33%;width:34%;height:28%}
+.pad .left{left:4%;top:33%;width:28%;height:34%} .pad .right{right:4%;top:33%;width:28%;height:34%}
+.pad .ok{left:31%;top:31%;width:38%;height:38%;border-radius:50%;background:linear-gradient(160deg,var(--gold),var(--gold-deep));color:var(--on-gold);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 8px 22px rgba(214,179,106,.28)}
+.pad .ok:hover{color:var(--on-gold);filter:brightness(1.06)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.key{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:10px 6px;font:inherit;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.key span{font-size:18px;line-height:1}
+.key:hover{border-color:rgba(214,179,106,.5)}
+.vol{display:flex;align-items:center;gap:10px}
+.vol .key{flex-direction:row;padding:8px 14px}
+.typebox{display:flex;gap:8px}
+.typebox input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--ink);font:inherit;padding:9px 14px}
+.typebox input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.btn-gold{border:0;background:var(--gold);color:var(--on-gold);font:inherit;font-weight:700;border-radius:14px;padding:9px 16px;cursor:pointer}
+.touch{height:228px;border-radius:20px;border:1px dashed rgba(214,179,106,.35);background:repeating-radial-gradient(circle at 50% 50%,rgba(46,84,112,.14) 0 2px,transparent 2px 22px);display:grid;place-items:center;color:var(--faint);font-size:13px;text-align:center;cursor:grab;user-select:none;touch-action:none}
+
+/* now playing */
+.now{display:flex;gap:16px;align-items:flex-start}
+.poster{width:92px;flex:none;aspect-ratio:2/3;border-radius:14px;background:
+  linear-gradient(180deg,rgba(7,13,20,0) 40%,rgba(7,13,20,.85)),radial-gradient(circle at 70% 24%,#F1DDA6 0 9%,transparent 10%),linear-gradient(170deg,#2E5470,#0D1620 70%);border:1px solid var(--line)}
+.now .t{min-width:0;flex:1}
+.now h3{font-family:var(--serif);font-size:24px;margin:0;color:var(--ink-strong);line-height:1.2}
+.now .meta{color:var(--faint);font-size:13px}
+.scrub{position:relative;height:28px;display:flex;align-items:center;cursor:pointer}
+.track{position:absolute;inset-inline:0;height:6px;border-radius:999px;background:rgba(238,242,246,.12)}
+.fill{position:absolute;inset-inline-start:0;height:6px;border-radius:999px;background:var(--gold)}
+.knob{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold-light);box-shadow:0 0 0 5px rgba(214,179,106,.2);transform:translateX(50%)}
+.times{display:flex;justify-content:space-between;color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
+.transport{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+.tr{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-width:52px;height:46px;padding:0 14px;font:inherit;font-size:13px;cursor:pointer}
+.tr:hover{border-color:rgba(214,179,106,.5)}
+.tr.play{width:64px;height:64px;background:var(--gold);color:var(--on-gold);border:0;font-size:24px}
+.skip{align-self:center;border:1px solid rgba(214,179,106,.5);color:var(--gold-light);background:rgba(214,179,106,.08);border-radius:999px;padding:6px 16px;font:inherit;font-size:13px;cursor:pointer}
+
+/* settings */
+.set{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.box{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box h4{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:34px;padding:0 13px;border-radius:999px;border:1px solid rgba(238,242,246,.18);background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:600}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-size:16px}
+.step output{min-width:70px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold-light)}
+.box.wide{grid-column:1/-1}
+
+/* toast mirror */
+.mirror{position:absolute;inset-inline-end:22px;bottom:18px;display:flex;align-items:center;gap:10px;background:rgba(3,7,11,.9);border:1px solid rgba(214,179,106,.35);border-radius:14px;padding:8px 14px;font-size:13px;color:var(--gold-light);opacity:0;transform:translateY(6px);transition:.25s}
+.mirror.show{opacity:1;transform:none}
+.mirror i{font-style:normal;color:var(--faint)}
+
+button:focus-visible{outline:2px solid var(--gold-light);outline-offset:2px}
+
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.note{background:var(--raised);border:1px solid var(--line);border-radius:16px;padding:16px}
+.note h3{font-family:var(--serif);font-size:19px;margin:0 0 4px;color:var(--ink-strong)}
+.note p,.note li{color:var(--muted);font-size:14px;margin:0}
+.note ul{margin:0;padding-inline-start:18px}
+
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)} .notes{grid-template-columns:minmax(0,1fr)}
+  .device{padding:8px;border-radius:26px} .screen{border-radius:20px}
+}
+@media (max-width:520px){ .set{grid-template-columns:minmax(0,1fr)} .grid{padding:14px} .bar{padding:12px 14px;flex-wrap:wrap} .now h3{font-size:20px} }
+@media (prefers-reduced-motion:reduce){ .mirror{transition:none} }
+</style>
+
+<div class="page" dir="rtl" lang="ar">
+  <header class="intro">
+    <div class="eyebrow">تصميم للاعتماد ── التابلت يتحكم بالشاشة</div>
+    <h1>ريموت موج</h1>
+    <p>كل ما يفعله ريموت الشاشة، مع ما يشاهَد الآن وإعداداته في صفحة واحدة. الأزرار هنا تعمل للتجربة، وتظهر في الزاوية رسالة بما كان سيحدث على الشاشة.</p>
+  </header>
+
+  <div class="device">
+    <div class="screen">
+      <canvas class="sea" id="sea" aria-hidden="true"></canvas>
+
+      <div class="bar">
+        <div class="tv"><span class="dot" aria-hidden="true"></span><div><b>موج · الشاشة</b><br><small>متصل · 192.168.1.20</small></div></div>
+        <div class="sp"></div>
+        <button class="pill" type="button" data-say="فتح قائمة الشاشات">تغيير الشاشة</button>
+      </div>
+
+      <div class="grid">
+        <!-- remote -->
+        <section class="panel" aria-labelledby="h-remote">
+          <div class="row" style="justify-content:space-between">
+            <h2 id="h-remote">الريموت</h2>
+            <div class="tabs" role="tablist">
+              <button role="tab" aria-selected="true" id="tab-pad" type="button">أسهم</button>
+              <button role="tab" aria-selected="false" id="tab-touch" type="button">لوحة لمس</button>
+            </div>
+          </div>
+
+          <div id="view-pad">
+            <div class="pad">
+              <button class="up" type="button" aria-label="أعلى" data-say="↑ أعلى">▲</button>
+              <button class="right" type="button" aria-label="يمين" data-say="→ يمين">▶</button>
+              <button class="left" type="button" aria-label="يسار" data-say="← يسار">◀</button>
+              <button class="down" type="button" aria-label="أسفل" data-say="↓ أسفل">▼</button>
+              <button class="ok" type="button" data-say="موافق">موافق</button>
+            </div>
+          </div>
+          <div id="view-touch" hidden>
+            <div class="touch" id="touch">اسحب بإصبع للتنقل، وانقر مرة للاختيار</div>
+          </div>
+
+          <div class="keys">
+            <button class="key" type="button" data-say="رجوع"><span>↩</span>رجوع</button>
+            <button class="key" type="button" data-say="فتح الرئيسية"><span>⌂</span>الرئيسية</button>
+            <button class="key" type="button" data-say="فتح القائمة"><span>☰</span>القائمة</button>
+          </div>
+
+          <div class="vol">
+            <span class="label">الصوت</span>
+            <button class="key" type="button" data-say="خفض الصوت">−</button>
+            <button class="key" type="button" data-say="كتم الصوت">كتم</button>
+            <button class="key" type="button" data-say="رفع الصوت">+</button>
+          </div>
+
+          <div>
+            <div class="label" style="margin-bottom:6px">الكتابة على الشاشة</div>
+            <form class="typebox" id="typeform">
+              <input id="typein" placeholder="يُكتب هنا ويظهر في خانة الشاشة" autocomplete="off">
+              <button class="btn-gold" type="submit">إرسال</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- now playing + settings -->
+        <section class="panel" aria-labelledby="h-now">
+          <h2 id="h-now">على الشاشة الآن</h2>
+          <div class="now">
+            <div class="poster" role="img" aria-label="بوستر العمل"></div>
+            <div class="t">
+              <div class="eyebrow">مسلسل · الموسم ٢ · الحلقة ٤</div>
+              <h3>ليالي الميناء</h3>
+              <div class="meta">العربية ٥٫١ · ترجمة عربية · 1080p</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="scrub" id="scrub" role="slider" aria-label="موضع التشغيل" aria-valuemin="0" aria-valuemax="3120" aria-valuenow="1310" tabindex="0">
+              <div class="track"></div><div class="fill" id="fill"></div><div class="knob" id="knob"></div>
+            </div>
+            <div class="times"><span id="cur">21:50</span><span>52:00</span></div>
+          </div>
+
+          <div class="transport">
+            <button class="tr" type="button" data-say="الحلقة السابقة">⏮</button>
+            <button class="tr" type="button" data-seek="-60">−٦٠</button>
+            <button class="tr" type="button" data-seek="-10">−١٠</button>
+            <button class="tr play" type="button" id="pp" aria-label="تشغيل أو إيقاف">⏸</button>
+            <button class="tr" type="button" data-seek="10">+١٠</button>
+            <button class="tr" type="button" data-seek="60">+٦٠</button>
+            <button class="tr" type="button" data-say="الحلقة التالية">⏭</button>
+          </div>
+          <button class="skip" type="button" data-say="تخطي المقدمة">تخطي المقدمة</button>
+
+          <div class="set">
+            <div class="box">
+              <h4>الصوت</h4>
+              <div class="chips" data-group="audio">
+                <button class="chip" type="button" aria-pressed="true">العربية ٥٫١</button>
+                <button class="chip" type="button" aria-pressed="false">English 5.1</button>
+                <button class="chip" type="button" aria-pressed="false">Français</button>
+              </div>
+            </div>
+            <div class="box">
+              <h4>الترجمة</h4>
+              <div class="chips" data-group="subs">
+                <button class="chip" type="button" aria-pressed="false">بدون</button>
+                <button class="chip" type="button" aria-pressed="true">العربية</button>
+                <button class="chip" type="button" aria-pressed="false">English</button>
+              </div>
+            </div>
+            <div class="box">
+              <h4>تأخير الترجمة</h4>
+              <div class="step" data-step="delay" data-unit="ث" data-by="0.5" data-val="0">
+                <button type="button" aria-label="تقديم">−</button><output>0.0 ث</output><button type="button" aria-label="تأخير">+</button>
+              </div>
+            </div>
+            <div class="box">
+              <h4>حجم الترجمة</h4>
+              <div class="chips" data-group="size">
+                <button class="chip" type="button" aria-pressed="false">صغير</button>
+                <button class="chip" type="button" aria-pressed="true">متوسط</button>
+                <button class="chip" type="button" aria-pressed="false">كبير</button>
+              </div>
+            </div>
+            <div class="box">
+              <h4>السرعة</h4>
+              <div class="chips" data-group="speed">
+                <button class="chip" type="button" aria-pressed="false">0.75×</button>
+                <button class="chip" type="button" aria-pressed="true">1×</button>
+                <button class="chip" type="button" aria-pressed="false">1.25×</button>
+                <button class="chip" type="button" aria-pressed="false">1.5×</button>
+                <button class="chip" type="button" aria-pressed="false">2×</button>
+              </div>
+            </div>
+            <div class="box">
+              <h4>أبعاد الصورة</h4>
+              <div class="chips" data-group="fit">
+                <button class="chip" type="button" aria-pressed="true">ملاءمة</button>
+                <button class="chip" type="button" aria-pressed="false">تعبئة</button>
+                <button class="chip" type="button" aria-pressed="false">تكبير</button>
+              </div>
+            </div>
+            <div class="box wide">
+              <h4>الجودة والمصدر</h4>
+              <div class="chips" data-group="src">
+                <button class="chip" type="button" aria-pressed="true">المصدر الحالي · 1080p</button>
+                <button class="chip" type="button" aria-pressed="false">مصدر آخر…</button>
+                <button class="chip" type="button" aria-pressed="false">الأوضاع السريعة</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="mirror" id="mirror" role="status"><i>الشاشة:</i><span id="msay">—</span></div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <div class="note">
+      <h3>على الشاشة</h3>
+      <ul>
+        <li>تستقبل كل أوامر الريموت وتنفّذها كأنها من الريموت الأصلي.</li>
+        <li>شكل المشغّل لا يتغير، وتظهر رسالة صغيرة عند تغيير إعداد.</li>
+        <li>يلزم أن تكون «موج» مفتوحة على الشاشة.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>على التابلت والجوال</h3>
+      <ul>
+        <li>يظهر «على الشاشة الآن» تلقائياً عند بدء التشغيل.</li>
+        <li>عند عدم التشغيل تبقى أزرار التنقل والكتابة فقط.</li>
+        <li>تبقى الشاشة محفوظة بعد إدخال الرمز مرة واحدة.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>مفتاح التشغيل</h3>
+      <p>يعمل من «التحكم بالشاشة 📱» في مزايا موج، ويمكن إيقافه في أي وقت.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const mirror=document.getElementById('mirror'), msay=document.getElementById('msay'); let tm;
+  function say(t){ msay.textContent=t; mirror.classList.add('show'); clearTimeout(tm); tm=setTimeout(()=>mirror.classList.remove('show'),1600); }
+  document.querySelectorAll('[data-say]').forEach(b=>b.addEventListener('click',()=>say(b.dataset.say)));
+
+  // tabs
+  const tp=document.getElementById('tab-pad'), tt=document.getElementById('tab-touch');
+  function tab(touch){ tp.setAttribute('aria-selected',!touch); tt.setAttribute('aria-selected',touch);
+    document.getElementById('view-pad').hidden=touch; document.getElementById('view-touch').hidden=!touch; }
+  tp.onclick=()=>tab(false); tt.onclick=()=>tab(true);
+
+  // touch pad
+  const pad=document.getElementById('touch'); let sx,sy,moved;
+  pad.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;moved=false;pad.setPointerCapture(e.pointerId)});
+  pad.addEventListener('pointermove',e=>{ if(sx==null)return; const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>40||Math.abs(dy)>40){ moved=true; say(Math.abs(dx)>Math.abs(dy)?(dx>0?'→ يمين':'← يسار'):(dy>0?'↓ أسفل':'↑ أعلى')); sx=e.clientX; sy=e.clientY; } });
+  pad.addEventListener('pointerup',()=>{ if(!moved) say('موافق'); sx=null; });
+
+  // typing
+  document.getElementById('typeform').addEventListener('submit',e=>{e.preventDefault(); const v=document.getElementById('typein').value.trim(); if(v) say('كُتب: «'+v+'»');});
+
+  // progress
+  const total=3120; let pos=1310, playing=true;
+  const fill=document.getElementById('fill'), knob=document.getElementById('knob'), cur=document.getElementById('cur'), scrub=document.getElementById('scrub');
+  const fmt=s=>{s=Math.max(0,Math.min(total,Math.round(s))); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+  function draw(){ const p=pos/total*100; fill.style.width=p+'%'; knob.style.insetInlineStart=p+'%'; knob.style.transform='translateX(50%)'; cur.textContent=fmt(pos); scrub.setAttribute('aria-valuenow',Math.round(pos)); }
+  draw();
+  document.querySelectorAll('[data-seek]').forEach(b=>b.addEventListener('click',()=>{ const d=+b.dataset.seek; pos=Math.max(0,Math.min(total,pos+d)); draw(); say((d>0?'تقديم ':'ترجيع ')+Math.abs(d)+' ثانية'); }));
+  scrub.addEventListener('click',e=>{ const r=scrub.getBoundingClientRect(); const x=(r.right-e.clientX)/r.width; pos=Math.max(0,Math.min(1,x))*total; draw(); say('انتقال إلى '+fmt(pos)); });
+  scrub.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'){pos+=10} else if(e.key==='ArrowRight'){pos-=10} else return; pos=Math.max(0,Math.min(total,pos)); draw(); e.preventDefault(); });
+  const pp=document.getElementById('pp'); pp.onclick=()=>{ playing=!playing; pp.textContent=playing?'⏸':'▶'; say(playing?'تشغيل':'إيقاف مؤقت'); };
+  setInterval(()=>{ if(playing&&pos<total){pos+=1; draw();} },1000);
+
+  // chips
+  document.querySelectorAll('.chips').forEach(g=>g.addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c)return;
+    g.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c)); say(g.previousElementSibling.textContent+': '+c.textContent); }));
+  // steppers
+  document.querySelectorAll('.step').forEach(s=>{ const out=s.querySelector('output'), [m,p]=s.querySelectorAll('button'); let v=+s.dataset.val, by=+s.dataset.by;
+    const upd=()=>{ out.textContent=(v>0?'+':'')+v.toFixed(1)+' '+s.dataset.unit; say('تأخير الترجمة: '+out.textContent); };
+    m.onclick=()=>{v-=by;upd()}; p.onclick=()=>{v+=by;upd()}; });
+
+  // still sea, drawn once
+  const cv=document.getElementById('sea'), ctx=cv.getContext('2d');
+  function sea(){ const w=cv.clientWidth, h=cv.clientHeight, d=window.devicePixelRatio||1; cv.width=w*d; cv.height=h*d; ctx.scale(d,d);
+    const layers=[['#132B3F',.30,.010,0],['#173550',.45,.014,1.3],['#1C3E5C',.60,.018,2.4],['#214766',.74,.022,3.1],['#0B1824',.88,.026,4.2]];
+    layers.forEach(([c,y,k,ph],i)=>{ ctx.beginPath(); ctx.moveTo(0,h); for(let x=0;x<=w;x+=8){ ctx.lineTo(x,h*y+Math.sin(x*k+ph)*(10-i)+Math.sin(x*k*.43+ph*2)*6); } ctx.lineTo(w,h); ctx.closePath();
+      const g=ctx.createLinearGradient(0,h*y-12,0,h); g.addColorStop(0,c); g.addColorStop(1,'#070D14'); ctx.fillStyle=g; ctx.globalAlpha=.85; ctx.fill(); });
+    ctx.globalAlpha=.5; ctx.strokeStyle='#D6B36A'; ctx.lineWidth=1; ctx.beginPath(); for(let x=0;x<=w;x+=8){ const y=h*.30+Math.sin(x*.010)*10+Math.sin(x*.0043)*6; x?ctx.lineTo(x,y):ctx.moveTo(x,y);} ctx.stroke(); ctx.globalAlpha=1; }
+  sea(); addEventListener('resize',()=>{ ctx.setTransform(1,0,0,1,0,0); sea(); });
+})();
+</script>
