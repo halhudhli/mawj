@@ -280,6 +280,19 @@ fun TabletDetailHero(
                     bottom = bottomInset + space.s24 + if (com.nuvio.app.core.ui.rememberMawjStageOn()) 40.dp else 0.dp,
                 ),
         ) {
+            val mawjTitle = com.nuvio.app.core.ui.rememberMawjStageOn()
+            if (mawjTitle) {
+                // «صفحة العمل — المسرح»: gold line, serif title, one ratings line, the synopsis, then the actions.
+                MawjTitleHead(meta = meta, showRatings = showOverallRatings)
+                meta.description?.takeIf { showOverview && it.isNotBlank() }?.let {
+                    Spacer(modifier = Modifier.height(space.s16))
+                    MawjTitleOverview(it)
+                }
+                if (actions != null) {
+                    Spacer(modifier = Modifier.height(space.s24))
+                    actions()
+                }
+            } else {
             if (logoUrl != null && !logoLoadError) {
                 AsyncImage(
                     model = logoUrl,
@@ -356,6 +369,7 @@ fun TabletDetailHero(
             if (actions != null) {
                 Spacer(modifier = Modifier.height(space.s24))
                 actions()
+            }
             }
         }
 

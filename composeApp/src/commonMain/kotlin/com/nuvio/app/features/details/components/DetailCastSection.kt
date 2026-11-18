@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -151,6 +152,8 @@ private fun CastItem(
             modifier = Modifier
                 .then(avatarSharedElementModifier)
                 .size(sizing.avatarSize)
+                // Mawj: a thin moon-gold ring around every face.
+                .then(if (com.nuvio.app.core.ui.rememberMawjStageOn()) Modifier.border(1.5.dp, androidx.compose.ui.graphics.Color(0xFFD6B36A), CircleShape) else Modifier)
                 .clip(CircleShape)
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant,

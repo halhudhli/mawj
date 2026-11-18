@@ -1179,6 +1179,7 @@ fun MetaDetailsScreen(
                         label = "detail_dominant_backdrop_color",
                     )
                     val heroGradientColor = dominantBackdropColor.takeIf { dominantColorEnabled }
+                    val mawjTitleLook = com.nuvio.app.core.ui.rememberMawjStageOn()
                     val heroTrailerPlayWhenReady = {
                         heroTrailerSourceUrl != null &&
                             selectedTrailer == null &&
@@ -1342,6 +1343,21 @@ fun MetaDetailsScreen(
                                         }
                                     }
 
+                                    // «صفحة العمل — المسرح»: the episode line and «لماذا قد يعجب» right under the hero.
+                                    item(key = "mawj-title-extras") {
+                                        if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+                                            DetailSectionContainer(
+                                                horizontalPadding = contentHorizontalPadding,
+                                                contentMaxWidth = if (isTablet && !useTabletLayout) contentMaxWidth else Dp.Unspecified,
+                                            ) {
+                                                androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(28.dp)) {
+                                                    if (hasEpisodes) com.nuvio.app.features.details.components.MawjEpisodeLine(meta = meta, onEpisodeClick = onEpisodePlayClick)
+                                                    com.nuvio.app.features.details.components.MawjWhyCard(meta = meta)
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     configuredMetaSectionItems(
                                         settings = if (useTabletLayout) {
                                             metaScreenSettingsUiState.copy(
@@ -1442,6 +1458,7 @@ fun MetaDetailsScreen(
                                     )
 
                                     if (
+                                        !mawjTitleLook &&
                                         metaScreenSettingsUiState.showRatingMap &&
                                         metaScreenSettingsUiState.episodeRatingsVisibility.showRatings &&
                                         hasEpisodes &&
