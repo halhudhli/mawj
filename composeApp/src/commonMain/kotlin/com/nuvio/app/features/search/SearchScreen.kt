@@ -249,6 +249,7 @@ fun SearchScreen(
             else -> stringResource(Res.string.compose_nav_search)
         }
 
+        val searchWide = maxWidth > 700.dp
         androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 androidx.compose.foundation.layout.Column(
@@ -269,7 +270,7 @@ fun SearchScreen(
                                 color = androidx.compose.ui.graphics.Color(0xFFF6F1E4),
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                fontSize = androidx.compose.ui.unit.TextUnit(if (maxWidth > 700.dp) 46f else 32f, androidx.compose.ui.unit.TextUnitType.Sp),
+                                fontSize = androidx.compose.ui.unit.TextUnit(if (searchWide) 46f else 32f, androidx.compose.ui.unit.TextUnitType.Sp),
                             )
                         }
                     } else {
