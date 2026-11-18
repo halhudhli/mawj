@@ -77,6 +77,9 @@ internal fun StreamCard(
     val cardShape = RoundedCornerShape(14.dp)
     val badgeImages = stream.badges.filter { it.imageURL.isNotBlank() }
     val hasBadges = badgeImages.isNotEmpty() || (showFileSizeBadges && stream.behaviorHints.videoSize != null)
+    // «المصادر — الميناء»: a solid sea row with the quality in a gold-outlined tag.
+    val mawjRow = com.nuvio.app.core.ui.rememberMawjStageOn()
+    val mawjQuality = remember(stream.name, stream.streamSubtitle) { if (mawjRow) mawjStreamQuality(stream) else null }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -88,6 +91,11 @@ internal fun StreamCard(
                 spotColor = Color.Black.copy(alpha = 0.04f),
             )
             .clip(cardShape)
+            .then(
+                if (mawjRow) Modifier.background(if (isCurrent) Color(0x29D6B36A) else Color(0xE60D1620), cardShape)
+                    .border(1.dp, Color(0x1FD6B36A), cardShape)
+                else Modifier,
+            )
             .ambientLiquidGlass(
                 shape = cardShape,
                 tint = if (isCurrent) {
@@ -121,6 +129,13 @@ internal fun StreamCard(
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (mawjQuality != null) {
+            Box(
+                Modifier.width(64.dp).height(34.dp).border(1.dp, Color(0x80D6B36A), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center,
+            ) { Text(mawjQuality, color = Color(0xFFF1DDA6), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
+            Spacer(modifier = Modifier.width(16.dp))
+        }
         Column(modifier = Modifier.weight(1f)) {
             if (hasBadges && badgePlacement == StreamBadgePlacement.TOP) {
                 StreamCardBadgeRow(
@@ -206,6 +221,19 @@ internal fun StreamCard(
                 )
             }
         }
+    }
+}
+
+/** The picture quality written in a stream's name or description (4K, 1080p…), or null. */
+internal fun mawjStreamQuality(stream: StreamItem): String? {
+    val text = (stream.name.orEmpty() + " " + stream.streamSubtitle.orEmpty()).lowercase()
+    return when {
+        "2160" in text || "4k" in text || "uhd" in text -> "4K"
+        "1440" in text -> "1440p"
+        "1080" in text -> "1080p"
+        "720" in text -> "720p"
+        "576" in text || "480" in text -> "SD"
+        else -> null
     }
 }
 
