@@ -392,9 +392,17 @@ private fun PersonHero(
     val rated = credits.filter { it.votes >= 20 }
     val avg = if (rated.isEmpty()) null else rated.sumOf { it.rating } / rated.size
     val photoView: @Composable (Modifier) -> Unit = { m ->
+        // «صفحة الممثل — المسيرة»: the portrait sits in a moon-gold frame.
+        val mawjFrame = com.nuvio.app.core.ui.rememberMawjStageOn()
         Box(
             m
                 .aspectRatio(2f / 3f)
+                .then(
+                    if (mawjFrame) Modifier.clip(RoundedCornerShape(32.dp))
+                        .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFFF1DDA6), Color(0xFFA9843F))))
+                        .padding(6.dp)
+                    else Modifier,
+                )
                 .clip(RoundedCornerShape(28.dp))
                 .background(Color.White.copy(alpha = 0.06f))
                 .border(1.dp, if (com.nuvio.app.core.ui.rememberMawjStageOn()) PAccent1.copy(alpha = 0.55f) else Color.White.copy(alpha = 0.18f), RoundedCornerShape(28.dp))
@@ -490,6 +498,15 @@ private fun PersonHero(
 
 @Composable
 private fun Header(text: String) {
+    if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+        val mawj = when {
+            text.startsWith("منحنى التقييم") -> "مدّ المسيرة"
+            text.startsWith("الأعمال") -> "أعماله"
+            else -> text.replace(Regex("\\s*[^\\p{L}\\p{N}\\s«»ـ]+$"), "")
+        }
+        Text(mawj, color = Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 28.sp, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
+        return
+    }
     Text(text, color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
 }
 
