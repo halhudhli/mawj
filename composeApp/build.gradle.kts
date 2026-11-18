@@ -613,3 +613,11 @@ configurations.all {
     exclude(group = "androidx.media3", module = "media3-exoplayer")
     exclude(group = "androidx.media3", module = "media3-ui")
 }
+
+// Mawj TV build (-Pluxo.tv=true): the stable-types list Nuvio TV uses, so focus moves with the remote
+// redraw less. The tablet and iPhone builds are unchanged.
+if (providers.gradleProperty("luxo.tv").map(String::toBoolean).getOrElse(false)) {
+    composeCompiler {
+        stabilityConfigurationFiles.add(project.layout.projectDirectory.file("compose-stability-tv.conf"))
+    }
+}
