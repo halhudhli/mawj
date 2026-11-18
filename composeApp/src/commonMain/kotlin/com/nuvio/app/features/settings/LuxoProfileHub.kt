@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -265,7 +266,14 @@ internal fun LazyListScope.luxoProfileHubContent(
                     add(LuxoHall(lx("عجلة الاختيار", "Choice wheel"), lx("كل فرد يختار، والعجلة تحسم", "Everyone picks, the wheel decides"), Icons.Rounded.Casino, Color(0xFF8FB0DA), { com.nuvio.app.features.luxo.LuxoOverlays.choiceWheel = true }))
                 }
                 if (luxoF.remote) {
-                    add(LuxoHall(lx("التحكم بالشاشة", "Remote control"), lx(if (com.nuvio.app.features.luxo.luxoIsTv()) "الرمز وعنوان هذا الجهاز" else "الجوال جهاز تحكم للشاشة", if (com.nuvio.app.features.luxo.luxoIsTv()) "This device's code" else "Control the TV"), Icons.Rounded.SettingsRemote, Color(0xFF6F8FBF), { com.nuvio.app.features.luxo.LuxoOverlays.remote = true }))
+                    // On the TV the pairing code is written on the button itself, so it shows even before it is opened.
+                    val tvCode = if (com.nuvio.app.features.luxo.luxoIsTv()) com.nuvio.app.features.luxo.LuxoRemote.code else null
+                    add(LuxoHall(
+                        if (tvCode != null) "التحكم بالشاشة · الرمز $tvCode" else lx("التحكم بالشاشة", "Remote control"),
+                        lx(if (tvCode != null) "الرمز وعنوان هذا الجهاز" else "الجوال جهاز تحكم للشاشة", if (tvCode != null) "This device's code" else "Control the TV"),
+                        Icons.Rounded.SettingsRemote, Color(0xFF6F8FBF), { com.nuvio.app.features.luxo.LuxoOverlays.remote = true },
+                        motion = com.nuvio.app.core.ui.MawjMotion.forHall("التحكم بالشاشة"),
+                    ))
                 }
                 if (luxoF.kidsProfile) {
                     val kidsOn = com.nuvio.app.features.luxo.LuxoKids.isOn()
@@ -304,6 +312,17 @@ internal fun LazyListScope.luxoProfileHubContent(
             }
         }
     }
+}
+
+/**
+ * TV remote: a clear gold frame on the row the remote is on (touch never focuses, so the tablet
+ * looks the same).
+ */
+@Composable
+private fun Modifier.mawjFocusRing(shape: androidx.compose.ui.graphics.Shape, color: Color): Modifier {
+    var focused by remember { androidx.compose.runtime.mutableStateOf(false) }
+    return this.onFocusChanged { focused = it.isFocused }
+        .then(if (focused) Modifier.background(color.copy(alpha = 0.16f), shape).border(2.dp, color, shape) else Modifier)
 }
 
 private class LuxoHall(
@@ -711,7 +730,7 @@ private fun MawjSettingsGroups(halls: List<LuxoHall>, isTablet: Boolean) {
                     ) {
                         halls.filter { it.group == id }.forEach { hall ->
                             Row(
-                                Modifier.fillMaxWidth().clickable(onClick = hall.onClick).padding(horizontal = 16.dp, vertical = 14.dp),
+                                Modifier.fillMaxWidth().mawjFocusRing(RoundedCornerShape(16.dp), accent).clickable(onClick = hall.onClick).padding(horizontal = 16.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
@@ -747,7 +766,7 @@ private fun MawjSettingsGroups(halls: List<LuxoHall>, isTablet: Boolean) {
                         Row(
                             Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFF0D1620))
                                 .border(1.dp, accent.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
-                                .clickable(onClick = hall.onClick).padding(horizontal = 14.dp, vertical = 11.dp),
+                                .mawjFocusRing(RoundedCornerShape(16.dp), accent).clickable(onClick = hall.onClick).padding(horizontal = 14.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             val m = hall.motion
