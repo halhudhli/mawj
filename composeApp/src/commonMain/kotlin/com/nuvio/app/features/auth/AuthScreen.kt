@@ -538,10 +538,12 @@ private fun AuthLargeLayout(
     Row(
         modifier = modifier,
     ) {
+        val mawjGate = com.nuvio.app.core.ui.rememberMawjStageOn()
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .then(if (mawjGate) Modifier.drawBehind { mawjGateArt() } else Modifier)
                 .padding(horizontal = brandHorizontalPadding),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
@@ -669,10 +671,12 @@ private fun AuthHeading(
     headingStyle: TextStyle,
     subtitleStyle: TextStyle,
 ) {
+    val mawjGate = com.nuvio.app.core.ui.rememberMawjStageOn()
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (mawjGate) Text("البوابة", color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp)
         AnimatedContent(
             targetState = isSignUp,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -681,7 +685,7 @@ private fun AuthHeading(
             Text(
                 text = if (signUp) stringResource(Res.string.compose_auth_create_account)
                 else stringResource(Res.string.compose_auth_welcome_back),
-                style = headingStyle,
+                style = if (mawjGate) headingStyle.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) else headingStyle,
                 color = AuthTextPrimary,
             )
         }
@@ -1229,4 +1233,22 @@ private fun LayoutCoordinates.boundsInRoot(): Rect {
         right = position.x + size.width,
         bottom = position.y + size.height,
     )
+}
+
+
+/** «تسجيل الدخول — البوابة»: a moon over three gold waves behind the brand side. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.mawjGateArt() {
+    val moon = androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.34f)
+    drawCircle(
+        androidx.compose.ui.graphics.Brush.radialGradient(listOf(androidx.compose.ui.graphics.Color(0x73F1DDA6), androidx.compose.ui.graphics.Color.Transparent), center = moon, radius = size.minDimension * 0.32f),
+        radius = size.minDimension * 0.32f, center = moon,
+    )
+    listOf(0.72f to 0.8f, 0.8f to 0.45f, 0.88f to 0.25f).forEach { (yf, a) ->
+        val path = androidx.compose.ui.graphics.Path()
+        val y = size.height * yf
+        var x = 0f
+        path.moveTo(0f, y)
+        while (x <= size.width) { path.lineTo(x, y + kotlin.math.sin(x / size.width * 5f * kotlin.math.PI.toFloat()) * 14f * density); x += 4f }
+        drawPath(path, androidx.compose.ui.graphics.Color(0xFFD6B36A).copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3f * density))
+    }
 }

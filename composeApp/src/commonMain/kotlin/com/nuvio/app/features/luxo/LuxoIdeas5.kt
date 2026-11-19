@@ -1,5 +1,7 @@
 package com.nuvio.app.features.luxo
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -268,11 +270,32 @@ fun LuxoKidsTimeUpDialog(onExtended: () -> Unit, onDismiss: () -> Unit) {
     var wrong by remember { mutableStateOf(false) }
     // Back closes the notice (to leave the player); playing again brings it straight back.
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(dismissOnClickOutside = false, usePlatformDefaultWidth = false)) {
+        val mawjKids = com.nuvio.app.core.ui.rememberMawjStageOn()
         Box(Modifier.fillMaxSize().background(Color(0xF208090D)), contentAlignment = Alignment.Center) {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                (if (mawjKids) Modifier.widthIn(max = 380.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(30.dp)).background(Color(0xFF0A141E))
+                    .border(1.dp, Color(0x66D6B36A), androidx.compose.foundation.shape.RoundedCornerShape(30.dp)).padding(horizontal = 26.dp, vertical = 30.dp)
+                else Modifier).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (mawjKids) {
+                    // «وضع الأطفال»: the calm moon-over-waves notice.
+                    androidx.compose.foundation.Canvas(Modifier.width(120.dp).height(80.dp)) {
+                        drawCircle(Color(0xFFF1DDA6), radius = 16.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.32f))
+                        listOf(0.75f to 1f, 0.9f to 0.5f).forEach { (yf, a) ->
+                            val path = androidx.compose.ui.graphics.Path(); var x = 0f; val y = size.height * yf
+                            path.moveTo(0f, y)
+                            while (x <= size.width) { path.lineTo(x, y + kotlin.math.sin(x / size.width * 2f * kotlin.math.PI.toFloat()) * 7.dp.toPx()); x += 2f }
+                            drawPath(path, Color(0xFFD6B36A).copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+                        }
+                    }
+                    Text("هدأت الأمواج… وحان وقت الراحة", color = Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text("انتهى وقت المشاهدة لهذا اليوم. يُستأنف غداً، أو يُضاف نصف ساعة برمز وليّ الأمر.", color = Color(0xFFA9B6C4), fontSize = 13.sp, textAlign = TextAlign.Center)
+                } else {
                 Text("🌙", fontSize = 52.sp)
                 Text("انتهى وقت المشاهدة لهذا اليوم", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Text("يُستأنف غداً، أو تُضاف نصف ساعة بإدخال الرمز", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, textAlign = TextAlign.Center)
+                }
                 OutlinedTextField(value = pin, onValueChange = { pin = it.filter(Char::isDigit).take(6); wrong = false }, singleLine = true, placeholder = { Text("الرمز") })
                 if (wrong) Text("الرمز غير صحيح", color = Color(0xFFFFB4A9), fontSize = 12.sp)
                 IButton("إضافة 30 دقيقة") {
