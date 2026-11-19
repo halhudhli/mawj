@@ -87,6 +87,19 @@ private fun SettingsCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
+    if (com.nuvio.app.core.ui.rememberMawjStageOn()) {
+        // «إعدادات من الداخل»: every inner settings group is the raised sea with a fine gold edge.
+        val shape = RoundedCornerShape(if (isTablet) 22.dp else 20.dp)
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(androidx.compose.ui.graphics.Color(0xFF0D1620), shape)
+                .border(1.dp, androidx.compose.ui.graphics.Color(0x24D6B36A), shape),
+            content = content,
+        )
+        return
+    }
     if (com.nuvio.app.core.ui.luxoDesignOn()) {
         Column(
             modifier = modifier
