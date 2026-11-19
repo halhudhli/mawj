@@ -136,6 +136,19 @@ fun NuvioSurfaceCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
+    if (rememberMawjStageOn()) {
+        // Mawj: the raised sea with a fine gold edge, as on the approved pages.
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .background(androidx.compose.ui.graphics.Color(0xFF0D1620), RoundedCornerShape(22.dp))
+                .border(1.dp, androidx.compose.ui.graphics.Color(0x29D6B36A), RoundedCornerShape(22.dp))
+                .padding(tokens.spacing.cardPadding),
+            content = content,
+        )
+        return
+    }
     if (luxoDesignOn()) {
         Column(
             modifier = modifier

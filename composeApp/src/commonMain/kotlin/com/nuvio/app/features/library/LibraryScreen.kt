@@ -1,5 +1,8 @@
 package com.nuvio.app.features.library
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import com.nuvio.app.core.ui.background.isGlassUiActive
 import com.nuvio.app.core.ui.background.appGlassBackdrop
 import com.nuvio.app.core.ui.background.appBackgroundCover
@@ -1528,6 +1531,127 @@ private fun CloudSkeletonBlock(
     )
 }
 
+private fun mawjEpochDay(d: LibraryCalendarDate): Long {
+    // Days since 1970-01-01 (civil calendar).
+    val y = if (d.month <= 2) d.year - 1 else d.year
+    val era = (if (y >= 0) y else y - 399) / 400
+    val yoe = y - era * 400
+    val mp = (d.month + 9) % 12
+    val doy = (153 * mp + 2) / 5 + d.day - 1
+    val doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+    return era * 146097L + doe - 719468L
+}
+
+private fun mawjDateOf(epochDay: Long): LibraryCalendarDate {
+    val z = epochDay + 719468L
+    val era = (if (z >= 0) z else z - 146096) / 146097
+    val doe = z - era * 146097
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    val mp = (5 * doy + 2) / 153
+    val day = (doy - (153 * mp + 2) / 5 + 1).toInt()
+    val month = (if (mp < 10) mp + 3 else mp - 9).toInt()
+    val year = (yoe + era * 400 + (if (month <= 2) 1 else 0)).toInt()
+    return LibraryCalendarDate(year, month, day)
+}
+
+private val mawjDayNames = listOf("الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت")
+
+private fun mawjArabicDigits(s: String): String = s.map { c -> if (c in '0'..'9') ('٠' + (c - '0')) else c }.joinToString("")
+
+/** «جدول المدّ»: one week, seven columns, today in gold. */
+@Composable
+private fun MawjWeekCalendar(
+    events: List<LibraryCalendarEvent>,
+    today: LibraryCalendarDate,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onMonthRequested: (LibraryCalendarMonth) -> Unit,
+    onShowMonth: () -> Unit,
+    onEventClick: ((LibraryCalendarEvent) -> Unit)?,
+) {
+    val todayDay = remember(today) { mawjEpochDay(today) }
+    // 1970-01-01 was a Thursday; weeks start on Sunday.
+    val weekStartToday = remember(todayDay) { todayDay - ((todayDay + 4) % 7 + 7) % 7 }
+    var weekOffset by remember { mutableStateOf(0) }
+    val start = weekStartToday + weekOffset * 7L
+    val days = remember(start) { (0 until 7).map { mawjDateOf(start + it) } }
+    LaunchedEffect(start) {
+        days.map { LibraryCalendarMonth(it.year, it.month) }.distinct().forEach(onMonthRequested)
+    }
+    val byDate = remember(events) { events.groupBy { it.date.iso } }
+    val gold = Color(0xFFD6B36A)
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.fillMaxSize().background(Color(0xFF070D14))
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = 32.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Column(Modifier.weight(1f)) {
+                    Text("جدول المدّ", color = gold, fontSize = 13.sp)
+                    Text(
+                        when (weekOffset) { 0 -> "هذا الأسبوع"; 1 -> "الأسبوع القادم"; -1 -> "الأسبوع الماضي"; else -> "${mawjArabicDigits(days.first().day.toString())} – ${mawjArabicDigits(days.last().day.toString())}" },
+                        color = Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 44.sp,
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    MawjCalChip("السابق", false) { weekOffset-- }
+                    MawjCalChip("هذا الأسبوع", weekOffset == 0) { weekOffset = 0 }
+                    MawjCalChip("التالي", false) { weekOffset++ }
+                    MawjCalChip("عرض الشهر", false, onShowMonth)
+                    MawjCalChip("إغلاق", false, onDismiss)
+                }
+            }
+            com.nuvio.app.core.ui.MawjGoldWaveLine(Modifier.fillMaxWidth())
+            if (isLoading) Text("جارٍ تحميل المواعيد…", color = Color(0xFF8796A8), fontSize = 13.sp)
+            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                days.forEachIndexed { i, d ->
+                    val isToday = mawjEpochDay(d) == todayDay
+                    val dayEvents = byDate[d.iso].orEmpty()
+                    Column(
+                        Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
+                            .background(if (isToday) Color(0x1AD6B36A) else Color(0xFF0D1620))
+                            .border(1.dp, if (isToday) Color(0x8CD6B36A) else Color(0x0FEEF2F6), RoundedCornerShape(18.dp))
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(mawjDayNames[i], color = Color(0xFFA9B6C4), fontSize = 13.sp)
+                        Text(mawjArabicDigits(d.day.toString()), color = Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 32.sp)
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x2ED6B36A)))
+                        dayEvents.forEach { e ->
+                            Column(
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                    .then(if (onEventClick != null) Modifier.clickable { onEventClick(e) } else Modifier),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1B2A38))) {
+                                    e.imageUrl?.let { AsyncImage(model = it, contentDescription = e.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+                                }
+                                Text(e.title, color = Color(0xFFE6EBF0), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                e.subtitle?.takeIf { it.isNotBlank() }?.let { Text(it, color = gold, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MawjCalChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.height(40.dp).clip(RoundedCornerShape(20.dp))
+            .background(if (selected) Color(0xFFD6B36A) else Color.Transparent)
+            .border(1.dp, if (selected) Color(0xFFD6B36A) else Color(0x33EEF2F6), RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick).padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = if (selected) Color(0xFF070D14) else Color(0xFFC3CCD6), fontSize = 14.sp) }
+}
+
 @Composable
 private fun LibraryReleaseCalendarPanel(
     events: List<LibraryCalendarEvent>,
@@ -1542,6 +1666,24 @@ private fun LibraryReleaseCalendarPanel(
 ) {
     val today = remember { parseLibraryCalendarDate(CurrentDateProvider.todayIsoDate()) ?: LibraryCalendarDate(1970, 1, 1) }
     val todayIso = today.iso
+    // «التقويم — جدول المدّ»: the week in seven columns first; the month view stays one tap away.
+    var mawjMonthView by remember { mutableStateOf(false) }
+    if (com.nuvio.app.core.ui.rememberMawjStageOn() && !mawjMonthView) {
+        MawjWeekCalendar(
+            events = events,
+            today = today,
+            isLoading = isLoading,
+            onDismiss = onDismiss,
+            onMonthRequested = onMonthRequested,
+            onShowMonth = { mawjMonthView = true },
+            onEventClick = when {
+                onCalendarEpisodeClick != null -> { event -> onDismiss(); onCalendarEpisodeClick(event.item, event.seasonNumber, event.episodeNumber) }
+                onPosterClick != null -> { event -> onDismiss(); onPosterClick(event.item) }
+                else -> null
+            },
+        )
+        return
+    }
     val initialMonth = remember { initialLibraryCalendarMonth() }
     var calendarSelection by remember(initialMonth, todayIso) {
         mutableStateOf(defaultLibraryCalendarSelection(events, initialMonth, todayIso))

@@ -122,6 +122,8 @@ fun NuvioModalBottomSheet(
             }
         }
         val sheetGlassReady = sheetBackdrop != null && sheetBackdrop.backdrop.isReady && isLiquidGlassSupported()
+        // «النوافذ الصغيرة»: under the Mawj look every sheet is the raised sea with a fine gold edge.
+        val mawjSheet = rememberMawjStageOn()
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
@@ -133,7 +135,13 @@ fun NuvioModalBottomSheet(
         ) {
             CompositionLocalProvider(LocalBottomInsetsConsumed provides true) {
                 Column(
-                    modifier = modifier
+                    modifier = if (mawjSheet) {
+                        modifier
+                            .padding(NuvioTokens.Space.s10)
+                            .clip(SheetShape)
+                            .background(Color(0xFF0D1620), SheetShape)
+                            .border(1.dp, Color(0x40D6B36A), SheetShape)
+                    } else modifier
                         .padding(NuvioTokens.Space.s10)
                         .appGlassBackdrop(SheetShape)
                         .clip(SheetShape)
