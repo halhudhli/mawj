@@ -1,5 +1,7 @@
 package com.nuvio.app.features.addons
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.shadow
@@ -105,6 +107,35 @@ internal fun AddonsSettingsPageContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (com.nuvio.app.core.ui.rememberMawjStageOn() && uiState.addons.isNotEmpty()) {
+            // «الإضافات — الأشرعة»: one line on how the add-ons are doing, and a check on demand.
+            val working = uiState.addons.count { it.manifest != null }
+            val failing = uiState.addons.count { it.manifest == null && it.errorMessage != null }
+            val arabic: (Int) -> String = { n -> n.toString().map { c -> if (c in '0'..'9') ('٠' + (c - '0')) else c }.joinToString("") }
+            androidx.compose.foundation.layout.Row(
+                Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .background(Color(0xFF0D1620)).border(1.dp, Color(0x40D6B36A), androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                androidx.compose.foundation.layout.Box(
+                    Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Color(0x24D6B36A)),
+                    contentAlignment = Alignment.Center,
+                ) { Text(arabic(working), color = Color(0xFFD6B36A), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 22.sp) }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        if (failing == 0) "${arabic(working)} إضافات تعمل" else "${arabic(working)} إضافات تعمل · ${arabic(failing)} لا تستجيب",
+                        color = Color(0xFFEEF2F6), fontSize = 15.sp,
+                    )
+                    Text("الإضافة التي لا تستجيب تبقى في القائمة، ويمكن فحصها مرة أخرى في أي وقت.", color = Color(0xFF8796A8), fontSize = 12.sp)
+                }
+                androidx.compose.foundation.layout.Box(
+                    Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)).border(1.dp, Color(0x73D6B36A), androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                        .clickable { AddonRepository.refreshAll() }.padding(horizontal = 16.dp, vertical = 9.dp),
+                ) { Text("فحص الآن", color = Color(0xFFF1DDA6), fontSize = 13.sp) }
+            }
+        }
         SectionHeader(stringResource(Res.string.addons_section_overview))
         OverviewCard(overview = overview)
 

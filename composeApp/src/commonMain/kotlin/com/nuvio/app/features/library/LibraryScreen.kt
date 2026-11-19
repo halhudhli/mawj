@@ -467,6 +467,7 @@ fun LibraryScreen(
                     },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
+                if (com.nuvio.app.core.ui.rememberMawjStageOn()) MawjLibraryWeek(savedCount = uiState.items.size)
                 LibrarySourceSwitch(
                     selectedMode = sourceMode,
                     showServers = hasServers,
@@ -1529,6 +1530,39 @@ private fun CloudSkeletonBlock(
             .clip(RoundedCornerShape(cornerRadius))
             .background(brush),
     )
+}
+
+/** «المكتبة — الخزانة»: the week at a glance, from this device's watch history. */
+@Composable
+private fun MawjLibraryWeek(savedCount: Int) {
+    val progress by com.nuvio.app.features.watchprogress.WatchProgressRepository.uiState.collectAsStateWithLifecycle()
+    val watched by com.nuvio.app.features.watched.WatchedRepository.uiState.collectAsStateWithLifecycle()
+    val now = remember { kotlin.time.Clock.System.now().toEpochMilliseconds() }
+    val weekAgo = now - 7L * 24 * 3600 * 1000
+    val weekEntries = progress.entries.filter { it.lastUpdatedEpochMs >= weekAgo }
+    val minutes = (weekEntries.sumOf { minOf(it.lastPositionMs, if (it.durationMs > 0) it.durationMs else it.lastPositionMs) } / 60_000L).toInt()
+    val finished = watched.items.count { it.markedAtEpochMs >= weekAgo }
+    val inProgress = progress.entries.count { it.durationMs > 0 && it.lastPositionMs < it.durationMs * 0.9 && it.lastPositionMs > 60_000 }
+    val a: (Int) -> String = { n -> mawjArabicDigits(n.toString()) }
+    val time = if (minutes >= 60) "${a(minutes / 60)} ساعة" else "${a(minutes)} دقيقة"
+    Row(
+        Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().clip(RoundedCornerShape(22.dp))
+            .background(Color(0xFF0D1620)).border(1.dp, Color(0x29D6B36A), RoundedCornerShape(22.dp))
+            .padding(horizontal = 22.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        listOf(
+            "هذا الأسبوع" to time,
+            "اكتمل هذا الأسبوع" to "${a(finished)} ${if (finished == 1) "عمل" else "أعمال"}",
+            "قيد المتابعة" to a(inProgress),
+            "في المكتبة" to a(savedCount),
+        ).forEachIndexed { i, (label, value) ->
+            Column(Modifier.weight(1f)) {
+                Text(label, color = Color(0xFF8796A8), fontSize = 12.sp, maxLines = 1)
+                Text(value, color = if (i == 0) Color(0xFFF1DDA6) else Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 26.sp, maxLines = 1)
+            }
+        }
+    }
 }
 
 private fun mawjEpochDay(d: LibraryCalendarDate): Long {
