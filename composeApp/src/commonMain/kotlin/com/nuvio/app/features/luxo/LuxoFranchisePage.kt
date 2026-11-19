@@ -136,7 +136,7 @@ private fun FranchiseHome(onOpen: (String) -> Unit, onClose: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("السلاسل 🎞️", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                Text(if (com.nuvio.app.core.ui.rememberMawjStageOn()) "عالم السلاسل" else "السلاسل 🎞️", color = if (com.nuvio.app.core.ui.rememberMawjStageOn()) Color(0xFFF6F1E4) else Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
                 Text("الأعمال المكوّنة من أكثر من جزء، بترتيب المشاهدة", color = Color.White.copy(alpha = 0.55f), fontSize = 13.sp)
             }
             Box(Modifier.size(42.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.1f)).clickable(onClick = onClose), contentAlignment = Alignment.Center) {
@@ -275,7 +275,7 @@ private fun FranchiseDetail(key: String, onBack: () -> Unit) {
                         AsyncImage(model = f.backdrop ?: f.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.3f), FBg))))
                         Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
-                            Text(f.title, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black)
+                            Text(f.title, color = if (com.nuvio.app.core.ui.rememberMawjStageOn()) Color(0xFFF6F1E4) else Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
                             Text(
                                 "${f.parts.size} أجزاء · تمت مشاهدة $watchedCount" + if (watchedCount == f.parts.size && f.parts.isNotEmpty()) " · مكتملة 🏆" else "",
                                 color = Color.White.copy(alpha = 0.7f),

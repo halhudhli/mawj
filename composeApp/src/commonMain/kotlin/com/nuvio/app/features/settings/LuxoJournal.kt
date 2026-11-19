@@ -192,7 +192,7 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
         ) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(lx("مذكراتي 📔", "My diary 📔"), fontWeight = FontWeight.Black, fontSize = 26.sp, color = tokens.colors.textPrimary)
+                    Text(if (com.nuvio.app.core.ui.rememberMawjStageOn()) lx("مذكراتي", "My diary") else lx("مذكراتي 📔", "My diary 📔"), fontWeight = FontWeight.Black, fontSize = 26.sp, color = tokens.colors.textPrimary, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
                     Text(lx("${entries.size} يوم مشاهدة مسجّل", "${entries.size} watch entries"), fontSize = 12.sp, color = tokens.colors.textMuted)
                 }
                 IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, null, tint = tokens.colors.textPrimary) }
@@ -452,7 +452,7 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(lx("الأعلى تقييماً", "Your top rated"), color = white.copy(alpha = 0.8f), fontSize = 20.sp)
                     AsyncImage(fav.title.poster, null, contentScale = ContentScale.Crop, modifier = Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(16.dp)))
-                    Text(fav.title.name, color = white, fontSize = 24.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                    Text(fav.title.name, color = white, fontSize = 24.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
                     Text("★ ${luxoStarsLabel(fav.score)}/5", color = Color(0xFFFFD86B), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             })
@@ -546,7 +546,8 @@ private fun LuxoWrappedDialog(year: Int, onDismiss: () -> Unit) {
 private fun WrappedBig(top: String, big: String, bottom: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(top, color = Color.White.copy(alpha = 0.8f), fontSize = 22.sp, textAlign = TextAlign.Center)
-        Text(big, color = Color.White, fontSize = 72.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, lineHeight = 76.sp)
+        // «حصاد موج»: the big number in moon gold and serif.
+        Text(big, color = if (com.nuvio.app.core.ui.rememberMawjStageOn()) Color(0xFFF1DDA6) else Color.White, fontSize = 72.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, lineHeight = 76.sp, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
         Text(bottom, color = Color.White.copy(alpha = 0.85f), fontSize = 18.sp, textAlign = TextAlign.Center)
     }
 }
