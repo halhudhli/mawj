@@ -65,7 +65,7 @@ private fun MawjIdentSettingsBody() {
             IdentCard(
                 if (MawjIdentPrefs.tvShort) "افتتاحية قصيرة على الشاشة ✓" else "افتتاحية قصيرة على الشاشة",
                 "تُختصر الافتتاحية المختارة إلى ثانية ونصف على الشاشة، فتظهر الرئيسية أسرع.",
-                MawjIdentPrefs.tvShort, { MawjIdentPrefs.setTvShort(!MawjIdentPrefs.tvShort) }, null, null,
+                MawjIdentPrefs.tvShort, { MawjIdentPrefs.changeTvShort(!MawjIdentPrefs.tvShort) }, null, null,
             )
         }
     }

@@ -75,7 +75,7 @@ object MawjIdentPrefs {
     var tvShort by mutableStateOf(LuxoPrefsStorage.load("mawj_ident_tv_short") != "0")
         private set
 
-    fun setTvShort(on: Boolean) { tvShort = on; LuxoPrefsStorage.save("mawj_ident_tv_short", if (on) "1" else "0") }
+    fun changeTvShort(on: Boolean) { tvShort = on; LuxoPrefsStorage.save("mawj_ident_tv_short", if (on) "1" else "0") }
 
     /** How long the gate holds the opener on this device. */
     val holdMs: Long get() {
