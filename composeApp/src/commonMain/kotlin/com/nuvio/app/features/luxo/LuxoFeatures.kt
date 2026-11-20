@@ -241,6 +241,14 @@ data class LuxoFeatures(
     val tvPlayerKeys: Boolean = true,
     /** A subtitle timing change is kept for the whole series (and the film), and comes back next time. */
     val subtitleDelayPerTitle: Boolean = true,
+    /** TV: the first posters of every home row are downloaded ahead, so they are ready under the focus. */
+    val tvPrefetch: Boolean = true,
+    /** TV: the title page shows the artwork and play first, then the cast, related and the rest. */
+    val tvStagedDetails: Boolean = true,
+    /** TV: player buffering tuned so a stream starts sooner and rides out short network dips. */
+    val tvFastStart: Boolean = true,
+    /** A small meter in the corner: frames per second and memory, to find what is slow. */
+    val perfMeter: Boolean = false,
 )
 
 object LuxoFeaturesRepository {

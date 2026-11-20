@@ -39,7 +39,7 @@ import kotlin.math.sin
  * picture, drawn once, instead of redrawing a large part of the screen every frame on a weak box.
  */
 @Composable
-private fun mawjDrift(label: String, durationMs: Int, still: Float = 0.3f): androidx.compose.runtime.State<Float> {
+internal fun mawjDrift(label: String, durationMs: Int, still: Float = 0.3f): androidx.compose.runtime.State<Float> {
     if (com.nuvio.app.features.luxo.rememberLuxoLite()) {
         return androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(still) }
     }

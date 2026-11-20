@@ -152,7 +152,7 @@ private fun BackdropArtwork(
     )
     val artworkModifier = Modifier
         .fillMaxSize()
-        .then(if (blur) Modifier.blur(30.dp) else Modifier)
+        .then(if (blur && !com.nuvio.app.features.luxo.luxoLiteMode()) Modifier.blur(30.dp) else if (blur) Modifier.graphicsLayer { alpha = 0.5f } else Modifier)
 
     Box(
         modifier = modifier

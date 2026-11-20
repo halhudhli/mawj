@@ -925,6 +925,12 @@ fun HomeScreen(
     val keyedEnabledHomeItems = remember(enabledHomeItems) {
         enabledHomeItems.withDuplicateSafeLazyKeys(HomeCatalogSettingsItem::key)
     }
+    // TV: posters of the rows below are fetched ahead, so they are ready when the focus gets there.
+    com.nuvio.app.features.luxo.MawjTvPosterPrefetch(
+        remember(enabledHomeItems, sectionsMap) {
+            enabledHomeItems.mapNotNull { if (it.isCollection) null else sectionsMap[it.key]?.items }
+        },
+    )
     val resolvedBadgeInputs = remember(activeProfileId, effectiveWatchProgressSource) {
         mutableStateOf<Triple<WatchedUiState, List<WatchProgressEntry>, String>?>(null)
     }

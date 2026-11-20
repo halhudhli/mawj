@@ -79,13 +79,8 @@ internal fun LuxoDockBar(
     val accents = luxoAccentColors()
     val glow = com.nuvio.app.core.ui.luxoGlowAmount()
     val showLabels = rememberLuxoNavSettings().showLabels
-    val shimmer = rememberInfiniteTransition(label = "dock_shimmer")
-    val sweep by shimmer.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(6000, easing = LinearEasing), RepeatMode.Restart),
-        label = "dock_sweep",
-    )
+    // Still on a TV in light mode.
+    val sweep by com.nuvio.app.core.ui.mawjDrift("dock_shimmer", 6000)
     val shape = RoundedCornerShape(32.dp)
     Box(
         modifier = modifier

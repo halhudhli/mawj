@@ -54,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.nuvio.app.features.luxo.luxoTvAutoFocus
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -474,7 +475,8 @@ private fun MobileStreamsLayout(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(12.dp)
+                    // TV light mode: a darkened still instead of a live blur (heavy on weak GPUs).
+                    .then(if (com.nuvio.app.features.luxo.luxoLiteMode()) Modifier.graphicsLayer { alpha = 0.55f } else Modifier.blur(12.dp))
                     .nuvioBackdropSource(streamsGlassBackdrop),
                 contentScale = ContentScale.Crop,
             )

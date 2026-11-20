@@ -1496,15 +1496,8 @@ private fun rememberCloudLibrarySkeletonBrush(): Brush {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.48f),
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
     )
-    val transition = rememberInfiniteTransition()
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-    )
+    val drift by com.nuvio.app.core.ui.mawjDrift("library_shimmer", 1200)
+    val translateAnim = drift * 1000f
     return Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(translateAnim - 200f, 0f),

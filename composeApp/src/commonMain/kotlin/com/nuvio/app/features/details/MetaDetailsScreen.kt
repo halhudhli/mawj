@@ -352,6 +352,15 @@ fun MetaDetailsScreen(
         displayedMeta != null &&
         displayedMeta.type.lowercase().let { it == "movie" || it == "series" || it == "show" || it == "tv" }
 
+    val stagedOnTv = com.nuvio.app.features.luxo.luxoIsTv() && com.nuvio.app.features.luxo.rememberLuxoFeatures().tvStagedDetails
+    LaunchedEffect(displayedMeta?.id, stagedOnTv) {
+        if (!stagedOnTv) { MawjDetailsStage.ready = true; return@LaunchedEffect }
+        MawjDetailsStage.ready = false
+        if (displayedMeta != null) {
+            delay(700)
+            MawjDetailsStage.ready = true
+        }
+    }
     LaunchedEffect(displayedMeta?.id) {
         deferredMetaWorkAllowed = false
         if (displayedMeta != null) {
@@ -1241,7 +1250,7 @@ fun MetaDetailsScreen(
                                     MetaScreenBackgroundMode.Cinematic -> if (backdropUrl != null) {
                                         val cinematicModifier = Modifier
                                             .fillMaxSize()
-                                            .blur(16.dp)
+                                            .then(if (com.nuvio.app.features.luxo.luxoLiteMode()) Modifier.graphicsLayer { alpha = 0.55f } else Modifier.blur(16.dp))
                                             .nuvioBackdropSource(cinematicArtworkBackdrop)
                                         val heroPainter = heroBackdropPainter
                                         if (heroPainter != null) {
@@ -2434,19 +2443,27 @@ private fun metaSectionHasContent(
     comments: List<TraktCommentReview>,
     isCommentsLoading: Boolean,
     commentsError: String?,
-): Boolean =
-    when (key) {
+): Boolean {
+    // TV «صفحة العمل على مراحل»: artwork, play, overview and episodes first; the rest a moment later.
+    val later = MawjDetailsStage.ready
+    return when (key) {
         MetaScreenSectionKey.ACTIONS -> true
         MetaScreenSectionKey.OVERVIEW -> true
-        MetaScreenSectionKey.PRODUCTION -> hasProductionSection
-        MetaScreenSectionKey.CAST -> meta.cast.isNotEmpty()
-        MetaScreenSectionKey.COMMENTS -> shouldShowComments && (isCommentsLoading || comments.isNotEmpty() || !commentsError.isNullOrBlank())
-        MetaScreenSectionKey.TRAILERS -> hasTrailersSection
+        MetaScreenSectionKey.PRODUCTION -> later && hasProductionSection
+        MetaScreenSectionKey.CAST -> later && meta.cast.isNotEmpty()
+        MetaScreenSectionKey.COMMENTS -> later && shouldShowComments && (isCommentsLoading || comments.isNotEmpty() || !commentsError.isNullOrBlank())
+        MetaScreenSectionKey.TRAILERS -> later && hasTrailersSection
         MetaScreenSectionKey.EPISODES -> hasEpisodes
-        MetaScreenSectionKey.DETAILS -> hasAdditionalInfoSection
-        MetaScreenSectionKey.COLLECTION -> !hasEpisodes && hasCollectionSection
-        MetaScreenSectionKey.MORE_LIKE_THIS -> hasMoreLikeThisSection
+        MetaScreenSectionKey.DETAILS -> later && hasAdditionalInfoSection
+        MetaScreenSectionKey.COLLECTION -> later && !hasEpisodes && hasCollectionSection
+        MetaScreenSectionKey.MORE_LIKE_THIS -> later && hasMoreLikeThisSection
     }
+}
+
+/** TV: whether the title page may show its later sections yet (see «صفحة العمل على مراحل»). */
+internal object MawjDetailsStage {
+    var ready by androidx.compose.runtime.mutableStateOf(true)
+}
 
 @Composable
 @OptIn(ExperimentalSharedTransitionApi::class)

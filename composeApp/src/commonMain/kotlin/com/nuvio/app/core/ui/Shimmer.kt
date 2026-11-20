@@ -47,7 +47,9 @@ private val LocalSkeletonAnimation = staticCompositionLocalOf<SkeletonAnimation?
 internal fun SkeletonAnimationProvider(content: @Composable () -> Unit) {
     val animation = remember { SkeletonAnimation() }
     val isActive by remember { derivedStateOf { animation.consumers > 0 } }
-    if (isActive) {
+    // TV light mode: the placeholders stay still (a sweeping shimmer redraws the whole screen).
+    val lite = remember { com.nuvio.app.features.luxo.luxoLiteMode() }
+    if (isActive && !lite) {
         LaunchedEffect(animation) {
             animation.progress.snapTo(0f)
             animation.progress.animateTo(

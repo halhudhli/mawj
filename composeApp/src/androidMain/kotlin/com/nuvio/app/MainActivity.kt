@@ -217,7 +217,11 @@ open class MainActivity : AppCompatActivity() {
             val sheetBackdropSource = rememberNuvioBackdrop()
             val sheetBackdrop = remember(sheetBackdropSource) { NuvioSheetBackdrop(sheetBackdropSource) }
             NuvioSheetBackdropHost(sheetBackdrop = sheetBackdrop) {
-                App()
+                androidx.compose.foundation.layout.Box {
+                    App()
+                    // «عدّاد الأداء» (off unless switched on in the features).
+                    com.nuvio.app.features.luxo.MawjPerfMeter()
+                }
             }
         }
         contentReady = true

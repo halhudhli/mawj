@@ -1783,8 +1783,9 @@ private class NuvioLibmpvView(
         setVo(videoOutput.mpvValue)
         mpv.setOptionString("profile", "fast")
         mpv.setOptionString("hwdec", if (hardwareDecodingEnabled) "auto" else "no")
-        // LUXO: subtitle files that are not valid UTF-8 are read as Arabic Windows-1256.
-        runCatching { mpv.setOptionString("sub-codepage", "+cp1256") }
+        // LUXO: subtitle files that are not valid UTF-8 are read as Arabic Windows-1256. No "+" in
+        // front: "+cp1256" forces it even on valid UTF-8 files, which garbles them.
+        runCatching { mpv.setOptionString("sub-codepage", "cp1256") }
         if (yuv420pEnabled) {
             mpv.setOptionString("vf", "format=yuv420p")
         }
@@ -1796,6 +1797,19 @@ private class NuvioLibmpvView(
         mpv.setOptionString("demuxer-max-bytes", "${libmpvCacheBytes()}").logIfMpvError("demuxer-max-bytes")
         mpv.setOptionString("demuxer-max-back-bytes", "${libmpvCacheBytes()}").logIfMpvError("demuxer-max-back-bytes")
         mpv.setOptionString("vd-lavc-film-grain", "cpu")
+        // LUXO TV «بدء التشغيل الأسرع»: a shorter probe so the picture starts sooner, a read-ahead
+        // that rides out short network dips, and a longer timeout before giving up on a slow source.
+        val tvFastStart = runCatching {
+            com.nuvio.app.features.luxo.luxoIsTv() && com.nuvio.app.features.luxo.LuxoFeaturesRepository.current().tvFastStart
+        }.getOrDefault(false)
+        if (tvFastStart) {
+            mpv.setOptionString("demuxer-lavf-probesize", "1048576").logIfMpvError("demuxer-lavf-probesize")
+            mpv.setOptionString("demuxer-lavf-analyzeduration", "1").logIfMpvError("demuxer-lavf-analyzeduration")
+            mpv.setOptionString("cache", "yes").logIfMpvError("cache")
+            mpv.setOptionString("demuxer-readahead-secs", "30").logIfMpvError("demuxer-readahead-secs")
+            mpv.setOptionString("cache-pause-wait", "2").logIfMpvError("cache-pause-wait")
+            mpv.setOptionString("network-timeout", "30").logIfMpvError("network-timeout")
+        }
         SubtitleFontFiles.directoryPath()?.let { mpv.setOptionString("sub-fonts-dir", it).logIfMpvError("sub-fonts-dir") }
         mpv.setPropertyBoolean("keep-open", true)
         mpv.setPropertyBoolean("input-default-bindings", true)

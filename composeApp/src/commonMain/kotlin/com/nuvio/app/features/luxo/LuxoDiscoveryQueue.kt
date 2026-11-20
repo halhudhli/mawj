@@ -217,7 +217,7 @@ internal fun LuxoDiscoveryQueueDialog(onDismiss: () -> Unit, onOpen: (MetaPrevie
                     model = luxoHighResImage(top.banner ?: top.poster, maxBackdrop1080 = true),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().blur(40.dp).graphicsLayer { alpha = 0.35f },
+                    modifier = Modifier.fillMaxSize().then(if (com.nuvio.app.features.luxo.luxoLiteMode()) Modifier else Modifier.blur(40.dp)).graphicsLayer { alpha = if (com.nuvio.app.features.luxo.luxoLiteMode()) 0.18f else 0.35f },
                 )
             }
             Column(Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {

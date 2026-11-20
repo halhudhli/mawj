@@ -37,6 +37,26 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             lx("الأحمر للترجمة، والأخضر للصوت، والأصفر لتوقيت الترجمة، والأزرق للسرعة، والضغط المطوّل على «موافق» يفتح لوحة سريعة", "Red subtitles, green audio, yellow subtitle timing, blue speed; hold OK for a quick panel"),
             { it.tvPlayerKeys }, { f, v -> f.copy(tvPlayerKeys = v) },
         ),
+        LuxoFeatureSwitch(
+            lx("تجهيز البوسترات مسبقاً 🖼️", "Posters fetched ahead 🖼️"),
+            lx("تُنزَّل بوسترات الصفوف التالية في الرئيسية قبل الوصول إليها، فتظهر جاهزة عند النزول بالريموت", "Posters of the next home rows are downloaded before reaching them"),
+            { it.tvPrefetch }, { f, v -> f.copy(tvPrefetch = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("صفحة العمل على مراحل ⚡", "Title page in stages ⚡"),
+            lx("تظهر الصورة وزر التشغيل فوراً، ثم يُحمَّل الممثلون والأعمال المشابهة وبقية الأقسام بعد لحظة", "Artwork and play show at once; cast, related and the rest follow a moment later"),
+            { it.tvStagedDetails }, { f, v -> f.copy(tvStagedDetails = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("بدء التشغيل الأسرع ▶️", "Faster playback start ▶️"),
+            lx("ضبط التحميل المسبق في المشغل ليبدأ العرض أسرع ويتحمّل تذبذب الشبكة القصير", "Player buffering tuned to start sooner and ride out short network dips"),
+            { it.tvFastStart }, { f, v -> f.copy(tvFastStart = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("عدّاد الأداء 📊", "Performance meter 📊"),
+            lx("رقم صغير في الزاوية يعرض عدد الإطارات في الثانية والذاكرة المستخدمة، لمعرفة مواضع البطء", "A small corner readout of frames per second and memory in use"),
+            { it.perfMeter }, { f, v -> f.copy(perfMeter = v) },
+        ),
     )
     val switches = tvSwitches + listOf(
         LuxoFeatureSwitch(

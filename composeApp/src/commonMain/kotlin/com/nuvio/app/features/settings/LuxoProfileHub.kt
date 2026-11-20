@@ -463,13 +463,7 @@ private fun LuxoPassCard(modifier: Modifier = Modifier) {
     val tilt = rememberLuxoTilt(features.passTilt)
     var flipped by rememberSaveable { mutableStateOf(false) }
     val flip by animateFloatAsState(if (flipped) 180f else 0f, spring(dampingRatio = 0.72f, stiffness = 240f), label = "pass_flip")
-    val shine = rememberInfiniteTransition(label = "pass_shine")
-    val sweep by shine.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(5200, easing = LinearEasing), RepeatMode.Restart),
-        label = "pass_sweep",
-    )
+    val sweep by com.nuvio.app.core.ui.mawjDrift("pass_shine", 5200)
     val stats = rememberLuxoPassStats()
     val shape = remember { LuxoTicketShape(notch = 14f) }
 
