@@ -44,6 +44,14 @@ internal fun PlayerDestination(
     LaunchedEffect(launch.videoId) {
         launch.videoId?.let { ResumePromptRepository.markPlayerEntered(it) }
     }
+    androidx.compose.runtime.DisposableEffect(route.launchId) {
+        com.nuvio.app.features.player.LuxoPlayerBridge.currentLaunchId = route.launchId
+        onDispose {
+            if (com.nuvio.app.features.player.LuxoPlayerBridge.currentLaunchId == route.launchId) {
+                com.nuvio.app.features.player.LuxoPlayerBridge.currentLaunchId = null
+            }
+        }
+    }
     androidx.compose.runtime.DisposableEffect(Unit) {
         com.nuvio.app.features.luxo.LuxoIdle.playerOpen = true
         onDispose { com.nuvio.app.features.luxo.LuxoIdle.playerOpen = false }

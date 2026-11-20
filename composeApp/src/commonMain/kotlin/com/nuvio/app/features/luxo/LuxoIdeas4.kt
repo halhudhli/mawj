@@ -693,6 +693,8 @@ internal fun LuxoRemoteServerHost() {
                 "pp" -> c?.let { if (com.nuvio.app.features.player.LuxoPlayerBridge.remoteIsPlaying) it.pause() else it.play() }
                 "seek" -> (o["d"] as? JsonPrimitive)?.longOrNull?.let { d -> c?.seekBy(d) }
                 "open" -> (o["url"] as? JsonPrimitive)?.contentOrNull?.let { com.nuvio.app.core.deeplink.handleAppUrl(it) }
+                // «تشغيل على الشاشة»: the tablet's stream goes straight to the player.
+                "play" -> MawjPlayOnTv.decode(o)?.let { MawjPlayOnTv.requests.tryEmit(it) }
                 "search" -> (o["q"] as? JsonPrimitive)?.contentOrNull?.let { LuxoRemote.searchQuery = it }
                 // «ريموت موج»: keys, volume, tracks, speed and the rest.
                 else -> mawjHandleRemoteCommand(type, o)

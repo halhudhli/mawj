@@ -535,6 +535,15 @@ internal fun MainAppContent(
     // «ريموت موج»: the tablet's «الرئيسية» key.
     val remoteTabClick = androidx.compose.runtime.rememberUpdatedState<(AppScreenTab) -> Unit>({ handleRootTabClick(it) })
     LaunchedEffect(Unit) {
+        // TV: «تشغيل على الشاشة» from the tablet opens the player directly, replacing what plays.
+        com.nuvio.app.features.luxo.MawjPlayOnTv.requests.collect { incoming ->
+            val launch = incoming.copy(profileId = ProfileRepository.activeProfileId)
+            if (navController.currentRoute is PlayerRoute) navController.popBackStack()
+            val launchId = PlayerLaunchStore.put(launch)
+            navController.navigate(PlayerRoute(launchId = launchId, title = launch.title))
+        }
+    }
+    LaunchedEffect(Unit) {
         com.nuvio.app.features.luxo.MawjRemoteNav.requests.collect { to ->
             when (to) {
                 "home" -> remoteTabClick.value(AppScreenTab.Home)

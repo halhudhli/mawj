@@ -43,9 +43,18 @@ internal fun LuxoIdeas4PlayerHooks(title: String, season: Int?, episode: Int?, p
         }) else null
         LuxoPlayerBridge.onContinueOnTvClick = if (features.remote && !luxoIsTv() && LuxoRemote.target != null && metaId.isNotBlank()) ({
             scope.launch {
-                val url = com.nuvio.app.core.deeplink.buildMetaDeepLinkUrl(if (metaType == "movie") "movie" else "series", metaId)
-                val ok = LuxoRemote.send(buildJsonObject { put("t", "open"); put("url", url) })
-                toast(if (ok) "فُتح العمل على الشاشة 📺" else "تعذّر الوصول إلى الشاشة")
+                // The same stream, from the same moment, straight into the TV's player.
+                val launch = LuxoPlayerBridge.currentLaunchId?.let { PlayerLaunchStore.get(it) }
+                if (launch != null && com.nuvio.app.features.luxo.MawjPlayOnTv.canSend(launch)) {
+                    val ok = LuxoRemote.send(com.nuvio.app.features.luxo.MawjPlayOnTv.encode(launch, pos))
+                    if (ok) LuxoPlayerBridge.remoteController?.pause()
+                    toast(if (ok) "يُعرض الآن على الشاشة 📺" else "تعذّر الوصول إلى الشاشة")
+                } else {
+                    // A link only this device can reach: the TV opens the title instead.
+                    val url = com.nuvio.app.core.deeplink.buildMetaDeepLinkUrl(if (metaType == "movie") "movie" else "series", metaId)
+                    val ok = LuxoRemote.send(buildJsonObject { put("t", "open"); put("url", url) })
+                    toast(if (ok) "هذا المصدر يعمل على هذا الجهاز فقط، فعُرضت صفحة العمل على الشاشة" else "تعذّر الوصول إلى الشاشة")
+                }
             }
         }) else null
         onDispose {

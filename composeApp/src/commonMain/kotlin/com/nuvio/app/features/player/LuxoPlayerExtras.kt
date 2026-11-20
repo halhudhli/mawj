@@ -38,6 +38,8 @@ import kotlinx.coroutines.delay
  * show their buttons; only one player exists at a time, so a single shared holder is enough.
  */
 internal object LuxoPlayerBridge {
+    /** The launch the player is showing now (for «تشغيل على الشاشة»). */
+    var currentLaunchId: Long? = null
     var onPictureClick by mutableStateOf<(() -> Unit)?>(null)
     var onSubtitleFileClick by mutableStateOf<(() -> Unit)?>(null)
     var onSoundClick by mutableStateOf<(() -> Unit)?>(null)
