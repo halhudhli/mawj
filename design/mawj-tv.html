@@ -26,7 +26,17 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
 .tvbox{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;background:#000;
   box-shadow:0 0 0 10px #0B0F14,0 0 0 11px #1A222C,0 30px 80px rgba(0,0,0,.6)}
 .stage{position:absolute;top:0;right:0;width:1280px;height:720px;transform-origin:top right;direction:rtl;background:var(--sea);overflow:hidden}
-.screen{position:absolute;inset:0;display:none}
+.screen{position:absolute;inset:0;display:none;z-index:2}
+/* One background for every screen, driven by the artwork in focus */
+.bgl{position:absolute;inset:0;z-index:0;background:var(--sea)}
+.bgl div{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;background-size:cover;background-position:center}
+.bgl div.on{opacity:1}
+.bgl div.portrait{background-size:58% 100%;background-position:left top;background-repeat:no-repeat;-webkit-mask-image:linear-gradient(270deg,transparent 40%,#000 72%);mask-image:linear-gradient(270deg,transparent 40%,#000 72%)}
+.bgl div.logo{background-color:#0B121A;background-size:auto,34% auto;background-position:center,14% 22%;background-repeat:no-repeat}
+.scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:
+  linear-gradient(270deg,rgba(7,13,20,.94) 0%,rgba(7,13,20,.62) 42%,rgba(7,13,20,.18) 100%),
+  linear-gradient(0deg,rgba(7,13,20,.96) 0%,rgba(7,13,20,0) 58%)}
+@media (prefers-reduced-motion:reduce){.bgl div{transition:none}}
 .screen.on{display:block}
 .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:22px}
 .note{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
@@ -176,14 +186,17 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
       <button role="tab" aria-selected="false" data-s="detail">صفحة العمل</button>
       <button role="tab" aria-selected="false" data-s="sources">المصادر</button>
       <button role="tab" aria-selected="false" data-s="search">البحث</button>
+      <button role="tab" aria-selected="false" data-s="actor">الممثل</button>
+      <button role="tab" aria-selected="false" data-s="studio">الشركة</button>
       <button role="tab" aria-selected="false" data-s="profiles">الملفات والربط</button>
     </div>
   </header>
 
   <div class="tvbox" id="tv"><div class="stage" id="stage">
+    <div class="bgl" id="bgl"><div></div><div></div></div><div class="scrim"></div>
 
     <!-- 1 HOME -->
-    <section class="screen on" id="s-home">
+    <section class="screen on" id="s-home" data-dyn data-bg='radial-gradient(70% 90% at 20% 30%,rgba(241,221,166,.30),transparent 55%),linear-gradient(115deg,#1B3A52 0%,#0E2233 45%,#070D14 100%)'>
       <nav class="rail">
         <div class="logo">موج</div>
         <div class="it f" data-n title="البحث"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
@@ -192,7 +205,7 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
         <div class="it f" data-n title="الإعدادات"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3.6 14H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 7a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 .3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
         <div class="me f" data-n title="الملف">س</div>
       </nav>
-      <div class="hero"><div class="bg"></div><div class="moon"></div>
+      <div class="hero">
         <div class="info">
           <div class="eyebrow">مختار لهذا المساء</div>
           <h2>ليالي المدّ</h2>
@@ -229,10 +242,9 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
     </section>
 
     <!-- 2 TITLE PAGE -->
-    <section class="screen dt" id="s-detail">
-      <div class="bg"></div>
+    <section class="screen dt" id="s-detail" data-bg='radial-gradient(90% 80% at 15% 20%,rgba(224,87,79,.35),transparent 60%),linear-gradient(120deg,#5B2C24,#2A1410 45%,#120A08)'>
       <div class="col">
-        <div class="eyebrow">مسلسل · <bdi>٢٠٢٦</bdi> · <bdi>٣</bdi> مواسم</div>
+        <div class="eyebrow">مسلسل — <bdi>٢٠٢٦</bdi> — <bdi>٣</bdi> مواسم</div>
         <h2>غريزة حيوانية</h2>
         <div class="meta"><span class="rate">★ ٧٫٩</span><span>دراما · إثارة</span><span class="pill">+16</span><span class="pill">4K</span><span>٥٢ د</span></div>
         <p>طبيبة بيطرية تكتشف أن سلسلة حوادث غامضة في بلدتها الصغيرة مرتبطة بقطيع لم يُرَ منذ سنوات، فتبدأ رحلة بحث تقلب حياتها.</p>
@@ -256,7 +268,7 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
     </section>
 
     <!-- 3 SOURCES -->
-    <section class="screen sr" id="s-sources">
+    <section class="screen sr" id="s-sources" data-bg='radial-gradient(90% 80% at 15% 20%,rgba(224,87,79,.30),transparent 60%),linear-gradient(120deg,#5B2C24,#2A1410 45%,#120A08)'>
       <div class="head">
         <div class="p mini"><div class="art" style="background:linear-gradient(160deg,#5B2C24,#1B0F0C)"></div></div>
         <div><h2>غريزة حيوانية</h2><div class="h2s">الموسم ١ · الحلقة ٢ — آثار في الطين</div></div>
@@ -274,7 +286,7 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
     </section>
 
     <!-- 4 SEARCH -->
-    <section class="screen se" id="s-search">
+    <section class="screen se" id="s-search" data-dyn data-bg='linear-gradient(160deg,#5B2C24,#1B0F0C)'>
       <div class="field"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span id="q">غري</span><span class="cur"></span></div>
       <div class="kb" id="kb"></div>
       <div class="voice">يمكن الكتابة من التابلت مباشرة: <b>كل ما يُكتب في التابلت يظهر هنا</b>، فلا حاجة لتحريك الريموت حرفاً حرفاً.</div>
@@ -289,9 +301,32 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
       </div>
     </section>
 
+
+    <!-- 6 ACTOR -->
+    <section class="screen" id="s-actor" data-mode="portrait" data-bg='radial-gradient(circle at 50% 30%,#D8B08A 0 13%,transparent 13.5%),radial-gradient(circle at 50% 24%,#3A2A20 0 15%,transparent 15.5%),radial-gradient(ellipse 48% 32% at 50% 82%,#2B3F55 0 98%,transparent 100%),linear-gradient(180deg,#3B5368,#16222E)'>
+      <div style="position:absolute;right:120px;top:90px;width:560px">
+        <div class="eyebrow">ممثلة — <bdi>٤٢</bdi> عملاً</div>
+        <h2 style="font-family:Amiri,serif;font-size:58px;margin:6px 0 8px">ليان الساحلي</h2>
+        <div class="meta"><span>تمثيل</span><span>مواليد <bdi>١٩٨٨</bdi></span></div>
+        <p style="color:#C9D2DC;font-size:17px;line-height:1.75;margin:14px 0 20px">ممثلة عُرفت بأدوار الدراما الساحلية، وتنقّلت بين المسرح والتلفزيون قبل أن تتجه إلى السينما.</p>
+        <span class="btn f" data-n data-start>متابعة الأعمال</span>
+      </div>
+      <div class="rows" style="top:440px"><div class="row"><h4>اشتهرت بـ</h4><div class="strip"><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#5B2C24,#1B0F0C)"></div><div class="t">غريزة حيوانية</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#3A6E8C,#0B1F2C)"></div><div class="t">الضفة الأخرى</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#2E7A73,#0A1F1D)"></div><div class="t">جزيرة الملح</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#8C6B3A,#241A0C)"></div><div class="t">الرحلة ٩</div></div></div></div></div>
+    </section>
+
+    <!-- 7 STUDIO -->
+    <section class="screen" id="s-studio" data-mode="logo" data-bg='radial-gradient(60% 70% at 26% 50%,rgba(214,179,106,.10),transparent 70%),url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 200%27%3E%3Ccircle cx=%27100%27 cy=%27100%27 r=%2762%27 fill=%27none%27 stroke=%27%23F1DDA6%27 stroke-opacity=%27.35%27 stroke-width=%2710%27/%3E%3Cpath d=%27M48 112h104%27 stroke=%27%23F1DDA6%27 stroke-opacity=%27.35%27 stroke-width=%2710%27/%3E%3Ctext x=%27190%27 y=%27122%27 font-family=%27Georgia,serif%27 font-size=%2764%27 fill=%27%23F1DDA6%27 fill-opacity=%27.35%27%3EOFOQ%3C/text%3E%3C/svg%3E")'>
+      <div style="position:absolute;right:120px;top:90px;width:560px">
+        <div class="eyebrow">شركة إنتاج — <bdi>١٢٨</bdi> عملاً</div>
+        <h2 style="font-family:Amiri,serif;font-size:58px;margin:6px 0 8px">أفق للإنتاج</h2>
+        <div class="meta"><span>تأسست <bdi>١٩٩٤</bdi></span><span>أفلام · مسلسلات</span></div>
+        <div style="display:flex;gap:10px;margin-top:22px"><span class="chip f cur" data-n data-start>الأحدث</span><span class="chip f" data-n>الأعلى تقييماً</span><span class="chip f" data-n>مسلسلات</span></div>
+      </div>
+      <div class="rows" style="top:330px"><div class="row"><h4>من أعمالها</h4><div class="strip"><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#C08A3E,#3A2410)"></div><div class="t">رمال الذهب</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#7A2E3A,#1E0A0E)"></div><div class="t">ظلّ القلعة</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#59507E,#16132A)"></div><div class="t">مدار</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#4F6B3A,#141C0E)"></div><div class="t">قبل الفجر</div></div><div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#2B4A63,#0F2030)"></div><div class="t">ليالي المدّ</div></div></div></div></div>
+    </section>
+
     <!-- 5 PROFILES + PAIRING -->
-    <section class="screen pf" id="s-profiles">
-      <div class="bg"></div>
+    <section class="screen pf" id="s-profiles" data-dyn data-bg='linear-gradient(135deg,#2E5E7E,#173247)'>
       <div class="toast" id="toast">✓ تم الربط مع التابلت</div>
       <h2>من يشاهد الآن؟</h2>
       <div class="ps">
@@ -320,6 +355,7 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
     <div class="note"><h3>المصادر</h3><p>قائمة عمودية واضحة: الجودة على اليمين، ثم الاسم وشارات HDR والصوت والترجمة، ثم الحجم والإضافة. فلاتر سريعة فوق.</p></div>
     <div class="note"><h3>البحث</h3><p>لوحة مفاتيح عربية كبيرة للريموت، والأهم: الكتابة من التابلت تظهر هنا مباشرة.</p></div>
     <div class="note"><h3>الملفات والربط</h3><p>اختيار الملف بالريموت، ورمز الربط بأربعة مربعات واضحة تحت. عند الربط تظهر رسالة تأكيد صغيرة.</p></div>
+    <div class="note"><h3>الخلفية الموحّدة</h3><p>لا خلفيات ثابتة ولا بحر متحرك: في الرئيسية والبحث تتبدّل الخلفية لصورة العمل المحدَّد بعد ٠٫٢ ثانية من التوقف، بتلاشٍ ناعم. صفحة العمل والمصادر خلفيتها صورة العمل، والممثل صورته مؤطَّرة من الأعلى حتى لا يُقص الوجه، والشركة شعارها بشفافية خفيفة. وفوق الكل طبقة تعتيم تُبقي النصوص واضحة.</p></div>
     <div class="note"><h3>المشغّل</h3><p>نفس مشغّل موج الحالي بشكله كما هو، مع اختصارات الأزرار الملوّنة وضغطة OK الطويلة للوحة السريعة.</p></div>
   </div>
 </div>
@@ -339,7 +375,24 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
   var cur=null;
   function screen(){return document.querySelector('.screen.on');}
   function items(){return Array.prototype.slice.call(screen().querySelectorAll('[data-n]'));}
-  function setFocus(el){if(cur)cur.classList.remove('focus');cur=el;if(el)el.classList.add('focus');}
+  // Unified background: the screen's own artwork, or (on browse screens) the focused item's,
+  // after a short pause so fast remote presses never load every poster on the way.
+  var layers=document.querySelectorAll('#bgl div'),front=0,shown=null,timer=null;
+  function setBg(bg,mode){
+    if(!bg||bg===shown)return;shown=bg;
+    var next=layers[1-front];next.className=mode||'';next.removeAttribute('style');next.style.backgroundImage=bg;
+    next.classList.add('on');layers[front].classList.remove('on');front=1-front;
+  }
+  function artOf(el){
+    if(!el)return null;var a=el.querySelector('.art,.av');
+    return a?(a.style.backgroundImage||a.style.background):null;
+  }
+  function setFocus(el){
+    if(cur)cur.classList.remove('focus');cur=el;if(el)el.classList.add('focus');
+    if(!screen().hasAttribute('data-dyn'))return;
+    var art=artOf(el);if(!art)return;
+    clearTimeout(timer);timer=setTimeout(function(){setBg(art);},200);
+  }
   function startFocus(){var s=screen();setFocus(s.querySelector('[data-start]')||items()[0]);}
   function center(el){var r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,r:r};}
   function move(dir){
@@ -364,6 +417,7 @@ h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap
   function show(name){
     document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s-'+name);});
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.s===name?'true':'false');});
+    clearTimeout(timer);var sc=document.getElementById('s-'+name);setBg(sc.getAttribute('data-bg'),sc.getAttribute('data-mode'));
     cur=null;startFocus();
     try{localStorage.setItem('mawjtv-tab',name);}catch(e){}
   }
