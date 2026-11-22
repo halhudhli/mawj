@@ -134,7 +134,10 @@ internal fun AppBackgroundHost(paintSea: Boolean = true, content: @Composable ()
     // show through the same way they do for a picture background.
     // On iPhone/iPad the launch gate is a see-through layer above the native screens: it must never
     // paint the sea (or anything opaque) there, or it hides the whole app.
-    val seaOn = mawjStage && suspendCount == 0 && paintSea
+    // TV: no sea behind the pages unless «خلفية البحر على الشاشة» is on. The sea makes every page
+    // see-through, so the weak box composites the whole screen twice; plain opaque pages are lighter.
+    val tvPlain = com.nuvio.app.features.luxo.luxoIsTv() && !com.nuvio.app.features.luxo.rememberLuxoFeatures().tvSea
+    val seaOn = mawjStage && suspendCount == 0 && paintSea && !tvPlain
     val hasImage = model != null || seaOn
     val tokens = remember(baseTokens, hasImage, glassStyle) { baseTokens.withAppBackground(hasImage, glassStyle) }
     val scheme = remember(baseScheme, hasImage, glassStyle) { baseScheme.withAppBackground(hasImage, glassStyle) }

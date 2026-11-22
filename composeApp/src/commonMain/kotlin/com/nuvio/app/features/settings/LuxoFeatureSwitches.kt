@@ -53,6 +53,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.tvFastStart }, { f, v -> f.copy(tvFastStart = v) },
         ),
         LuxoFeatureSwitch(
+            lx("خلفية البحر على الشاشة 🌊", "Sea background on TV 🌊"),
+            lx("تُرسم خلفية البحر خلف الصفحات على الشاشة. عند إيقافها تصبح الصفحات بلون ثابت، وهي أخف على الأجهزة الضعيفة", "The sea behind TV pages; off gives plain pages, lighter on weak boxes"),
+            { it.tvSea }, { f, v -> f.copy(tvSea = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("عدّاد الأداء 📊", "Performance meter 📊"),
             lx("رقم صغير في الزاوية يعرض عدد الإطارات في الثانية والذاكرة المستخدمة، لمعرفة مواضع البطء", "A small corner readout of frames per second and memory in use"),
             { it.perfMeter }, { f, v -> f.copy(perfMeter = v) },

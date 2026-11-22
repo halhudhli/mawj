@@ -249,6 +249,8 @@ data class LuxoFeatures(
     val tvFastStart: Boolean = true,
     /** A small meter in the corner: frames per second and memory, to find what is slow. */
     val perfMeter: Boolean = false,
+    /** TV: the moving sea behind the pages (off: plain opaque pages, lighter on a weak box). */
+    val tvSea: Boolean = false,
 )
 
 object LuxoFeaturesRepository {
