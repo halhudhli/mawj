@@ -62,11 +62,7 @@ private fun MawjIdentSettingsBody() {
         IdentCard("عشوائي 🎲", "تُختار إحدى الافتتاحيات عشوائياً عند كل تشغيل.", choice == MawjIdentPrefs.RANDOM, { MawjIdentPrefs.set(MawjIdentPrefs.RANDOM) }, null, null)
         IdentCard("بدون افتتاحية", "يُفتح التطبيق مباشرة.", choice == MawjIdentPrefs.OFF, { MawjIdentPrefs.set(MawjIdentPrefs.OFF) }, null, null)
         if (com.nuvio.app.features.luxo.luxoIsTv()) {
-            IdentCard(
-                if (MawjIdentPrefs.tvShort) "افتتاحية قصيرة على الشاشة ✓" else "افتتاحية قصيرة على الشاشة",
-                "تُختصر الافتتاحية المختارة إلى ثانية ونصف على الشاشة، فتظهر الرئيسية أسرع.",
-                MawjIdentPrefs.tvShort, { MawjIdentPrefs.changeTvShort(!MawjIdentPrefs.tvShort) }, null, null,
-            )
+            IdentCard("لا افتتاحية على الشاشة", "تُفتح الرئيسية مباشرة على الشاشة دائماً، والاختيار هنا يخص التابلت والجوال.", true, {}, null, null)
         }
     }
     preview?.let { s ->

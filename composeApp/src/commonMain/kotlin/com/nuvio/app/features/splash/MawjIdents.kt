@@ -70,21 +70,12 @@ object MawjIdentPrefs {
 
     fun set(value: String) { choice = value; LuxoPrefsStorage.save(KEY, value) }
 
-    /** TV: a chosen opener is cut to [TV_SHORT_MS] so the home shows sooner (on by default). */
-    const val TV_SHORT_MS = 1_500L
-    var tvShort by mutableStateOf(LuxoPrefsStorage.load("mawj_ident_tv_short") != "0")
-        private set
+    /** How long the gate holds the opener (none on a TV). */
+    val holdMs: Long get() = forThisLaunch?.durationMs ?: 0L
 
-    fun changeTvShort(on: Boolean) { tvShort = on; LuxoPrefsStorage.save("mawj_ident_tv_short", if (on) "1" else "0") }
-
-    /** How long the gate holds the opener on this device. */
-    val holdMs: Long get() {
-        val full = forThisLaunch?.durationMs ?: 0L
-        return if (com.nuvio.app.features.luxo.luxoIsTv() && tvShort) minOf(full, TV_SHORT_MS) else full
-    }
-
-    /** The opener for this launch (fixed once picked, so the hold and the animation agree). */
     val forThisLaunch: MawjIdentStyle? by lazy {
+        // TV: no opener at all, the home comes first.
+        if (com.nuvio.app.features.luxo.luxoIsTv()) return@lazy null
         when (choice) {
             OFF -> null
             RANDOM -> MawjIdentStyle.entries.random()
