@@ -1,0 +1,379 @@
+<title>Mawj TV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --sea:#070D14;--raised:#0D1620;--card:#121C26;--line:rgba(238,242,246,.10);
+  --gold:#D6B36A;--gold-l:#F1DDA6;--ink:#F6F1E4;--muted:#A9B6C4;--dim:#6F7E8E;
+  --red:#E0574F;--green:#5BBF7A;--yellow:#E3C34D;--blue:#4F8FE0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#04080C;color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+h1{font-family:Amiri,serif;font-size:30px;margin:0;color:var(--gold-l);text-wrap:balance}
+.sub{color:var(--muted);font-size:14px;margin:4px 0 0;max-width:68ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:inherit;font-size:14px;color:var(--muted);background:var(--raised);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--gold);color:var(--sea);border-color:var(--gold);font-weight:600}
+.hint{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--dim);font-size:13px;margin:10px 0 0}
+.hint kbd{font-family:inherit;background:var(--raised);border:1px solid var(--line);border-radius:6px;padding:1px 7px;color:var(--muted)}
+
+/* The TV: a fixed 1280x720 stage scaled to the page width */
+.tvbox{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;background:#000;
+  box-shadow:0 0 0 10px #0B0F14,0 0 0 11px #1A222C,0 30px 80px rgba(0,0,0,.6)}
+.stage{position:absolute;top:0;right:0;width:1280px;height:720px;transform-origin:top right;direction:rtl;background:var(--sea);overflow:hidden}
+.screen{position:absolute;inset:0;display:none}
+.screen.on{display:block}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:22px}
+.note{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.note h3{margin:0 0 6px;font-size:15px;color:var(--gold-l)}
+.note p,.note li{margin:0;color:var(--muted);font-size:13.5px;line-height:1.7}
+.note ul{margin:0;padding-inline-start:18px}
+
+/* ---------- shared TV pieces ---------- */
+.f{outline:none;transition:transform .16s ease,box-shadow .16s ease,background-color .16s}
+.f.focus{box-shadow:0 0 0 3px var(--gold-l),0 0 24px rgba(214,179,106,.35);transform:scale(1.06);z-index:3}
+.btn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px;border-radius:999px;font-size:19px;font-weight:600;
+  background:rgba(246,241,228,.10);color:var(--ink);border:1px solid var(--line)}
+.btn.focus{background:var(--ink);color:var(--sea);transform:scale(1.05)}
+.btn.primary{background:var(--gold);color:var(--sea);border-color:var(--gold)}
+.btn.primary.focus{background:var(--gold-l)}
+.ico{width:22px;height:22px;flex:none}
+.rail{position:absolute;top:0;right:0;bottom:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:34px;
+  background:linear-gradient(270deg,rgba(7,13,20,.92),rgba(7,13,20,0));z-index:5}
+.rail .logo{font-family:Amiri,serif;color:var(--gold);font-size:26px;margin-bottom:18px}
+.rail .it{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--muted)}
+.rail .it.cur{color:var(--gold)}
+.rail .it.focus{background:var(--ink);color:var(--sea);transform:scale(1.08)}
+.rail .me{margin-top:auto;margin-bottom:28px;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2E5E7E,#173247);display:grid;place-items:center;font-weight:700}
+.rail .me.focus{box-shadow:0 0 0 3px var(--gold-l)}
+.code{position:absolute;bottom:18px;left:26px;font-size:13px;color:var(--dim);z-index:6}
+.code b{color:var(--gold-l);letter-spacing:.18em;font-weight:600}
+
+/* posters (no outside images: painted gradients) */
+.p{position:relative;border-radius:12px;overflow:hidden;flex:none;background:var(--card)}
+.p .art{position:absolute;inset:0}
+.p .t{position:absolute;inset:auto 10px 10px 10px;font-family:Amiri,serif;font-weight:700;font-size:17px;line-height:1.25;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.p .q{position:absolute;top:8px;left:8px;font-size:11px;font-weight:700;background:rgba(7,13,20,.8);border:1px solid rgba(214,179,106,.5);color:var(--gold-l);border-radius:6px;padding:1px 6px}
+.poster{width:150px;height:225px}
+.wide{width:286px;height:161px}
+.bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.15)}
+.bar i{display:block;height:100%;background:var(--gold)}
+
+/* ---------- 1 home ---------- */
+.hero{position:absolute;inset:0 0 auto 0;height:400px}
+.hero .bg{position:absolute;inset:0;background:
+  radial-gradient(120% 90% at 20% 30%,rgba(214,179,106,.18),transparent 55%),
+  linear-gradient(115deg,#1B3A52 0%,#0E2233 45%,#070D14 100%)}
+.hero .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--sea) 0%,rgba(7,13,20,0) 55%),linear-gradient(270deg,rgba(7,13,20,.9) 8%,rgba(7,13,20,0) 60%)}
+.hero .moon{position:absolute;left:170px;top:70px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#F7EAC6,#D6B36A 60%,#8E733A);opacity:.85;filter:blur(.3px);box-shadow:0 0 120px rgba(241,221,166,.35)}
+.hero .info{position:absolute;right:120px;top:64px;width:560px}
+.eyebrow{color:var(--gold);font-size:15px;font-weight:600;letter-spacing:.02em}
+.hero h2{font-family:Amiri,serif;font-size:64px;line-height:1.05;margin:6px 0 10px}
+.meta{display:flex;gap:14px;align-items:center;color:var(--muted);font-size:16px}
+.meta .pill{border:1px solid var(--line);border-radius:6px;padding:0 7px;font-size:13px}
+.hero p{color:#C9D2DC;font-size:17px;line-height:1.7;margin:12px 0 22px}
+.rows{position:absolute;right:120px;left:0;top:372px}
+.row h4{margin:0 0 10px;font-size:20px;font-weight:600;display:flex;align-items:center;gap:10px}
+.row h4 .n{color:var(--dim);font-size:14px;font-weight:400}
+.strip{display:flex;gap:18px;padding:8px 6px 18px}
+.row+.row{margin-top:4px}
+
+/* ---------- 2 title page ---------- */
+.dt .bg{position:absolute;inset:0;background:radial-gradient(90% 80% at 15% 20%,rgba(224,87,79,.22),transparent 60%),linear-gradient(120deg,#3A1E1C,#1A1414 45%,#070D14)}
+.dt .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(270deg,var(--sea) 30%,rgba(7,13,20,.2) 75%),linear-gradient(0deg,var(--sea) 2%,rgba(7,13,20,0) 45%)}
+.dt .col{position:absolute;right:120px;top:70px;width:620px}
+.dt h2{font-family:Amiri,serif;font-size:58px;margin:6px 0 8px;line-height:1.05}
+.dt .rate{color:var(--gold);font-weight:600}
+.dt p{color:#C9D2DC;font-size:17px;line-height:1.75;margin:14px 0 22px}
+.dt .acts{display:flex;gap:14px;flex-wrap:wrap}
+.dt .src{margin-top:12px;color:var(--muted);font-size:14px}
+.dt .src b{color:var(--gold-l);font-weight:600}
+.seasons{position:absolute;right:120px;top:452px;display:flex;gap:10px}
+.chip{height:38px;padding:0 18px;border-radius:999px;display:flex;align-items:center;font-size:16px;background:rgba(246,241,228,.08);border:1px solid var(--line);color:var(--muted)}
+.chip.cur{color:var(--ink);border-color:rgba(214,179,106,.6)}
+.chip.focus{background:var(--ink);color:var(--sea);transform:scale(1.05)}
+.eps{position:absolute;right:120px;left:0;top:506px;display:flex;gap:18px;padding:6px}
+.ep{width:262px;flex:none}
+.ep .p{width:262px;height:147px}
+.ep .et{font-size:15px;margin-top:9px;font-weight:600}
+.ep .ed{font-size:13px;color:var(--dim)}
+.later{position:absolute;left:40px;top:70px;width:300px;border:1px dashed rgba(214,179,106,.35);border-radius:14px;padding:14px 16px;color:var(--dim);font-size:13px;line-height:1.7}
+.later b{color:var(--gold-l);font-weight:600}
+
+/* ---------- 3 sources ---------- */
+.sr .head{position:absolute;right:120px;left:60px;top:44px;display:flex;align-items:center;gap:20px}
+.sr .mini{width:84px;height:126px}
+.sr h2{font-family:Amiri,serif;font-size:40px;margin:0}
+.sr .h2s{color:var(--muted);font-size:16px;margin-top:4px}
+.filters{position:absolute;right:120px;top:196px;display:flex;gap:10px}
+.list{position:absolute;right:120px;left:60px;top:254px;display:flex;flex-direction:column;gap:10px}
+.s{display:flex;align-items:center;gap:18px;padding:14px 18px;border-radius:14px;background:var(--raised);border:1px solid var(--line)}
+.s.focus{background:#16212C;transform:scale(1.015)}
+.s .qq{width:74px;text-align:center;font-weight:700;font-size:18px;color:var(--gold-l)}
+.s .qq small{display:block;font-size:11px;color:var(--dim);font-weight:500}
+.s .mid{flex:1;min-width:0}
+.s .nm{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:12px;border-radius:6px;padding:1px 7px;border:1px solid var(--line);color:var(--muted)}
+.tag.g{border-color:rgba(214,179,106,.55);color:var(--gold-l)}
+.tag.ok{border-color:rgba(91,191,122,.5);color:#8FD9A6}
+.s .sz{color:var(--muted);font-size:15px;width:110px;text-align:left}
+.s .ad{color:var(--dim);font-size:13px;width:140px;text-align:left}
+.best{position:absolute;left:60px;top:196px;color:var(--dim);font-size:13px}
+.best b{color:var(--green);font-weight:600}
+
+/* ---------- 4 search ---------- */
+.se .field{position:absolute;right:120px;top:44px;width:520px;height:58px;border-radius:16px;background:var(--raised);border:1px solid rgba(214,179,106,.45);display:flex;align-items:center;gap:12px;padding:0 18px;font-size:22px}
+.se .field .cur{width:2px;height:28px;background:var(--gold);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.se .field .cur{animation:none}.f{transition:none}}
+.kb{position:absolute;right:120px;top:122px;width:520px;display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.k{height:50px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:rgba(246,241,228,.06);border:1px solid var(--line)}
+.k.w2{grid-column:span 2;font-size:15px}
+.k.w4{grid-column:span 4;font-size:15px}
+.k.focus{background:var(--ink);color:var(--sea);transform:scale(1.07)}
+.voice{position:absolute;right:120px;top:500px;width:520px;color:var(--dim);font-size:14px;line-height:1.7}
+.voice b{color:var(--gold-l);font-weight:600}
+.res{position:absolute;left:44px;top:44px;width:560px}
+.res h4{margin:0 0 12px;font-size:18px;color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 14px}
+.grid .poster{width:122px;height:183px}
+
+/* ---------- 5 profiles ---------- */
+.pf .bg{position:absolute;inset:0;background:radial-gradient(60% 55% at 50% 30%,rgba(214,179,106,.16),transparent 70%),var(--sea)}
+.pf h2{position:absolute;top:120px;left:0;right:0;text-align:center;font-family:Amiri,serif;font-size:46px;margin:0}
+.pf .ps{position:absolute;top:240px;left:0;right:0;display:flex;justify-content:center;gap:44px}
+.pp{display:flex;flex-direction:column;align-items:center;gap:14px;width:150px}
+.pp .av{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;font-family:Amiri,serif;font-size:52px;font-weight:700;border:3px solid transparent}
+.pp .nm{font-size:19px;color:var(--muted)}
+.pp.focus{transform:scale(1.08);box-shadow:none}
+.pp.focus .av{border-color:var(--gold-l);box-shadow:0 0 34px rgba(214,179,106,.4)}
+.pp.focus .nm{color:var(--ink);font-weight:600}
+.pp .lock{font-size:12px;color:var(--dim)}
+.pair{position:absolute;left:0;right:0;bottom:58px;display:flex;justify-content:center}
+.pair .box{display:flex;align-items:center;gap:22px;background:var(--raised);border:1px solid rgba(214,179,106,.3);border-radius:18px;padding:16px 26px}
+.pair .digits{display:flex;gap:8px;direction:ltr}
+.pair .d{width:46px;height:56px;border-radius:12px;display:grid;place-items:center;font-size:30px;font-weight:700;color:var(--gold-l);background:var(--sea);border:1px solid rgba(214,179,106,.45)}
+.pair .tx{font-size:15px;color:var(--muted);line-height:1.6}
+.pair .tx b{display:block;color:var(--ink);font-size:17px}
+.toast{position:absolute;top:26px;left:50%;transform:translateX(-50%);background:rgba(13,22,32,.95);border:1px solid rgba(91,191,122,.45);color:#BDEBCB;border-radius:999px;padding:9px 20px;font-size:15px;display:none;z-index:9}
+.toast.on{display:block}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>موج للشاشة — التصميم الجديد</h1>
+      <p class="sub">تطبيق شاشة مستقل وخفيف، مصمَّم للريموت من البداية. خمس شاشات أساسية، وأسهم لوحة المفاتيح تحاكي الريموت داخل الإطار.</p>
+    </div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" aria-selected="true" data-s="home">الرئيسية</button>
+      <button role="tab" aria-selected="false" data-s="detail">صفحة العمل</button>
+      <button role="tab" aria-selected="false" data-s="sources">المصادر</button>
+      <button role="tab" aria-selected="false" data-s="search">البحث</button>
+      <button role="tab" aria-selected="false" data-s="profiles">الملفات والربط</button>
+    </div>
+  </header>
+
+  <div class="tvbox" id="tv"><div class="stage" id="stage">
+
+    <!-- 1 HOME -->
+    <section class="screen on" id="s-home">
+      <nav class="rail">
+        <div class="logo">موج</div>
+        <div class="it f" data-n title="البحث"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+        <div class="it f cur" data-n title="الرئيسية"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg></div>
+        <div class="it f" data-n title="المكتبة"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4v16H5zM11 4h4v16h-4zM17 5l3 .8-3.6 14-3-.8z"/></svg></div>
+        <div class="it f" data-n title="الإعدادات"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3.6 14H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 7a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 .3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
+        <div class="me f" data-n title="الملف">س</div>
+      </nav>
+      <div class="hero"><div class="bg"></div><div class="moon"></div>
+        <div class="info">
+          <div class="eyebrow">مختار لهذا المساء</div>
+          <h2>ليالي المدّ</h2>
+          <div class="meta"><span><bdi>٢٠٢٦</bdi></span><span>دراما · غموض</span><span class="pill">4K HDR</span><span>★ ٨٫٤</span></div>
+          <p>قرية ساحلية يتغيّر مصيرها مع كل مدّ. تُكشف أسرار قديمة حين تعود سفينة غابت ثلاثين عاماً.</p>
+          <div style="display:flex;gap:12px">
+            <span class="btn primary f" data-n data-start><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>تشغيل</span>
+            <span class="btn f" data-n>التفاصيل</span>
+          </div>
+        </div>
+      </div>
+      <div class="rows">
+        <div class="row"><h4>أكمل المشاهدة <span class="n">٤</span></h4>
+          <div class="strip">
+            <div class="p wide f" data-n><div class="art" style="background:linear-gradient(135deg,#2B4A63,#0F2030)"></div><div class="t">ليالي المدّ · م١ ح٤</div><div class="bar"><i style="width:62%"></i></div></div>
+            <div class="p wide f" data-n><div class="art" style="background:linear-gradient(135deg,#5B2C24,#1B0F0C)"></div><div class="t">غريزة حيوانية</div><div class="bar"><i style="width:18%"></i></div></div>
+            <div class="p wide f" data-n><div class="art" style="background:linear-gradient(135deg,#2F4A2B,#0E180C)"></div><div class="t">وادي الصمت · م٢ ح١</div><div class="bar"><i style="width:84%"></i></div></div>
+            <div class="p wide f" data-n><div class="art" style="background:linear-gradient(135deg,#40345E,#120E1E)"></div><div class="t">مرسى الغرباء</div><div class="bar"><i style="width:40%"></i></div></div>
+          </div>
+        </div>
+        <div class="row"><h4>الرائج الآن</h4>
+          <div class="strip">
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#C08A3E,#3A2410)"></div><span class="q">4K</span><div class="t">رمال الذهب</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#3A6E8C,#0B1F2C)"></div><div class="t">الضفة الأخرى</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#7A2E3A,#1E0A0E)"></div><span class="q">HDR</span><div class="t">ظلّ القلعة</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#4F6B3A,#141C0E)"></div><div class="t">قبل الفجر</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#59507E,#16132A)"></div><div class="t">مدار</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#8C6B3A,#241A0C)"></div><div class="t">الرحلة ٩</div></div>
+            <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#2E7A73,#0A1F1D)"></div><div class="t">جزيرة الملح</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="code">رمز الربط مع التابلت: <b>4827</b></div>
+    </section>
+
+    <!-- 2 TITLE PAGE -->
+    <section class="screen dt" id="s-detail">
+      <div class="bg"></div>
+      <div class="col">
+        <div class="eyebrow">مسلسل · <bdi>٢٠٢٦</bdi> · <bdi>٣</bdi> مواسم</div>
+        <h2>غريزة حيوانية</h2>
+        <div class="meta"><span class="rate">★ ٧٫٩</span><span>دراما · إثارة</span><span class="pill">+16</span><span class="pill">4K</span><span>٥٢ د</span></div>
+        <p>طبيبة بيطرية تكتشف أن سلسلة حوادث غامضة في بلدتها الصغيرة مرتبطة بقطيع لم يُرَ منذ سنوات، فتبدأ رحلة بحث تقلب حياتها.</p>
+        <div class="acts">
+          <span class="btn primary f" data-n data-start><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>متابعة الحلقة ٢ من حيث توقفت</span>
+          <span class="btn f" data-n>المصادر</span>
+          <span class="btn f" data-n>+ القائمة</span>
+        </div>
+        <div class="src">يُشغَّل تلقائياً بأفضل مصدر: <b>4K · TorBox · ترجمة عربية</b></div>
+      </div>
+      <div class="later"><b>يظهر بعد لحظة:</b> الممثلون · أعمال مشابهة · الإعلان · التقييمات. الصورة وزر التشغيل والحلقات تظهر فوراً.</div>
+      <div class="seasons">
+        <span class="chip f cur" data-n>الموسم ١</span><span class="chip f" data-n>الموسم ٢</span><span class="chip f" data-n>الموسم ٣</span>
+      </div>
+      <div class="eps">
+        <div class="ep f" data-n><div class="p"><div class="art" style="background:linear-gradient(135deg,#4A2420,#160B09)"></div><div class="bar"><i style="width:100%"></i></div></div><div class="et">١. البداية</div><div class="ed">٥٤ د · شوهدت</div></div>
+        <div class="ep f" data-n><div class="p"><div class="art" style="background:linear-gradient(135deg,#5B2C24,#1B0F0C)"></div><div class="bar"><i style="width:5%"></i></div></div><div class="et">٢. آثار في الطين</div><div class="ed">٥١ د</div></div>
+        <div class="ep f" data-n><div class="p"><div class="art" style="background:linear-gradient(135deg,#3D2A22,#120C0A)"></div></div><div class="et">٣. القطيع</div><div class="ed">٤٩ د</div></div>
+        <div class="ep f" data-n><div class="p"><div class="art" style="background:linear-gradient(135deg,#2F2520,#0E0A08)"></div></div><div class="et">٤. ليلة العاصفة</div><div class="ed">٥٦ د</div></div>
+      </div>
+    </section>
+
+    <!-- 3 SOURCES -->
+    <section class="screen sr" id="s-sources">
+      <div class="head">
+        <div class="p mini"><div class="art" style="background:linear-gradient(160deg,#5B2C24,#1B0F0C)"></div></div>
+        <div><h2>غريزة حيوانية</h2><div class="h2s">الموسم ١ · الحلقة ٢ — آثار في الطين</div></div>
+      </div>
+      <div class="filters">
+        <span class="chip f cur" data-n>الكل ١٨</span><span class="chip f" data-n>4K ٦</span><span class="chip f" data-n>1080p ٩</span><span class="chip f" data-n>فيها عربي ٧</span>
+      </div>
+      <div class="best">مرتّبة حسب: <b>الجودة ثم السرعة</b></div>
+      <div class="list">
+        <div class="s f" data-n data-start><div class="qq">4K<small>2160p</small></div><div class="mid"><div class="nm">Animal.Instinct.S01E02.2160p.WEB-DL.DV.HDR.H265</div><div class="tags"><span class="tag g">Dolby Vision</span><span class="tag g">HDR10</span><span class="tag">Atmos</span><span class="tag ok">⚡ جاهز فوراً</span></div></div><div class="sz">٦٫٢ ج.ب</div><div class="ad">TorBox</div></div>
+        <div class="s f" data-n><div class="qq">4K<small>2160p</small></div><div class="mid"><div class="nm">Animal.Instinct.S01E02.2160p.WEB.H265</div><div class="tags"><span class="tag g">HDR10</span><span class="tag">5.1</span><span class="tag ok">ترجمة عربية</span></div></div><div class="sz">٤٫٨ ج.ب</div><div class="ad">Torrentio</div></div>
+        <div class="s f" data-n><div class="qq">1080p<small>FHD</small></div><div class="mid"><div class="nm">Animal.Instinct.S01E02.1080p.WEB-DL.H264</div><div class="tags"><span class="tag">5.1</span><span class="tag ok">⚡ جاهز فوراً</span></div></div><div class="sz">٢٫١ ج.ب</div><div class="ad">TorBox</div></div>
+        <div class="s f" data-n><div class="qq">1080p<small>FHD</small></div><div class="mid"><div class="nm">Animal Instinct S01E02 1080p — مترجم</div><div class="tags"><span class="tag ok">ترجمة عربية مدمجة</span></div></div><div class="sz">١٫٤ ج.ب</div><div class="ad">إضافة عربية</div></div>
+      </div>
+    </section>
+
+    <!-- 4 SEARCH -->
+    <section class="screen se" id="s-search">
+      <div class="field"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span id="q">غري</span><span class="cur"></span></div>
+      <div class="kb" id="kb"></div>
+      <div class="voice">يمكن الكتابة من التابلت مباشرة: <b>كل ما يُكتب في التابلت يظهر هنا</b>، فلا حاجة لتحريك الريموت حرفاً حرفاً.</div>
+      <div class="res">
+        <h4>النتائج</h4>
+        <div class="grid">
+          <div class="p poster f" data-n data-start><div class="art" style="background:linear-gradient(160deg,#5B2C24,#1B0F0C)"></div><div class="t">غريزة حيوانية</div></div>
+          <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#3A6E8C,#0B1F2C)"></div><div class="t">غريب في المدينة</div></div>
+          <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#59507E,#16132A)"></div><div class="t">الغريزة</div></div>
+          <div class="p poster f" data-n><div class="art" style="background:linear-gradient(160deg,#4F6B3A,#141C0E)"></div><div class="t">غرباء</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 PROFILES + PAIRING -->
+    <section class="screen pf" id="s-profiles">
+      <div class="bg"></div>
+      <div class="toast" id="toast">✓ تم الربط مع التابلت</div>
+      <h2>من يشاهد الآن؟</h2>
+      <div class="ps">
+        <div class="pp f" data-n data-start><div class="av" style="background:linear-gradient(135deg,#2E5E7E,#173247)">س</div><div class="nm">الملف ١</div></div>
+        <div class="pp f" data-n><div class="av" style="background:linear-gradient(135deg,#7E5A2E,#3A2812)">ن</div><div class="nm">الملف ٢</div></div>
+        <div class="pp f" data-n><div class="av" style="background:linear-gradient(135deg,#3E7E5A,#163828)">ع</div><div class="nm">العائلة</div><div class="lock">🔒 رمز</div></div>
+        <div class="pp f" data-n><div class="av" style="background:var(--raised);color:var(--gold);font-family:inherit;font-size:44px;border:2px dashed rgba(214,179,106,.4)">+</div><div class="nm">إضافة</div></div>
+      </div>
+      <div class="pair"><div class="box">
+        <div class="tx"><b>التحكم من التابلت</b>يُفتح «الريموت» في التابلت ويُدخَل هذا الرمز</div>
+        <div class="digits"><span class="d">4</span><span class="d">8</span><span class="d">2</span><span class="d">7</span></div>
+      </div></div>
+    </section>
+
+  </div></div>
+
+  <div class="hint"><span><kbd>← → ↑ ↓</kbd> التنقل كالريموت</span><span><kbd>Enter</kbd> اختيار</span><span>أو بالنقر على أي عنصر داخل الشاشة</span></div>
+
+  <div class="notes">
+    <div class="note"><h3>ليش أخف من الحالي</h3><ul>
+      <li>أدوات جوجل الرسمية للشاشات (Compose for TV): التركيز والتنقل بالريموت جاهزان من الأساس.</li>
+      <li>لا تمويه حي ولا حركات متكررة؛ الإطار الذهبي والتكبير البسيط هما الحركة الوحيدة.</li>
+      <li>العربي والإنجليزي فقط، وبدون شاشات التابلت.</li></ul></div>
+    <div class="note"><h3>الرئيسية</h3><p>شريط جانبي صغير على اليمين، وعمل مختار فوق، ثم «أكمل المشاهدة» و«الرائج». البطاقة المحددة فقط عليها الإطار الذهبي. ورمز الربط ظاهر في الزاوية دائماً.</p></div>
+    <div class="note"><h3>صفحة العمل</h3><p>زر التشغيل عليه التركيز من أول لحظة، ويكمل من حيث توقفتِ بأفضل مصدر تلقائياً. الحلقات تحت مباشرة، والباقي يُحمَّل بعد لحظة.</p></div>
+    <div class="note"><h3>المصادر</h3><p>قائمة عمودية واضحة: الجودة على اليمين، ثم الاسم وشارات HDR والصوت والترجمة، ثم الحجم والإضافة. فلاتر سريعة فوق.</p></div>
+    <div class="note"><h3>البحث</h3><p>لوحة مفاتيح عربية كبيرة للريموت، والأهم: الكتابة من التابلت تظهر هنا مباشرة.</p></div>
+    <div class="note"><h3>الملفات والربط</h3><p>اختيار الملف بالريموت، ورمز الربط بأربعة مربعات واضحة تحت. عند الربط تظهر رسالة تأكيد صغيرة.</p></div>
+    <div class="note"><h3>المشغّل</h3><p>نفس مشغّل موج الحالي بشكله كما هو، مع اختصارات الأزرار الملوّنة وضغطة OK الطويلة للوحة السريعة.</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage'),tv=document.getElementById('tv');
+  function fit(){var s=tv.clientWidth/1280;stage.style.transform='scale('+s+')';}
+  window.addEventListener('resize',fit);fit();
+
+  // Arabic keyboard for the search screen
+  var keys='ا ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي ة ى ء ١'.split(' ');
+  var kb=document.getElementById('kb'),q=document.getElementById('q');
+  keys.forEach(function(k){var d=document.createElement('div');d.className='k f';d.setAttribute('data-n','');d.textContent=k;d.dataset.key=k;kb.appendChild(d);});
+  [['مسافة','w4',' '],['حذف','w2','⌫'],['123','w2','']].forEach(function(a){var d=document.createElement('div');d.className='k f '+a[1];d.setAttribute('data-n','');d.textContent=a[0];d.dataset.key=a[2];kb.appendChild(d);});
+
+  var cur=null;
+  function screen(){return document.querySelector('.screen.on');}
+  function items(){return Array.prototype.slice.call(screen().querySelectorAll('[data-n]'));}
+  function setFocus(el){if(cur)cur.classList.remove('focus');cur=el;if(el)el.classList.add('focus');}
+  function startFocus(){var s=screen();setFocus(s.querySelector('[data-start]')||items()[0]);}
+  function center(el){var r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,r:r};}
+  function move(dir){
+    if(!cur){startFocus();return;}
+    var c=center(cur),best=null,bs=1e9;
+    items().forEach(function(el){
+      if(el===cur)return;var e=center(el),dx=e.x-c.x,dy=e.y-c.y,main,cross;
+      if(dir==='left'){if(dx>=-8||Math.abs(dy)>-dx*1.5)return;main=-dx;cross=Math.abs(dy);}
+      if(dir==='right'){if(dx<=8||Math.abs(dy)>dx*1.5)return;main=dx;cross=Math.abs(dy);}
+      if(dir==='up'){if(dy>=-20)return;main=-dy;cross=Math.abs(dx);}
+      if(dir==='down'){if(dy<=20)return;main=dy;cross=Math.abs(dx);}
+      var score=main+cross*2.2;if(score<bs){bs=score;best=el;}
+    });
+    if(best)setFocus(best);
+  }
+  function press(el){
+    if(!el)return;
+    if(el.dataset.key!==undefined){var k=el.dataset.key;if(k==='⌫')q.textContent=q.textContent.slice(0,-1);else q.textContent+=k;return;}
+    var s=screen().id;
+    if(s==='s-profiles'){var t=document.getElementById('toast');t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1600);}
+  }
+  function show(name){
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s-'+name);});
+    document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.s===name?'true':'false');});
+    cur=null;startFocus();
+    try{localStorage.setItem('mawjtv-tab',name);}catch(e){}
+  }
+  document.getElementById('tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(b)show(b.dataset.s);});
+  stage.addEventListener('click',function(e){var el=e.target.closest('[data-n]');if(el){setFocus(el);press(el);}});
+  document.addEventListener('keydown',function(e){
+    var m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'}[e.key];
+    if(m){e.preventDefault();move(m);}else if(e.key==='Enter'&&cur){e.preventDefault();press(cur);}
+  });
+  var saved=null;try{saved=localStorage.getItem('mawjtv-tab');}catch(e){}
+  show(saved&&document.getElementById('s-'+saved)?saved:'home');
+})();
+</script>
