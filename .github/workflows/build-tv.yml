@@ -1,0 +1,79 @@
+name: Build Mawj TV
+
+# «موج» للشاشة: التطبيق الجديد المستقل (tvApp). ينبني لحاله وينشر في إصدار ثابت اسمه tv.
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "tvApp/**", ".github/workflows/build-tv.yml" ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-tv-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Add swap
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /mnt/swapfile && sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Lower Gradle memory for CI
+        run: |
+          sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Xms512m -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC/' gradle.properties
+          sed -i -E 's/^kotlin\.daemon\.jvmargs=.*/kotlin.daemon.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g/' gradle.properties
+          sed -i -E 's/^org\.gradle\.configuration-cache=.*/org.gradle.configuration-cache=false/' gradle.properties
+          echo "org.gradle.workers.max=2" >> gradle.properties
+          touch local.properties
+
+      - name: Build TV APK
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: |
+          set -o pipefail
+          ./gradlew :tvApp:assembleRelease \
+            -Pnuvio.app.versionName=1.0.0 -Pnuvio.app.versionCode=1 \
+            -Pmawj.tv.versionName=0.${{ github.run_number }} \
+            -Pmawj.tv.versionCode=${{ github.run_number }} \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Report compile errors
+        if: failure()
+        run: |
+          grep -E '^e: ' build.log | sed 's#.*/tvApp/src/main/kotlin/##' | head -80 > errs.txt || true
+          split -l 8 errs.txt errpart_ || true
+          for f in errpart_*; do
+            [ -s "$f" ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")"
+          done
+          awk '/What went wrong/{f=1;c=0} f{print; if(++c>12) f=0}' build.log | head -25 > wrong.txt
+          [ -s wrong.txt ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' wrong.txt)" || true
+
+      - name: Publish to the "tv" release
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=$(ls tvApp/build/outputs/apk/release/*.apk | head -1)
+          NAME="Mawj-TV-0.${{ github.run_number }}.apk"
+          cp "$APK" "$NAME"
+          if ! gh release view tv >/dev/null 2>&1; then
+            gh release create tv --title "موج للشاشة" --notes "تطبيق الشاشة الجديد. آخر نسخة دائماً هنا." --target "${{ github.sha }}"
+          fi
+          for old in $(gh release view tv --json assets -q '.assets[].name'); do gh release delete-asset tv "$old" --yes || true; done
+          gh release upload tv "$NAME" --clobber
