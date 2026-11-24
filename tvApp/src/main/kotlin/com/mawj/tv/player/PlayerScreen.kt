@@ -98,6 +98,11 @@ fun PlayerScreen(req: PlayRequest) {
     var countdown by remember { mutableIntStateOf(-1) }
     var nextDismissed by remember { mutableStateOf(false) }
     var nextBusy by remember { mutableStateOf(false) }
+    var subScale by remember { mutableDoubleStateOf(1.0) }
+    // «سمعت» / «رأيت»: from the TV panel or from the tablet; both stamped with the video's time.
+    var heardMs by remember { mutableStateOf<Long?>(null) }
+    var seenMs by remember { mutableStateOf<Long?>(null) }
+    var syncNote by remember { mutableStateOf("بانتظار الضغطتين") }
     val scope = rememberCoroutineScope()
 
     val rootFocus = remember { FocusRequester() }
@@ -134,6 +139,11 @@ fun PlayerScreen(req: PlayRequest) {
         }
     }
 
+    fun mark(kind: String) {
+        val p = view?.positionMs ?: return
+        if (kind == "heard") heardMs = p else seenMs = p
+    }
+
     fun showControls(focus: FocusRequester = playFocus) {
         lastInput = System.currentTimeMillis()
         controls = true
@@ -163,12 +173,59 @@ fun PlayerScreen(req: PlayRequest) {
         val subs = Addons.subtitles(req.meta.type, req.videoId)
         var waited = 0
         while (v.durationMs <= 0 && waited < 40) { delay(250); waited++ }
-        val hasArabic = v.tracks().any { it.type == "sub" && it.lang.startsWith("ar") }
+        var hasArabic = v.tracks().any { it.type == "sub" && it.lang.startsWith("ar") }
+        req.extraSubs.forEachIndexed { i, s ->
+            val ar = s.lang.startsWith("ar")
+            v.addSubtitle(s.url, s.label, s.lang, select = !hasArabic && ar)
+            if (ar) hasArabic = true
+        }
         subs.filter { it.lang.startsWith("ar") }.take(5).forEachIndexed { i, s ->
             v.addSubtitle(s.url, "${s.label} ${i + 1}", s.lang, select = !hasArabic && i == 0)
         }
         subs.filter { it.lang.startsWith("en") }.take(2).forEach { v.addSubtitle(it.url, it.label, it.lang, select = false) }
         tracksVersion++
+    }
+
+    LaunchedEffect(heardMs, seenMs) {
+        val h = heardMs; val s = seenMs
+        if (h != null && s != null) {
+            val shift = (h - s) / 1000.0
+            subDelay = ((subDelay + shift) * 100).toLong() / 100.0
+            view?.setSubDelay(subDelay)
+            syncNote = if (shift < 0) "كانت الترجمة متأخرة، فقُدِّمت" else "كانت الترجمة متقدمة، فأُخِّرت"
+            delay(1500)
+            heardMs = null; seenMs = null
+        }
+    }
+
+    // The tablet's remote sees and drives this player.
+    DisposableEffect(view) {
+        val v = view
+        val link = if (v == null) null else object : com.mawj.tv.link.RemotePlayer {
+            override fun state(): kotlinx.serialization.json.JsonObject {
+                val t = v.tracks()
+                val a = t.filter { it.type == "audio" }; val sb = t.filter { it.type == "sub" }
+                return com.mawj.tv.link.RemoteLink.playerState(
+                    req.meta, req.episode, pos, dur, !paused,
+                    a.map { it.id to it.label }, a.firstOrNull { it.selected }?.id ?: -1,
+                    sb.map { it.id to it.label }, sb.firstOrNull { it.selected }?.id ?: -1,
+                    (subDelay * 1000).toInt(), (subScale * 18).toInt(), speed.toFloat(), next != null,
+                )
+            }
+            override fun seekTo(ms: Long) { v.seekTo(ms) }
+            override fun audio(id: Int) { v.select(Track(id, "audio", "", "", true), "audio"); tracksVersion++ }
+            override fun subtitle(id: Int) { v.select(if (id < 0) null else Track(id, "sub", "", "", true), "sub"); tracksVersion++ }
+            override fun subDelayMs(ms: Int) { subDelay = ms / 1000.0; v.setSubDelay(subDelay) }
+            override fun subSize(sp: Int) { subScale = (sp / 18.0).coerceIn(0.5, 2.0); v.setSubScale(subScale) }
+            override fun speed(v2: Float) { speed = v2.toDouble(); v.setSpeed(speed) }
+            override fun next() { playNext() }
+            override fun syncMark(kind: String) {
+                if (panel == Panel.None) { controls = true; panel = Panel.Sync }
+                mark(kind)
+            }
+        }
+        com.mawj.tv.link.RemoteLink.player = link
+        onDispose { if (com.mawj.tv.link.RemoteLink.player === link) com.mawj.tv.link.RemoteLink.player = null }
     }
 
     // The next episode, for the button and the countdown.
@@ -267,7 +324,7 @@ fun PlayerScreen(req: PlayRequest) {
         if (countdown >= 0 && next != null) NextUp(next!!, countdown, onPlay = { playNext() }, onCancel = { nextDismissed = true; countdown = -1 })
 
         if (v != null) when (panel) {
-            Panel.Subs -> SubsPanel(tracks, v, onPick = { tracksVersion++ })
+            Panel.Subs -> SubsPanel(tracks, v, subScale, onScale = { subScale = it; v.setSubScale(it) }, onPick = { tracksVersion++ })
             Panel.Audio -> ChoicePanel("الصوت", tracks.filter { it.type == "audio" }.map { it.label to it.selected }) { i ->
                 v.select(tracks.filter { it.type == "audio" }[i], "audio"); tracksVersion++
             }
@@ -279,7 +336,8 @@ fun PlayerScreen(req: PlayRequest) {
             }
             Panel.Info -> InfoPanel(v.info() + listOf("المصدر" to (req.stream.addonName + (req.stream.sizeLabel?.let { " · $it" } ?: ""))))
             Panel.Sync -> SyncPanel(
-                delay = subDelay, positionMs = { v.positionMs },
+                delay = subDelay, heard = heardMs != null, seen = seenMs != null, note = syncNote,
+                onMark = { mark(it) },
                 onDelay = { d -> subDelay = d; v.setSubDelay(d) },
                 onSave = { Store.saveSubDelay(req.meta.id, subDelay) },
             )
@@ -402,11 +460,10 @@ private fun ChoicePanel(title: String, items: List<Pair<String, Boolean>>, onPic
 }
 
 @Composable
-private fun SubsPanel(tracks: List<Track>, v: MpvView, onPick: () -> Unit) {
+private fun SubsPanel(tracks: List<Track>, v: MpvView, scale: Double, onScale: (Double) -> Unit, onPick: () -> Unit) {
     val subs = tracks.filter { it.type == "sub" }
     val offFocus = remember { FocusRequester() }
     val focus = remember(subs.size) { List(subs.size) { FocusRequester() } }
-    var scale by remember { mutableDoubleStateOf(1.0) }
     var codepage by remember { mutableStateOf("auto") }
     LaunchedEffect(Unit) {
         delay(40)
@@ -419,9 +476,9 @@ private fun SubsPanel(tracks: List<Track>, v: MpvView, onPick: () -> Unit) {
         Spacer(Modifier.height(6.dp))
         T("الحجم", 15.sp, color = C.Muted)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Chip("أصغر", false, onClick = { scale = (scale - 0.1).coerceAtLeast(0.5); v.setSubScale(scale) })
+            Chip("أصغر", false, onClick = { onScale((scale - 0.1).coerceAtLeast(0.5)) })
             T("${(scale * 100).toInt()}٪", 15.sp)
-            Chip("أكبر", false, onClick = { scale = (scale + 0.1).coerceAtMost(2.0); v.setSubScale(scale) })
+            Chip("أكبر", false, onClick = { onScale((scale + 0.1).coerceAtMost(2.0)) })
         }
         Spacer(Modifier.height(6.dp))
         T("الترميز (عند ظهور رموز غريبة فقط)", 15.sp, color = C.Muted)
@@ -453,31 +510,17 @@ private fun InfoPanel(rows: List<Pair<String, String>>) {
  * Both are stamped with the video's own time, so the difference is exact; it is added to the delay.
  */
 @Composable
-private fun SyncPanel(delay: Double, positionMs: () -> Long, onDelay: (Double) -> Unit, onSave: () -> Unit) {
-    var heard by remember { mutableStateOf<Long?>(null) }
-    var seen by remember { mutableStateOf<Long?>(null) }
-    var note by remember { mutableStateOf("بانتظار الضغطتين") }
+private fun SyncPanel(delay: Double, heard: Boolean, seen: Boolean, note: String, onMark: (String) -> Unit, onDelay: (Double) -> Unit, onSave: () -> Unit) {
     var saved by remember { mutableStateOf(false) }
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { kotlinx.coroutines.delay(40); runCatching { first.requestFocus() } }
-    LaunchedEffect(heard, seen) {
-        val h = heard; val s = seen
-        if (h != null && s != null) {
-            val shift = (h - s) / 1000.0
-            onDelay(((delay + shift) * 100).toLong() / 100.0)
-            note = if (shift < 0) "كانت الترجمة متأخرة، فقُدِّمت" else "كانت الترجمة متقدمة، فأُخِّرت"
-            saved = false
-            kotlinx.coroutines.delay(1500)
-            heard = null; seen = null
-        }
-    }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Column(Modifier.fillMaxWidth().background(Color(0xF5070D14)).padding(horizontal = 60.dp, vertical = 22.dp)) {
             T("ضبط توقيت الترجمة", 22.sp, weight = FontWeight.Bold, color = C.GoldLight)
-            T("يُضغط «سمعت» لحظة سماع جملة، و«رأيت» لحظة ظهور ترجمتها (بأي ترتيب). يُحسب الفرق ويُضبط تلقائياً.", 15.sp, color = C.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+            T("يُضغط «سمعت» لحظة سماع جملة، و«رأيت» لحظة ظهور ترجمتها (بأي ترتيب)، من هنا أو من ريموت التابلت. يُحسب الفرق ويُضبط تلقائياً.", 15.sp, color = C.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SyncButton("سمعت 👂", "لحظة سماع الجملة", heard != null, Modifier.weight(1f).focusRequester(first)) { heard = positionMs() }
-                SyncButton("رأيت 👁️", "لحظة ظهور ترجمتها", seen != null, Modifier.weight(1f)) { seen = positionMs() }
+                SyncButton("سمعت 👂", "لحظة سماع الجملة", heard, Modifier.weight(1f).focusRequester(first)) { onMark("heard") }
+                SyncButton("رأيت 👁️", "لحظة ظهور ترجمتها", seen, Modifier.weight(1f)) { onMark("seen") }
                 Column(
                     Modifier.width(250.dp).background(Color(0x1AD6B36A), RoundedCornerShape(20.dp)).border(1.dp, Color(0x66D6B36A), RoundedCornerShape(20.dp)).padding(16.dp),
                 ) {

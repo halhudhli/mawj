@@ -46,6 +46,7 @@ class MawjTv : Application(), SingletonImageLoader.Factory {
         Store.init(this)
         com.mawj.tv.data.Account.init(this)
         com.mawj.tv.link.PhoneLink.start()
+        com.mawj.tv.link.RemoteLink.start(this)
     }
 
     /** Small memory cache, a disk cache for posters, 16-bit colour: light on a TV. */
@@ -100,6 +101,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        com.mawj.tv.link.RemoteLink.activity = java.lang.ref.WeakReference(this)
         // First start: Mawj's sign-in page (it can be skipped).
         if (savedInstanceState == null && !com.mawj.tv.data.Account.introSeen && com.mawj.tv.data.Account.configured) Nav.tab(Route.Login)
         setContent {
@@ -140,5 +142,6 @@ private fun MawjApp(onExit: () -> Unit) {
                 }
             }
         }
+        com.mawj.tv.ui.PairingOverlay()
     }
 }

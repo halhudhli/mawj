@@ -93,6 +93,7 @@ private fun PhoneLinkCard() {
         } else {
             Box(Modifier.size(200.dp).background(Color.White, RoundedCornerShape(10.dp)).padding(10.dp)) { Qr(address) }
             T(address, 15.sp, color = C.GoldLight, modifier = Modifier.padding(top = 12.dp))
+            T("رمز الربط مع ريموت التابلت: ${com.mawj.tv.link.RemoteLink.code}", 14.sp, color = C.Muted, modifier = Modifier.padding(top = 10.dp))
         }
     }
 }
@@ -130,6 +131,30 @@ private fun AccountCard() {
                 Chip("تسجيل الخروج", false, onClick = { com.mawj.tv.data.Account.signOut(); note = null })
             } else {
                 Chip("تسجيل الدخول", false, onClick = { com.mawj.tv.Nav.go(com.mawj.tv.Route.Login) })
+            }
+        }
+    }
+}
+
+/** When a tablet asks to pair, the 4-digit code shows here by itself (it closes once paired). */
+@Composable
+fun PairingOverlay() {
+    val from = com.mawj.tv.link.RemoteLink.pairingFrom ?: return
+    Box(Modifier.fillMaxSize().padding(30.dp), contentAlignment = Alignment.TopCenter) {
+        Column(
+            Modifier.background(Color(0xF20D1620), RoundedCornerShape(20.dp)).padding(horizontal = 26.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            T("طلب ربط من «$from»", 16.sp, color = C.Muted)
+            T("يُدخَل هذا الرمز في التابلت", 14.sp, color = C.Dim, modifier = Modifier.padding(bottom = 10.dp))
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    com.mawj.tv.link.RemoteLink.code.forEach { d ->
+                        Box(Modifier.size(54.dp, 64.dp).background(C.Sea, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                            T(d.toString(), 32.sp, color = C.GoldLight, weight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
     }

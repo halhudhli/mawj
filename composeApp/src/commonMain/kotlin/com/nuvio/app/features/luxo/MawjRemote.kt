@@ -867,6 +867,13 @@ private fun SettingsPanel(modifier: Modifier, now: RemoteNow, scroll: Boolean, c
                         }
                     }
                     Text("الرقم السالب يُظهر الترجمة أبكر، والموجب يؤخرها", color = RFaint, fontSize = 12.sp)
+                    // «سمعت» و«رأيت»: the TV stamps each press with its own video time, so the network doesn't matter.
+                    Label("الضبط بالسمع والنظر")
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(Modifier.weight(1f)) { GhostButton("سمعت 👂", gold = true) { cmd("سمعت") { put("t", "syncMark"); put("k", "heard") } } }
+                        Box(Modifier.weight(1f)) { GhostButton("رأيت 👁️", gold = true) { cmd("رأيت") { put("t", "syncMark"); put("k", "seen") } } }
+                    }
+                    Text("يُضغط «سمعت» لحظة سماع جملة، و«رأيت» لحظة ظهور ترجمتها، بأي ترتيب. يعمل مع تطبيق الشاشة الجديد.", color = RFaint, fontSize = 12.sp)
                     if (now.subDelay != 0) GhostButton("إعادة التوقيت إلى صفر") { cmd("توقيت الترجمة: صفر") { put("t", "subDelay"); put("ms", 0) } }
                 }
                 2 -> {

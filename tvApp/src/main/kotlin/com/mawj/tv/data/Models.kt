@@ -101,6 +101,8 @@ data class PlayRequest(
     val episode: Episode?,
     val stream: Stream,
     val startMs: Long,
+    /** Subtitles sent along (from the tablet), added before the addons' ones. */
+    val extraSubs: List<Subtitle> = emptyList(),
 )
 
 /** A saved position for «أكمل المشاهدة». */
