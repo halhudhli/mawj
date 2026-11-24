@@ -61,7 +61,7 @@ fun AppBackdrop() {
     }
     Box(Modifier.fillMaxSize().background(C.Sea)) {
         Crossfade(targetState = shown, animationSpec = tween(400), label = "backdrop") { url ->
-            if (url != null) Img(url, 960.dp, 540.dp, Modifier.fillMaxSize(), ContentScale.Crop)
+            if (url != null) Img(url, 640.dp, 360.dp, Modifier.fillMaxSize(), ContentScale.Crop)
         }
         // Dark towards the side where the text sits (the right, in Arabic) and towards the bottom.
         Box(

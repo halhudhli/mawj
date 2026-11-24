@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.mawj.tv
 
 import android.app.Application
@@ -48,7 +50,7 @@ class MawjTv : Application(), SingletonImageLoader.Factory {
     /** Small memory cache, a disk cache for posters, 16-bit colour: light on a TV. */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.15).build() }
+            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.05).build() }
             .diskCache { DiskCache.Builder().directory(cacheDir.resolve("img").toOkioPath()).maxSizeBytes(150L * 1024 * 1024).build() }
             .allowRgb565(true)
             .crossfade(false)
@@ -95,7 +97,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContent {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            CompositionLocalProvider(
+                LocalLayoutDirection provides LayoutDirection.Rtl,
+                androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides com.mawj.tv.ui.PivotScroll,
+            ) {
                 MawjApp(onExit = { finish() })
             }
         }

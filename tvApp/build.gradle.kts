@@ -74,4 +74,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.mpv.android.lib)
     implementation("com.google.zxing:core:3.5.3")
+    // Installs src/main/baseline-prof.txt so hot paths are compiled ahead of time.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+}
+
+composeCompiler {
+    // Models and lists from the engine never change after they are made: let Compose skip them.
+    stabilityConfigurationFiles.add(project.layout.projectDirectory.file("compose-stability.conf"))
 }

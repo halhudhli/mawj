@@ -69,6 +69,36 @@ object Store {
         return u
     }
 
+    // ---- the source chosen for a title («متابعة» plays it again) ----
+
+    fun rememberSource(metaId: String, stream: Stream) {
+        val o = buildJsonObject {
+            put("url", stream.url); put("name", stream.name); put("title", stream.title); put("addon", stream.addonName)
+            put("q", stream.quality); stream.bingeGroup?.let { put("bg", it) }
+            put("h", JsonObject(stream.headers.mapValues { JsonPrimitive(it.value) }))
+        }
+        prefs.edit().putString("src:$metaId", o.toString()).apply()
+    }
+
+    fun rememberedSource(metaId: String): Stream? = runCatching {
+        val o = Json.parseToJsonElement(prefs.getString("src:$metaId", null) ?: return null).jsonObject
+        fun s(k: String) = (o[k] as? JsonPrimitive)?.content
+        Stream(
+            addonName = s("addon") ?: "", url = s("url") ?: return null, name = s("name") ?: "", title = s("title") ?: "",
+            headers = (o["h"] as? JsonObject)?.mapValues { (it.value as? JsonPrimitive)?.content ?: "" }.orEmpty(),
+            quality = s("q")?.toIntOrNull() ?: 0, hdr = false, dolbyVision = false, sizeLabel = null, sizeBytes = 0, arabic = false,
+            bingeGroup = s("bg"),
+        )
+    }.getOrNull()
+
+    // ---- subtitle delay saved for a title ----
+
+    fun subDelay(metaId: String): Double = prefs.getFloat("sd:$metaId", 0f).toDouble()
+
+    fun saveSubDelay(metaId: String, seconds: Double) {
+        prefs.edit().putFloat("sd:$metaId", seconds.toFloat()).apply()
+    }
+
     // ---- progress ----
 
     fun saveProgress(p: Progress) {

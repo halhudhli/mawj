@@ -217,6 +217,7 @@ object Addons {
             sizeLabel = if (bytes > 0) formatSize(bytes) else null,
             sizeBytes = bytes,
             arabic = "arabic" in text || "عرب" in text || Regex("\\bara?\\b").containsMatchIn(text),
+            bingeGroup = hints?.str("bingeGroup"),
         )
     }
 

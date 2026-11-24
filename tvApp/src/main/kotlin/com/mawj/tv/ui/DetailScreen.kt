@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
 package com.mawj.tv.ui
 
 import androidx.compose.foundation.background
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,13 +44,20 @@ import com.mawj.tv.data.PlayRequest
 import com.mawj.tv.data.Store
 import kotlinx.coroutines.launch
 
-/** Finds the best source and opens the player straight away. */
-suspend fun playBest(meta: MetaPreview, episode: Episode?): String? {
+/**
+ * «متابعة»: plays the same source chosen before. The link is looked up again (links from
+ * debrid services expire); if it is gone, the saved link is tried as it is.
+ */
+suspend fun resumeSameSource(meta: MetaPreview, episode: Episode?): Boolean {
+    val saved = Store.rememberedSource(meta.id) ?: return false
     val videoId = episode?.id ?: meta.id
-    val streams = Addons.streams(meta.type, videoId)
-    val best = streams.firstOrNull() ?: return "لم يُعثر على مصدر قابل للتشغيل. تحقّق من الإضافات في الإعدادات."
-    Nav.go(Route.Player(PlayRequest(meta, videoId, episode, best, Store.positionFor(videoId))))
-    return null
+    val fresh = Addons.streams(meta.type, videoId)
+    val match = fresh.firstOrNull { it.addonName == saved.addonName && it.name == saved.name && it.title == saved.title }
+        ?: saved.bingeGroup?.let { bg -> fresh.firstOrNull { it.bingeGroup == bg } }
+        ?: fresh.firstOrNull { it.addonName == saved.addonName && it.quality == saved.quality }
+    val stream = match ?: if (episode == null || Store.progressFor(meta.id)?.videoId == videoId) saved else return false
+    Nav.go(Route.Player(PlayRequest(meta, videoId, episode, stream, Store.positionFor(videoId))))
+    return true
 }
 
 @Composable
@@ -78,7 +88,7 @@ fun DetailScreen(preview: MetaPreview) {
     LaunchedEffect(Unit) { runCatching { playFocus.requestFocus() } }
 
     val playLabel = when {
-        busy -> "جارٍ البحث عن أفضل مصدر…"
+        busy -> "جارٍ فتح المصدر…"
         resume != null && isSeries -> "متابعة م${resume.season} ح${resume.episode}"
         resume != null -> "متابعة المشاهدة"
         isSeries && nextEpisode != null -> "تشغيل م${nextEpisode.season} ح${nextEpisode.number}"
@@ -98,10 +108,15 @@ fun DetailScreen(preview: MetaPreview) {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     Pill(playLabel, primary = true, modifier = Modifier.focusRequester(playFocus)) {
                         if (busy) return@Pill
+                        val ep = if (isSeries) (episodes.firstOrNull { it.id == resume?.videoId } ?: nextEpisode) else null
+                        // The viewer picks the source; only «متابعة» reuses the one picked before.
+                        if (resume == null || Store.rememberedSource(m.id) == null) {
+                            Nav.go(Route.Sources(m, ep))
+                            return@Pill
+                        }
                         busy = true; error = null
                         scope.launch {
-                            val ep = if (isSeries) (episodes.firstOrNull { it.id == resume?.videoId } ?: nextEpisode) else null
-                            error = playBest(m, ep)
+                            if (!resumeSameSource(m, ep)) Nav.go(Route.Sources(m, ep))
                             busy = false
                         }
                     }
@@ -120,7 +135,7 @@ fun DetailScreen(preview: MetaPreview) {
                 }
             }
             item {
-                LazyRow(Modifier.padding(top = 16.dp), contentPadding = PaddingValues(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                LazyRow(Modifier.padding(top = 16.dp).focusRestorer(), contentPadding = PaddingValues(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(episodes.filter { it.season == season }, key = { it.id }) { ep ->
                         EpisodeCard(ep, Store.isWatched(ep.id), m) { Nav.go(Route.Sources(m, ep)) }
                     }

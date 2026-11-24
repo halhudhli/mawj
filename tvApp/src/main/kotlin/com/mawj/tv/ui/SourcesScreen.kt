@@ -95,6 +95,7 @@ fun SourcesScreen(meta: MetaPreview, episode: Episode?) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 40.dp)) {
             itemsIndexed(shown, key = { i, s -> "$i|${s.url}" }) { i, s ->
                 SourceRow(s, if (i == 0) Modifier.focusRequester(first) else Modifier) {
+                    Store.rememberSource(meta.id, s)
                     Nav.go(Route.Player(PlayRequest(meta, videoId, episode, s, Store.positionFor(videoId))))
                 }
             }

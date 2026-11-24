@@ -1,0 +1,8 @@
+# Compiled ahead of time on install, so the first scroll and the first open don't stutter.
+HSPLcom/mawj/tv/**->**(**)**
+Lcom/mawj/tv/**;
+HSPLandroidx/compose/foundation/lazy/**->**(**)**
+HSPLandroidx/compose/foundation/gestures/**->**(**)**
+HSPLandroidx/compose/ui/focus/**->**(**)**
+HSPLandroidx/compose/runtime/**->**(**)**
+HSPLcoil3/**->**(**)**

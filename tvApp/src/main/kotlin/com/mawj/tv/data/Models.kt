@@ -1,6 +1,9 @@
 package com.mawj.tv.data
 
+import androidx.compose.runtime.Immutable
+
 /** One installed addon, read from its manifest. */
+@Immutable
 data class Addon(
     val manifestUrl: String,
     val id: String,
@@ -22,8 +25,10 @@ data class Addon(
     }
 }
 
+@Immutable
 data class AddonResource(val name: String, val types: List<String>?, val idPrefixes: List<String>?)
 
+@Immutable
 data class CatalogDef(
     val addon: Addon?,
     val type: String,
@@ -35,6 +40,7 @@ data class CatalogDef(
 )
 
 /** A title in a row or a result. */
+@Immutable
 data class MetaPreview(
     val id: String,
     val type: String,
@@ -48,6 +54,7 @@ data class MetaPreview(
     val genres: List<String>,
 )
 
+@Immutable
 data class Meta(
     val preview: MetaPreview,
     val runtime: String?,
@@ -56,6 +63,7 @@ data class Meta(
     val videos: List<Episode>,
 )
 
+@Immutable
 data class Episode(
     val id: String,
     val season: Int,
@@ -65,6 +73,7 @@ data class Episode(
     val overview: String?,
 )
 
+@Immutable
 data class Stream(
     val addonName: String,
     val url: String,
@@ -77,11 +86,15 @@ data class Stream(
     val sizeLabel: String?,
     val sizeBytes: Long,
     val arabic: Boolean,
+    /** Streams of the same release across episodes share this (for the next episode). */
+    val bingeGroup: String? = null,
 )
 
+@Immutable
 data class Subtitle(val url: String, val lang: String, val label: String)
 
 /** What the player needs to play one thing and remember where it stopped. */
+@Immutable
 data class PlayRequest(
     val meta: MetaPreview,
     val videoId: String,
@@ -91,6 +104,7 @@ data class PlayRequest(
 )
 
 /** A saved position for «أكمل المشاهدة». */
+@Immutable
 data class Progress(
     val meta: MetaPreview,
     val videoId: String,

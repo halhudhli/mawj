@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
 package com.mawj.tv.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,7 +89,7 @@ fun HomeScreen() {
             if (Store.progress.isNotEmpty()) {
                 item(key = "continue") {
                     RowTitle("أكمل المشاهدة")
-                    LazyRow(contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         itemsIndexed(Store.progress, key = { _, p -> p.meta.id }) { i, p ->
                             val k = "c|${p.meta.id}"
                             val label = if (p.season > 0) "${p.meta.name} · م${p.season} ح${p.episode}" else p.meta.name
@@ -116,7 +119,7 @@ private fun CatalogRow(def: CatalogDef, firstRow: Boolean) {
         Spacer(Modifier.height(218.dp))
         return
     }
-    LazyRow(contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         itemsIndexed(list, key = { _, m -> m.id }) { i, m ->
             val k = "$key|${m.id}"
             PosterCard(

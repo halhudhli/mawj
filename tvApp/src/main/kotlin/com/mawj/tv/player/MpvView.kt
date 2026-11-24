@@ -86,6 +86,31 @@ class MpvView(context: Context) : BaseMPVView(context, null) {
     fun setSubScale(scale: Double) = runCatching { mpv.setPropertyString("sub-scale", scale.toString()) }
     fun setSpeed(value: Double) = runCatching { mpv.setPropertyString("speed", value.toString()) }
 
+    fun prop(name: String): String? = runCatching { mpv.getPropertyString(name) }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    /** «الترميز»: auto (UTF-8 kept, older files read as Arabic), UTF-8 only, or Arabic forced. */
+    fun setCodepage(mode: String) = runCatching {
+        mpv.setPropertyString("sub-codepage", when (mode) { "utf8" -> "utf-8"; "arabic" -> "+cp1256"; else -> "cp1256" })
+        mpv.command("sub-reload")
+    }
+
+    /** What «معلومات الملف» shows. */
+    fun info(): List<Pair<String, String>> {
+        val w = prop("video-params/w"); val h = prop("video-params/h")
+        val gamma = prop("video-params/gamma").orEmpty()
+        val hdr = when { gamma.contains("pq") -> " · HDR10"; gamma.contains("hlg") -> " · HLG"; else -> "" }
+        val fps = runCatching { mpv.getPropertyDouble("container-fps") }.getOrNull()
+        val hw = prop("hwdec-current")
+        val ch = runCatching { mpv.getPropertyInt("audio-params/channel-count") }.getOrNull()
+        return listOfNotNull(
+            if (w != null && h != null) "الدقة" to "${w}×${h}$hdr" else null,
+            prop("video-codec")?.let { "الفيديو" to (it.substringBefore(" (") + (fps?.let { f -> " · " + String.format(java.util.Locale.US, "%.3f", f) } ?: "")) },
+            prop("audio-codec-name")?.let { "الصوت" to (it.uppercase() + (ch?.let { c -> " · " + if (c >= 6) "${c - 1}.1" else "$c.0" } ?: "")) },
+            "فك الترميز" to (if (hw.isNullOrBlank() || hw == "no") "المعالج" else "العتاد (أسرع)"),
+            prop("file-format")?.let { "الحاوية" to it.uppercase() },
+        )
+    }
+
     fun select(track: Track?, type: String) = runCatching {
         mpv.setPropertyString(if (type == "audio") "aid" else "sid", track?.id?.toString() ?: "no")
     }
