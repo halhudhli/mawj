@@ -158,6 +158,15 @@ object Addons {
             .sortedWith(compareByDescending<Stream> { it.quality }.thenByDescending { it.dolbyVision || it.hdr }.thenByDescending { it.sizeBytes })
     }
 
+    /** The addons that answer streams for this video (the sources page loads each one by itself). */
+    suspend fun streamAddons(type: String, videoId: String): List<Addon> = installed().filter { it.serves("stream", type, videoId) }
+
+    /** One addon's streams; null when it failed or took too long. */
+    suspend fun streamsFrom(a: Addon, type: String, videoId: String): List<Stream>? = withTimeoutOrNull(25_000) {
+        val o = getJson("${a.base}/stream/$type/${enc(videoId)}.json", ttlMs = 3 * 60_000L) ?: return@withTimeoutOrNull null
+        (o["streams"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let { s -> stream(a.name, s) } }
+    }
+
     suspend fun subtitles(type: String, videoId: String): List<Subtitle> = coroutineScope {
         installed().filter { it.serves("subtitles", type, videoId) }.map { a ->
             async {
@@ -205,6 +214,35 @@ object Addons {
             else -> 0
         }
         val bytes = hints?.str("videoSize")?.toLongOrNull() ?: parseSize(text)
+        val raw = "$name\n$title"
+        val audioKind = when {
+            "truehd" in text -> "TrueHD"
+            Regex("dts[-. ]?(hd|x|ma)").containsMatchIn(text) -> "DTS-HD"
+            "dts" in text -> "DTS"
+            Regex("ddp|dd\\+|e-?ac-?3|eac3").containsMatchIn(text) -> "DD+"
+            Regex("\\bdd\\b|ac-?3|dolby digital").containsMatchIn(text) -> "DD"
+            "aac" in text -> "AAC"
+            "opus" in text -> "Opus"
+            else -> null
+        }
+        val channels = Regex("\\b([1-9])[. ]([01])\\b").find(text)?.value?.replace(' ', '.')
+        val audio = listOfNotNull(listOfNotNull(audioKind, channels).joinToString(" ").ifBlank { null }, if ("atmos" in text) "Atmos" else null)
+            .joinToString(" · ").ifBlank { null }
+        val dv = "dolby vision" in text || Regex("\\bdv\\b|dovi").containsMatchIn(text)
+        val hdrLabel = when {
+            dv && "hdr" in text -> "DV · HDR"
+            dv -> "DV"
+            "hdr10+" in text || "hdr10plus" in text -> "HDR10+"
+            "hdr10" in text -> "HDR10"
+            "hdr" in text -> "HDR"
+            else -> null
+        }
+        val cached = when {
+            "⚡" in raw || Regex("\\[(rd|tb|ad|pm|dl|ed|oc|pp)\\+\\]").containsMatchIn(text) || "instant" in text || "cached" in text -> true
+            else -> false
+        }
+        val seeders = Regex("(?:👤|seeders?:?|seeds?:?)\\s*(\\d+)").find(raw.lowercase())?.groupValues?.get(1)?.toIntOrNull()
+        val file = hints?.str("filename") ?: raw.lines().map { it.trim().replace(Regex("^[^A-Za-z0-9\\[(]+"), "") }.firstOrNull { Regex("\\.(mkv|mp4|avi|m4v|ts)$", RegexOption.IGNORE_CASE).containsMatchIn(it) }
         return Stream(
             addonName = addonName,
             url = url,
@@ -218,6 +256,28 @@ object Addons {
             sizeBytes = bytes,
             arabic = "arabic" in text || "عرب" in text || Regex("\\bara?\\b").containsMatchIn(text),
             bingeGroup = hints?.str("bingeGroup"),
+            source = when {
+                "remux" in text -> "REMUX"
+                Regex("blu-?ray|bdrip|brrip|\\bbd\\b").containsMatchIn(text) -> "BluRay"
+                Regex("web-?dl").containsMatchIn(text) -> "WEB-DL"
+                "webrip" in text || "web-rip" in text -> "WEBRip"
+                "hdtv" in text -> "HDTV"
+                Regex("hdcam|camrip|telesync|\\bcam\\b|\\bhdts\\b").containsMatchIn(text) -> "CAM"
+                Regex("\\bweb\\b").containsMatchIn(text) -> "WEB"
+                else -> null
+            },
+            codec = when {
+                Regex("hevc|x265|h\\.?265").containsMatchIn(text) -> "HEVC"
+                "av1" in text -> "AV1"
+                Regex("x264|h\\.?264|\\bavc\\b").containsMatchIn(text) -> "H.264"
+                else -> null
+            },
+            tenBit = Regex("10[- ]?bit").containsMatchIn(text),
+            hdrLabel = hdrLabel,
+            audio = audio,
+            cached = cached,
+            seeders = seeders,
+            file = file,
         )
     }
 
@@ -228,8 +288,8 @@ object Addons {
     }
 
     private fun formatSize(bytes: Long): String =
-        if (bytes >= 1_073_741_824L) String.format(java.util.Locale.US, "%.1f ج.ب", bytes / 1_073_741_824.0)
-        else "${bytes / 1_048_576L} م.ب"
+        if (bytes >= 1_073_741_824L) String.format(java.util.Locale.US, "%.1f GB", bytes / 1_073_741_824.0)
+        else "${bytes / 1_048_576L} MB"
 
     fun languageName(code: String): String = when (code.lowercase().take(3)) {
         "ara", "ar" -> "العربية"

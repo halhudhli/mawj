@@ -6,7 +6,7 @@ import `is`.xyz.mpv.MPV
 import `is`.xyz.mpv.Utils
 
 /** A track the viewer can pick (audio or subtitles). */
-data class Track(val id: Int, val type: String, val label: String, val lang: String, val selected: Boolean)
+data class Track(val id: Int, val type: String, val label: String, val lang: String, val selected: Boolean, val title: String = "", val external: Boolean = false)
 
 /**
  * The video surface: libmpv with hardware decoding and settings tuned for TVs (fast start, a
@@ -94,6 +94,45 @@ class MpvView(context: Context) : BaseMPVView(context, null) {
         mpv.command("sub-reload")
     }
 
+    /**
+     * «توضيح الحوار» lifts the speech band; «صوت ليلي» tames the loud parts; «تحسين الصوت» evens
+     * the level. Audio filters only (cheap next to the video), the same ones as the tablet.
+     */
+    fun setAudioFx(dialogue: Boolean, night: Boolean, level: Boolean) = runCatching {
+        val f = buildList {
+            if (dialogue) add("lavfi=[equalizer=f=1800:t=q:w=1.2:g=6]")
+            if (night) add("lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=200:makeup=2]")
+            if (level) add("lavfi=[dynaudnorm=f=500:g=31:p=0.9:m=8]")
+        }
+        mpv.setPropertyString("af", f.joinToString(","))
+    }
+
+    /** «ألوان الصورة»: mpv's own brightness/contrast/saturation/gamma (−100..100), no extra filter. */
+    fun setColors(brightness: Int, contrast: Int, saturation: Int, gamma: Int) = runCatching {
+        mpv.setPropertyString("brightness", brightness.toString())
+        mpv.setPropertyString("contrast", contrast.toString())
+        mpv.setPropertyString("saturation", saturation.toString())
+        mpv.setPropertyString("gamma", gamma.toString())
+    }
+
+    /** «تكرار مقطع»: both ends set → mpv repeats between them; null clears. */
+    fun setAbLoop(aMs: Long?, bMs: Long?) = runCatching {
+        mpv.setPropertyString("ab-loop-a", aMs?.let { (it / 1000.0).toString() } ?: "no")
+        mpv.setPropertyString("ab-loop-b", bMs?.let { (it / 1000.0).toString() } ?: "no")
+    }
+
+    /** The subtitle look from the subtitles panel. */
+    fun setSubStyle(bold: Boolean, color: String, edge: String, marginY: Int) = runCatching {
+        mpv.setPropertyString("sub-bold", if (bold) "yes" else "no")
+        mpv.setPropertyString("sub-color", color)
+        when (edge) {
+            "shadow" -> { mpv.setPropertyString("sub-border-size", "0"); mpv.setPropertyString("sub-shadow-offset", "2.5") }
+            "none" -> { mpv.setPropertyString("sub-border-size", "0"); mpv.setPropertyString("sub-shadow-offset", "0") }
+            else -> { mpv.setPropertyString("sub-border-size", "2.5"); mpv.setPropertyString("sub-shadow-offset", "1") }
+        }
+        mpv.setPropertyString("sub-margin-y", marginY.toString())
+    }
+
     /** What «معلومات الملف» shows. */
     fun info(): List<Pair<String, String>> {
         val w = prop("video-params/w"); val h = prop("video-params/h")
@@ -135,7 +174,7 @@ class MpvView(context: Context) : BaseMPVView(context, null) {
                 }
                 if (external) append(" · خارجية")
             }
-            Track(id, if (type == "sub") "sub" else "audio", label, lang, mpv.getPropertyBoolean("track-list/$i/selected") == true)
+            Track(id, if (type == "sub") "sub" else "audio", label, lang, mpv.getPropertyBoolean("track-list/$i/selected") == true, title, external)
         }
     }
 

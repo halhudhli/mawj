@@ -2,7 +2,9 @@ package com.mawj.tv.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.setValue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -27,8 +29,63 @@ object Store {
     /** «أكمل المشاهدة», newest first. */
     val progress = mutableStateListOf<Progress>()
 
+    // ---- Mawj feature switches (Settings → ميزات موج) ----
+
+    /** Icons move once when the focus lands on them. */
+    var animatedIcons by androidx.compose.runtime.mutableStateOf(true)
+        private set
+
+    /** A title with several posters changes them slowly in the focused row, Arabic first. */
+    var posterRotate by androidx.compose.runtime.mutableStateOf(true)
+        private set
+
+    /** The sources page marks one source as «الأنسب» and puts it first. */
+    var bestSource by androidx.compose.runtime.mutableStateOf(true)
+        private set
+
+    fun setFeature(key: String, value: Boolean) {
+        when (key) {
+            "animatedIcons" -> animatedIcons = value
+            "posterRotate" -> posterRotate = value
+            "bestSource" -> bestSource = value
+        }
+        prefs.edit().putBoolean("f:$key", value).apply()
+    }
+
+    // ---- bookmarks inside an episode (player → العلامات) ----
+
+    fun bookmarks(videoId: String): List<Long> =
+        prefs.getString("bm:$videoId", null)?.split(',')?.mapNotNull { it.toLongOrNull() }?.sorted().orEmpty()
+
+    fun addBookmark(videoId: String, ms: Long) {
+        val list = (bookmarks(videoId) + ms).distinctBy { it / 2000 }.sorted().takeLast(30)
+        prefs.edit().putString("bm:$videoId", list.joinToString(",")).apply()
+    }
+
+    fun removeBookmark(videoId: String, ms: Long) {
+        prefs.edit().putString("bm:$videoId", bookmarks(videoId).filter { it != ms }.joinToString(",")).apply()
+    }
+
+    // ---- small player settings kept between videos (sound tools, subtitle look) ----
+
+    fun flag(key: String, default: Boolean = false): Boolean = prefs.getBoolean("p:$key", default)
+    fun setFlag(key: String, value: Boolean) = prefs.edit().putBoolean("p:$key", value).apply()
+    fun text(key: String, default: String): String = prefs.getString("p:$key", default) ?: default
+    fun setText(key: String, value: String) = prefs.edit().putString("p:$key", value).apply()
+    fun number(key: String, default: Int): Int = prefs.getInt("p:$key", default)
+    fun setNumber(key: String, value: Int) = prefs.edit().putInt("p:$key", value).apply()
+
+    // ---- player look (picture colours preset, kept for every video) ----
+
+    var colorPreset: String
+        get() = prefs.getString("colorPreset", "natural0") ?: "natural0"
+        set(v) { prefs.edit().putString("colorPreset", v).apply() }
+
     fun init(context: Context) {
         prefs = context.getSharedPreferences("mawj_tv", Context.MODE_PRIVATE)
+        animatedIcons = prefs.getBoolean("f:animatedIcons", true)
+        posterRotate = prefs.getBoolean("f:posterRotate", true)
+        bestSource = prefs.getBoolean("f:bestSource", true)
         val saved = prefs.getString("addons", null)
         addonUrls.addAll(saved?.lines()?.map(String::trim)?.filter(String::isNotEmpty) ?: DEFAULT_ADDONS)
         progress.addAll(loadProgress())

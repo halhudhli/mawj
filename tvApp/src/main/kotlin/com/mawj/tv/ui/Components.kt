@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,11 +73,17 @@ fun T(
     maxLines: Int = Int.MAX_VALUE,
     align: TextAlign = TextAlign.Start,
     lineHeight: TextUnit = TextUnit.Unspecified,
+    /** Numbers and Latin labels (years, sizes, times): Barlow, as on the tablet. */
+    num: Boolean = false,
+    serif: Boolean = false,
 ) {
     BasicText(
         text = text,
         modifier = modifier,
-        style = TextStyle(color = color, fontSize = size, fontWeight = weight, textAlign = align, lineHeight = lineHeight),
+        style = TextStyle(
+            color = color, fontSize = size, fontWeight = weight, textAlign = align, lineHeight = lineHeight,
+            fontFamily = when { num -> Fonts.num; serif -> Fonts.serif; else -> Fonts.ui },
+        ),
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
     )
@@ -121,25 +129,77 @@ fun Img(url: String?, w: Dp, h: Dp, modifier: Modifier = Modifier, scale: Conten
     )
 }
 
+/**
+ * A poster as on the tablet: 2:3, rounded, the rating at the top corner, the title and year under it.
+ * With [rotate] (the focused row) a title with several posters changes them slowly, Arabic first.
+ */
 @Composable
 fun PosterCard(
     meta: MetaPreview,
     onFocused: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    w: Dp = 132.dp,
-    h: Dp = 198.dp,
+    w: Dp = 150.dp,
+    h: Dp = 223.dp,
+    rotate: Boolean = false,
+    index: Int = 0,
+    showTitle: Boolean = true,
 ) {
-    Box(
-        modifier
-            .size(w, h)
-            .tvFocus(onFocused = onFocused, onClick = onClick)
-            .background(C.Card),
-    ) {
-        Img(meta.poster, w, h, Modifier.fillMaxSize())
-        if (meta.poster.isNullOrBlank()) {
-            T(meta.name, 15.sp, weight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center).padding(10.dp), align = TextAlign.Center)
+    var focused by remember { mutableStateOf(false) }
+    Column(modifier.width(w)) {
+        Box(
+            Modifier
+                .size(w, h)
+                .onFocusChanged { focused = it.isFocused }
+                .tvFocus(shape = RoundedCornerShape(10.dp), onFocused = onFocused, onClick = onClick)
+                .background(C.Card),
+        ) {
+            PosterArt(meta, w, h, rotate && com.mawj.tv.data.Store.posterRotate, index)
+            if (meta.poster.isNullOrBlank()) {
+                T(meta.name, 15.sp, weight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center).padding(10.dp), align = TextAlign.Center)
+            }
+            val rating = meta.rating?.toDoubleOrNull()?.takeIf { it > 0 }
+            if (rating != null) {
+                Row(
+                    Modifier.align(Alignment.TopEnd).padding(6.dp).background(Color(0xB80A0C10), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    T("★", 10.sp, color = Color(0xFFF5C542))
+                    Spacer(Modifier.width(3.dp))
+                    T(String.format(java.util.Locale.US, "%.1f", rating), 11.sp, weight = FontWeight.Bold, num = true)
+                }
+            }
         }
+        if (showTitle) {
+            T(meta.name, 13.sp, color = if (focused) C.GoldLight else C.Ink, maxLines = 1, modifier = Modifier.padding(top = if (focused) 12.dp else 8.dp))
+            meta.year?.takeIf { it.isNotBlank() }?.let { T(it.take(4), 11.sp, color = C.Dim, num = true, modifier = Modifier.padding(top = 2.dp)) }
+        }
+    }
+}
+
+/** The poster picture; in the focused row it cross-fades slowly through the title's posters (Arabic first). */
+@Composable
+private fun PosterArt(meta: MetaPreview, w: Dp, h: Dp, rotate: Boolean, index: Int) {
+    var urls by remember(meta.id) { mutableStateOf(listOfNotNull(meta.poster)) }
+    var at by remember(meta.id) { mutableStateOf(0) }
+    LaunchedEffect(meta.id, rotate) {
+        if (!rotate) return@LaunchedEffect
+        if (urls.size <= 1) {
+            val more = com.mawj.tv.data.Tmdb.posters(meta)
+            if (more.isNotEmpty()) {
+                urls = (more.arabic + listOfNotNull(meta.poster) + more.others).distinct().take(4)
+                at = 0
+            }
+        }
+        // Slow, and staggered along the row so the cards never change together.
+        kotlinx.coroutines.delay(1_800L * (index % 5))
+        while (urls.size > 1) {
+            kotlinx.coroutines.delay(9_000L)
+            at = (at + 1) % urls.size
+        }
+    }
+    androidx.compose.animation.Crossfade(urls.getOrNull(at) ?: meta.poster, animationSpec = tween(1600), label = "poster") { url ->
+        Img(url, w, h, Modifier.fillMaxSize())
     }
 }
 
@@ -153,14 +213,25 @@ fun WideCard(
     modifier: Modifier = Modifier,
     w: Dp = 260.dp,
     h: Dp = 146.dp,
+    /** «متبقٍ 22 د» at the top corner. */
+    badge: String? = null,
+    /** Season and episode above the title. */
+    kicker: String? = null,
 ) {
-    Box(modifier.size(w, h).tvFocus(onFocused = onFocused, onClick = onClick).background(C.Card)) {
+    Box(modifier.size(w, h).tvFocus(shape = RoundedCornerShape(11.dp), onFocused = onFocused, onClick = onClick).background(C.Card)) {
         Img(image, w, h, Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color(0xE6070D14))))
-        T(title, 15.sp, weight = FontWeight.Bold, maxLines = 1, modifier = Modifier.align(Alignment.BottomStart).padding(start = 12.dp, end = 12.dp, bottom = 14.dp))
+        if (badge != null) {
+            T(badge, 11.sp, modifier = Modifier.align(Alignment.TopEnd).padding(7.dp).background(Color(0xBF0A0C10), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
+        }
+        Column(Modifier.align(Alignment.BottomStart).padding(start = 11.dp, end = 11.dp, bottom = 13.dp)) {
+            if (kicker != null) T(kicker, 10.sp, weight = FontWeight.Bold, num = true)
+            T(title, 15.sp, weight = FontWeight.Bold, maxLines = 1)
+        }
         if (fraction > 0f) {
-            Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color(0x33FFFFFF)))
-            Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(fraction).height(4.dp).background(C.Gold))
+            Box(Modifier.align(Alignment.BottomCenter).padding(horizontal = 11.dp, vertical = 5.dp).fillMaxWidth().height(3.dp).background(Color(0x2EFFFFFF), RoundedCornerShape(2.dp))) {
+                Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().background(C.Gold, RoundedCornerShape(2.dp)))
+            }
         }
     }
 }

@@ -76,6 +76,33 @@ object Tmdb {
     }
 
     /** Cast (with photos) and production companies (with logos) of a title. */
+    /** A title's posters for the slow change on the home: Arabic ones first, then English or text-free ones. */
+    data class PosterSet(val arabic: List<String>, val others: List<String>) {
+        fun isNotEmpty() = arabic.isNotEmpty() || others.isNotEmpty()
+    }
+
+    private val posterSets = ConcurrentHashMap<String, PosterSet>()
+
+    suspend fun posters(meta: MetaPreview): PosterSet {
+        posterSets[meta.id]?.let { return it }
+        val empty = PosterSet(emptyList(), emptyList())
+        if (!enabled) return empty
+        val id = when {
+            meta.id.startsWith("tt") -> idFor(meta.id.substringBefore(':'), meta.type)
+            meta.id.startsWith("tmdb:") -> meta.id.removePrefix("tmdb:").substringBefore(':').toIntOrNull()
+            else -> null
+        } ?: return empty.also { posterSets[meta.id] = it }
+        val kind = if (meta.type == "series") "tv" else "movie"
+        val o = get("/$kind/$id/images", "include_image_language=ar,en,null") ?: return empty
+        val list = (o["posters"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
+        fun pick(filter: (String?) -> Boolean) = list
+            .filter { filter((it["iso_639_1"] as? JsonPrimitive)?.contentOrNull) }
+            .sortedByDescending { (it["vote_average"] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull() ?: 0.0 }
+            .mapNotNull { img((it["file_path"] as? JsonPrimitive)?.contentOrNull, "w342") }
+            .take(2)
+        return PosterSet(pick { it == "ar" }, pick { it == "en" || it == null }).also { posterSets[meta.id] = it }
+    }
+
     suspend fun credits(imdbId: String, type: String): Pair<List<CastMember>, List<Company>> {
         val id = idFor(imdbId, type) ?: return emptyList<CastMember>() to emptyList()
         val kind = if (type == "series") "tv" else "movie"

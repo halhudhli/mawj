@@ -41,8 +41,14 @@ import com.mawj.tv.ui.SourcesScreen
 import okio.Path.Companion.toOkioPath
 
 class MawjTv : Application(), SingletonImageLoader.Factory {
+    companion object {
+        lateinit var app: MawjTv
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+        app = this
         Store.init(this)
         com.mawj.tv.data.Account.init(this)
         com.mawj.tv.link.PhoneLink.start()
@@ -121,7 +127,7 @@ private fun MawjApp(onExit: () -> Unit) {
     val holder = rememberSaveableStateHolder()
     BackHandler { if (!Nav.back()) onExit() }
     Box(Modifier.fillMaxSize()) {
-        if (route !is Route.Player) AppBackdrop()
+        if (route !is Route.Player) AppBackdrop(soft = route is Route.Sources)
         val topLevel = route is Route.Home || route is Route.Search || route is Route.Library || route is Route.Settings
         Row(Modifier.fillMaxSize()) {
             if (topLevel) Rail(route)

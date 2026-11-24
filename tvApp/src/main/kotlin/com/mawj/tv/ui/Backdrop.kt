@@ -52,7 +52,7 @@ object Backdrop {
 }
 
 @Composable
-fun AppBackdrop() {
+fun AppBackdrop(soft: Boolean = false) {
     var shown by remember { mutableStateOf<String?>(null) }
     val target = Backdrop.target
     LaunchedEffect(target) {
@@ -64,51 +64,60 @@ fun AppBackdrop() {
             if (url != null) Img(url, 640.dp, 360.dp, Modifier.fillMaxSize(), ContentScale.Crop)
         }
         // Dark towards the side where the text sits (the right, in Arabic) and towards the bottom.
-        Box(
+        // The sources page keeps the artwork clear (its own scrim darkens only under the list).
+        if (!soft) Box(
             Modifier.fillMaxSize().background(
                 Brush.horizontalGradient(0f to Color(0x2E070D14), 0.55f to Color(0x9E070D14), 1f to Color(0xF0070D14)),
             ),
         )
         Box(
             Modifier.fillMaxSize().background(
-                Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color(0xF5070D14)),
+                Brush.verticalGradient(0.35f to Color.Transparent, 1f to if (soft) Color(0x99070D14) else Color(0xF5070D14)),
             ),
         )
     }
 }
 
-/** The side rail: search, home, library, settings. */
+/** The side rail, as on the tablet: icons only, the open page on a dark-gold tile with a gold mark at the edge. */
 @Composable
 fun Rail(current: Route) {
     Column(
-        Modifier.width(88.dp).fillMaxHeight().background(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color(0xD9070D14))).padding(top = 30.dp),
+        Modifier.width(92.dp).fillMaxHeight().background(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color(0xD9070D14))).padding(top = 26.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        T("موج", 26.sp, color = C.Gold, weight = FontWeight.Bold)
-        Spacer(Modifier.height(26.dp))
-        RailItem(Icon.Search, current == Route.Search) { Nav.tab(Route.Search) }
-        Spacer(Modifier.height(12.dp))
-        RailItem(Icon.Home, current == Route.Home) { Nav.tab(Route.Home) }
-        Spacer(Modifier.height(12.dp))
-        RailItem(Icon.Library, current == Route.Library) { Nav.tab(Route.Library) }
-        Spacer(Modifier.height(12.dp))
-        RailItem(Icon.Settings, current == Route.Settings) { Nav.tab(Route.Settings) }
+        val initial = com.mawj.tv.data.Account.email?.firstOrNull()?.uppercase() ?: "م"
+        Box(
+            Modifier.size(34.dp).background(Brush.radialGradient(listOf(Color(0xFF7A6AA8), Color(0xFF2B2340))), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) { T(initial, 15.sp, weight = FontWeight.Bold) }
+        Spacer(Modifier.height(30.dp))
+        RailItem("home-write", current == Route.Home) { Nav.tab(Route.Home) }
+        Spacer(Modifier.height(10.dp))
+        RailItem("search-scan", current == Route.Search) { Nav.tab(Route.Search) }
+        Spacer(Modifier.height(10.dp))
+        RailItem("bookmarks-cycle", current == Route.Library) { Nav.tab(Route.Library) }
+        Spacer(Modifier.height(10.dp))
+        RailItem("sliders-move", current == Route.Settings) { Nav.tab(Route.Settings) }
     }
 }
 
 enum class Icon { Search, Home, Library, Settings, Play }
 
 @Composable
-private fun RailItem(icon: Icon, selected: Boolean, onClick: () -> Unit) {
+private fun RailItem(icon: String, selected: Boolean, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    Box(
-        Modifier.size(50.dp)
-            .onFocusChanged { focused = it.isFocused }
-            .tvFocus(shape = RoundedCornerShape(14.dp), scale = 1.08f, onClick = onClick)
-            .background(if (focused) C.Ink else Color.Transparent),
-        contentAlignment = Alignment.Center,
-    ) {
-        DrawIcon(icon, if (focused) C.Sea else if (selected) C.Gold else C.Muted, Modifier.size(24.dp))
+    Box(Modifier.width(92.dp).height(52.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(50.dp)
+                .onFocusChanged { focused = it.isFocused }
+                .tvFocus(shape = RoundedCornerShape(15.dp), scale = 1.06f, onClick = onClick)
+                .background(if (selected) Color(0xFF2A2216) else if (focused) Color(0x22F1DDA6) else Color.Transparent),
+            contentAlignment = Alignment.Center,
+        ) {
+            MIcon(icon, if (selected) C.Gold else if (focused) C.GoldLight else Color(0xFFC9D0D7), focused, Modifier.size(26.dp))
+        }
+        // The mark at the screen edge (the right, in Arabic) beside the open page.
+        if (selected) Box(Modifier.align(Alignment.CenterStart).width(3.dp).height(24.dp).background(C.Gold, RoundedCornerShape(2.dp)))
     }
 }
 

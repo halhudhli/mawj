@@ -47,6 +47,8 @@ private object HomeState {
     val items = mutableStateMapOf<String, List<MetaPreview>>()
     var focused by mutableStateOf<MetaPreview?>(null)
     var lastKey by mutableStateOf<String?>(null)
+    /** The row holding the focus: only its posters change (light on a weak TV). */
+    var focusedRow by mutableStateOf<String?>(null)
 }
 
 private fun CatalogDef.key() = "${addon?.manifestUrl}|$type|$id"
@@ -76,7 +78,7 @@ fun HomeScreen() {
     val rows = HomeState.rows
     val focus = HomeState.focused
     Column(Modifier.fillMaxSize()) {
-        Hero(focus, Modifier.fillMaxWidth().height(250.dp).padding(start = 24.dp, end = 32.dp, top = 40.dp))
+        Hero(focus, Modifier.fillMaxWidth().height(205.dp).padding(start = 24.dp, end = 32.dp, top = 34.dp))
         if (rows == null) {
             Loading()
             return@Column
@@ -88,14 +90,16 @@ fun HomeScreen() {
         ) {
             if (Store.progress.isNotEmpty()) {
                 item(key = "continue") {
-                    RowTitle("أكمل المشاهدة")
+                    RowTitle("متابعة المشاهدة")
                     LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         itemsIndexed(Store.progress, key = { _, p -> p.meta.id }) { i, p ->
                             val k = "c|${p.meta.id}"
-                            val label = if (p.season > 0) "${p.meta.name} · م${p.season} ح${p.episode}" else p.meta.name
+                            val left = ((p.durationMs - p.positionMs) / 60_000L).coerceAtLeast(0)
                             WideCard(
-                                label, p.meta.background ?: p.meta.poster, p.fraction,
-                                onFocused = { HomeState.focused = p.meta; HomeState.lastKey = k; Backdrop.show(p.meta.background) },
+                                p.meta.name, p.meta.background ?: p.meta.poster, p.fraction,
+                                badge = if (p.durationMs > 0) "متبقٍ $left د" else null,
+                                kicker = if (p.season > 0) "S${p.season} E${p.episode}" else null,
+                                onFocused = { HomeState.focused = p.meta; HomeState.lastKey = k; HomeState.focusedRow = "continue"; Backdrop.show(p.meta.background) },
                                 onClick = { Nav.go(Route.Detail(p.meta)) },
                                 modifier = restoreFocus(k, first = i == 0),
                             )
@@ -116,15 +120,17 @@ private fun CatalogRow(def: CatalogDef, firstRow: Boolean) {
     if (list != null && list.isEmpty()) return
     RowTitle(catalogTitle(def))
     if (list == null) {
-        Spacer(Modifier.height(218.dp))
+        Spacer(Modifier.height(285.dp))
         return
     }
-    LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(15.dp)) {
         itemsIndexed(list, key = { _, m -> m.id }) { i, m ->
             val k = "$key|${m.id}"
             PosterCard(
                 m,
-                onFocused = { HomeState.focused = m; HomeState.lastKey = k; Backdrop.show(m.background ?: m.poster) },
+                rotate = HomeState.focusedRow == key,
+                index = i,
+                onFocused = { HomeState.focused = m; HomeState.lastKey = k; HomeState.focusedRow = key; Backdrop.show(m.background ?: m.poster) },
                 onClick = { Nav.go(Route.Detail(m)) },
                 modifier = restoreFocus(k, first = firstRow && i == 0),
             )
@@ -144,7 +150,7 @@ fun restoreFocus(key: String, first: Boolean): Modifier {
 
 @Composable
 fun RowTitle(text: String) {
-    T(text, 19.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(start = 30.dp, top = 8.dp))
+    T(text, 20.sp, weight = FontWeight.Bold, modifier = Modifier.padding(start = 30.dp, top = 8.dp))
 }
 
 @Composable

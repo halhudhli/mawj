@@ -88,7 +88,26 @@ data class Stream(
     val arabic: Boolean,
     /** Streams of the same release across episodes share this (for the next episode). */
     val bingeGroup: String? = null,
-)
+    /** Read from the name/title/filename: REMUX, BluRay, WEB-DL, WEBRip, HDTV, CAM. */
+    val source: String? = null,
+    /** HEVC, H.264, AV1. */
+    val codec: String? = null,
+    val tenBit: Boolean = false,
+    /** «DV · HDR», «HDR10», «HDR10+», «HDR». */
+    val hdrLabel: String? = null,
+    /** «TrueHD 7.1 · Atmos», «DD+ 5.1», «AAC 2.0». */
+    val audio: String? = null,
+    /** Ready at once on a debrid service (⚡ / [RD+] / instant). */
+    val cached: Boolean = false,
+    val seeders: Int? = null,
+    /** The file name, shown only on the focused source. */
+    val file: String? = null,
+) {
+    /** «WEB-DL · HEVC · 10-bit», or the first line the addon sent. */
+    val releaseLine: String
+        get() = listOfNotNull(source, codec, if (tenBit) "10-bit" else null).joinToString(" · ")
+            .ifBlank { title.lineSequence().firstOrNull { it.isNotBlank() }?.trim().orEmpty().ifBlank { name } }
+}
 
 @Immutable
 data class Subtitle(val url: String, val lang: String, val label: String)

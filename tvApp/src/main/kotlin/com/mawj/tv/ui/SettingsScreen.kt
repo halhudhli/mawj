@@ -48,6 +48,7 @@ fun SettingsScreen() {
         Column(Modifier.weight(1f)) {
             T("الإعدادات", 34.sp, weight = FontWeight.Bold)
             AccountCard()
+            FeaturesCard()
             T("الإضافات المثبّتة، بترتيب ظهورها في الرئيسية", 15.sp, color = C.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 40.dp)) {
                 items(urls, key = { it }) { u ->
@@ -106,6 +107,28 @@ private fun Qr(text: String) {
         for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
             if (matrix[x, y]) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
         }
+    }
+}
+
+/** «ميزات موج»: every Mawj addition on the TV can be turned off. */
+@Composable
+private fun FeaturesCard() {
+    Column(Modifier.fillMaxWidth().padding(top = 10.dp).background(C.Raised, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 10.dp)) {
+        T("ميزات موج", 15.sp, color = C.Muted)
+        FeatureRow("الأيقونات المتحركة", "تتحرك الأيقونة مرة واحدة عند الوقوف عليها", com.mawj.tv.data.Store.animatedIcons) { com.mawj.tv.data.Store.setFeature("animatedIcons", it) }
+        FeatureRow("تبديل البوسترات", "في الصف المحدد، والبوستر العربي أولاً", com.mawj.tv.data.Store.posterRotate) { com.mawj.tv.data.Store.setFeature("posterRotate", it) }
+        FeatureRow("«الأنسب» في المصادر", "يُعلَّم أنسب مصدر ويُوضع أولاً", com.mawj.tv.data.Store.bestSource) { com.mawj.tv.data.Store.setFeature("bestSource", it) }
+    }
+}
+
+@Composable
+private fun FeatureRow(title: String, note: String, on: Boolean, set: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            T(title, 16.sp, weight = FontWeight.SemiBold, maxLines = 1)
+            T(note, 12.sp, color = C.Dim, maxLines = 1)
+        }
+        Chip(if (on) "مفعّل" else "معطّل", on, onClick = { set(!on) })
     }
 }
 
