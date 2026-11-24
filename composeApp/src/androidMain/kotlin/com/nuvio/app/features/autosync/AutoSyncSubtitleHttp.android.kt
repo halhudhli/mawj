@@ -154,7 +154,7 @@ internal object AutoSyncSubtitleHttp {
 
         // Addon files can use legacy encodings without declaring a charset. Detect from the
         // bytes before decoding so accented letters are not irreversibly replaced with U+FFFD.
-        val decoded = SubtitleCharsetDetector.decode(output.toByteArray(), languageHint = languageHint)
+        val decoded = com.nuvio.app.features.player.MawjSubtitleText.decode(output.toByteArray(), languageHint)
 
         return if (truncated) "$decoded$TRUNCATION_SUFFIX" else decoded
     }

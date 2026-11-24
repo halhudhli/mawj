@@ -52,6 +52,8 @@ internal object LuxoPlayerBridge {
     var onColorsClick by mutableStateOf<(() -> Unit)?>(null)
     var onTranslateSubtitlesClick by mutableStateOf<(() -> Unit)?>(null)
     var translateLabel by mutableStateOf("ترجمة الترجمة للعربي")
+    /** «ترميز الترجمة»: opens the encoding choice (set only while the switch is on). */
+    var onEncodingClick by mutableStateOf<(() -> Unit)?>(null)
     var onBookmarkClick by mutableStateOf<(() -> Unit)?>(null)
     var onBookmarksListClick by mutableStateOf<(() -> Unit)?>(null)
     var onDialogueClick by mutableStateOf<(() -> Unit)?>(null)
@@ -315,6 +317,45 @@ internal fun LuxoPlayerExtrasHost(
         sleepAtEpisodeEnd -> "نهاية الحلقة"
         sleepRemainingMs > 0L -> "${(sleepRemainingMs + 59_999L) / 60_000L} د"
         else -> null
+    }
+
+    // MAWJ «ترميز الترجمة»: Auto / UTF-8 / Arabic, the subtitle on screen is read again at once.
+    var encodingSheetOpen by remember { mutableStateOf(false) }
+    val encodingSwitch = features.subtitleEncodingFix
+    DisposableEffect(encodingSwitch) {
+        LuxoPlayerBridge.onEncodingClick = if (encodingSwitch) ({ encodingSheetOpen = true }) else null
+        onDispose { LuxoPlayerBridge.onEncodingClick = null }
+    }
+    if (encodingSheetOpen) {
+        val currentMode by MawjSubtitleEncoding.mode.collectAsState()
+        ModalBottomSheet(
+            onDismissRequest = { encodingSheetOpen = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text("ترميز الترجمة", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "«تلقائي» يُبقي ملف UTF-8 كما هو ويقرأ العربي المحفوظ بترميز ويندوز. عند ظهور رموز غريبة يُختار الترميز يدوياً، وتُعاد قراءة الترجمة فوراً.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    MawjSubtitleEncodingMode.entries.forEach { mode ->
+                        FilterChip(
+                            selected = currentMode == mode,
+                            onClick = {
+                                MawjSubtitleEncoding.set(mode)
+                                encodingSheetOpen = false
+                            },
+                            label = { Text(mode.label) },
+                        )
+                    }
+                }
+            }
+        }
     }
 
     if (sleepSheetOpen) {

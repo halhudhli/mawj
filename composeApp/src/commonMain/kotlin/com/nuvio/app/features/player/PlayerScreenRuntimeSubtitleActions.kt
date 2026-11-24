@@ -34,9 +34,10 @@ internal fun PlayerScreenRuntime.loadSubtitleAutoSyncCues(force: Boolean = false
     subtitleAutoSyncState = subtitleAutoSyncState.copy(isLoading = true, errorMessage = null)
     scope.launch {
         val result = runCatching {
-            val body = httpGetTextWithHeaders(
+            val body = mawjFetchSubtitleText(
                 url = subtitle.url,
                 headers = sanitizePlaybackHeaders(activeSourceHeaders),
+                languageHint = subtitle.language,
             )
             PlayerSubtitleCueParser.parse(body, subtitle.url)
         }

@@ -1,6 +1,5 @@
 package com.nuvio.app.features.downloads
 
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
 import com.nuvio.app.features.player.PlayerSubtitleCueParser
 import com.nuvio.app.features.player.loadAddonSubtitles
 import com.nuvio.app.features.streams.StreamSubtitle
@@ -41,7 +40,7 @@ internal object DownloadSubtitles {
                     async {
                         val body = try {
                             withTimeoutOrNull(15_000L) {
-                                httpGetTextWithHeaders(subtitle.url, subtitle.headers.orEmpty())
+                                com.nuvio.app.features.player.mawjFetchSubtitleText(subtitle.url, subtitle.headers.orEmpty(), subtitle.language)
                             }?.takeIf { it.isNotBlank() && PlayerSubtitleCueParser.parse(it, subtitle.url).isNotEmpty() }
                         } catch (error: Exception) {
                             if (error is CancellationException) throw error

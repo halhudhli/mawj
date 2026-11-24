@@ -16,7 +16,6 @@ import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
 import androidx.media3.ui.SubtitleView
 import com.nuvio.app.R
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
 import com.nuvio.app.features.autosync.AutoSyncSyncedSubtitle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,6 +93,7 @@ internal class SidecarSubtitleController(
         headers: Map<String, String> = emptyMap(),
         useLibass: Boolean = false,
         rawBodyLoader: (suspend () -> String)? = null,
+        languageHint: String? = null,
     ): Boolean {
         if (!canAttachAddonSubtitleViaSidecar(url, useLibass)) return false
 
@@ -117,7 +117,8 @@ internal class SidecarSubtitleController(
         sidecarSubtitleJob = scope.launch {
             try {
                 val rawBody = rawBodyLoader?.invoke() ?: withContext(Dispatchers.IO) {
-                    httpGetTextWithHeaders(url = url, headers = headers)
+                    // MAWJ: bytes → text by the one encoding rule (UTF-8 kept, Arabic Windows-1256 read right).
+                    mawjFetchSubtitleText(url = url, headers = headers, languageHint = languageHint)
                 }
                 if (!isCurrent()) return@launch
 

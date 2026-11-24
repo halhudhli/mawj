@@ -113,7 +113,7 @@ actual fun rememberLuxoSubtitleFilePicker(onPicked: (text: String, extension: St
                 }
                 out.toByteArray()
             } ?: return@runCatching
-            val text = com.nuvio.app.features.autosync.SubtitleCharsetDetector.decode(bytes)
+            val text = com.nuvio.app.features.player.MawjSubtitleText.decode(bytes, null)
             val head = text.trimStart().take(200)
             val extension = when {
                 name.endsWith(".vtt", ignoreCase = true) || head.startsWith("WEBVTT", ignoreCase = true) -> "vtt"

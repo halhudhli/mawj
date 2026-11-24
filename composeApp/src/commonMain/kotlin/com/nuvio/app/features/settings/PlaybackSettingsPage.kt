@@ -645,7 +645,7 @@ private fun PlaybackSettingsSection(
                     SettingsGroupDivider(isTablet = isTablet)
                     AutoSyncPlaybackSettingsRows( // AutoSync hook
                         isTablet = isTablet,
-                        enabled = otherSubtitleOptionsEnabled && androidPlaybackEngine != AndroidPlaybackEngine.Libmpv,
+                        enabled = otherSubtitleOptionsEnabled && !mawjResolvesToMpv(androidPlaybackEngine),
                         preferredSubtitleLanguage = preferredSubtitleLanguage,
                     )
                 }
@@ -824,7 +824,7 @@ private fun PlaybackSettingsSection(
                         },
                     )
                 }
-                val showLibassSettings = !isIos && androidPlaybackEngine != AndroidPlaybackEngine.Libmpv
+                val showLibassSettings = !isIos && !mawjResolvesToMpv(androidPlaybackEngine)
                 if (showLibassSettings) {
                     SettingsGroupDivider(isTablet = isTablet)
                     SettingsSwitchRow(
@@ -1089,8 +1089,11 @@ private fun PlaybackSettingsSection(
 
         if (!isIos) {
             val decoderEnabled = !autoPlayPlayerSettings.externalPlayerEnabled
-            val exoOptionsEnabled = decoderEnabled && androidPlaybackEngine != AndroidPlaybackEngine.Libmpv
-            val libmpvOptionsVisible = androidPlaybackEngine != AndroidPlaybackEngine.ExoPlayer
+            // MAWJ: «تلقائي» runs ExoPlayer unless a picture enhancement needs mpv, so only the
+            // engine that actually plays shows its options (the others had no effect).
+            val mpvActive = mawjResolvesToMpv(androidPlaybackEngine)
+            val exoOptionsEnabled = decoderEnabled && !mpvActive
+            val libmpvOptionsVisible = mpvActive
             val libmpvOptionsEnabled = decoderEnabled && libmpvOptionsVisible
             SettingsSection(
                 title = stringResource(Res.string.settings_playback_section_decoder),
@@ -1099,7 +1102,11 @@ private fun PlaybackSettingsSection(
                 SettingsGroup(isTablet = isTablet) {
                     SettingsNavigationRow(
                         title = stringResource(Res.string.settings_playback_engine),
-                        description = androidPlaybackEngine.label,
+                        description = if (androidPlaybackEngine == AndroidPlaybackEngine.Auto) {
+                            androidPlaybackEngine.label + if (mpvActive) " · mpv (لتحسين الصورة)" else " · ExoPlayer"
+                        } else {
+                            androidPlaybackEngine.label
+                        },
                         enabled = decoderEnabled,
                         isTablet = isTablet,
                         onClick = { showPlaybackEngineDialog = true },
@@ -3222,4 +3229,14 @@ private fun SkipSecondsDialog(
             )
         }
     }
+}
+
+/** The engine that will really play: «تلقائي» means ExoPlayer unless «تحسين الصورة» needs mpv. */
+private fun mawjResolvesToMpv(engine: AndroidPlaybackEngine): Boolean = when (engine) {
+    AndroidPlaybackEngine.Libmpv -> true
+    AndroidPlaybackEngine.ExoPlayer -> false
+    else -> runCatching {
+        com.nuvio.app.features.player.LuxoAvRepository.ensureLoaded()
+        com.nuvio.app.features.player.LuxoAvRepository.wantsLibmpv()
+    }.getOrDefault(false)
 }

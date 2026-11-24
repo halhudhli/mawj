@@ -25,6 +25,15 @@ object SubtitleRepository {
     private val _loadingProgress = MutableStateFlow<SubtitleLoadingProgress?>(null)
     internal val loadingProgress: StateFlow<SubtitleLoadingProgress?> = _loadingProgress.asStateFlow()
 
+    /** Subtitles in other languages (not shown in the list): the sources for «ترجمة الترجمة للعربي». */
+    private val _foreignSubtitles = MutableStateFlow<List<AddonSubtitle>>(emptyList())
+    internal val foreignSubtitles: StateFlow<List<AddonSubtitle>> = _foreignSubtitles.asStateFlow()
+
+    /** A finished Mawj translation joins the list like any other Arabic subtitle. */
+    internal fun addTranslated(subtitle: AddonSubtitle) {
+        _addonSubtitles.update { current -> current.filterNot { it.id == subtitle.id } + subtitle }
+    }
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -37,15 +46,15 @@ object SubtitleRepository {
             _isLoading.value = true
             _error.value = null
             _addonSubtitles.value = emptyList()
+            _foreignSubtitles.value = emptyList()
 
-            val englishCandidates = MutableStateFlow<List<AddonSubtitle>>(emptyList())
             val requests = addonSubtitleRequests(type, videoId)
             // LUXO: SubDL + add-ons, Arabic only
             _loadingProgress.value = SubtitleLoadingProgress(total = requests.size + 1)
             if (requests.isNotEmpty()) {
                 loadAddonSubtitles(requests) { request, subtitles ->
                     _addonSubtitles.update { it + subtitles.filter(LuxoSubtitleProviders::isArabic) }
-                    englishCandidates.update { it + subtitles.filter(LuxoSubtitleTranslator::isEnglish) }
+                    _foreignSubtitles.update { it + subtitles.filterNot(LuxoSubtitleProviders::isArabic) }
                     _loadingProgress.update { progress ->
                         progress?.copy(completed = progress.completed + 1, addonName = request.addonName)
                     }
@@ -59,13 +68,13 @@ object SubtitleRepository {
 
             // LUXO: no Arabic subtitle → translate an English one with Luxo Companion.
             val shouldTranslate = _addonSubtitles.value.isEmpty() &&
-                englishCandidates.value.isNotEmpty() &&
+                _foreignSubtitles.value.isNotEmpty() &&
                 LuxoSubtitleTranslator.canTranslate()
             if (shouldTranslate) {
                 _loadingProgress.update { progress ->
                     progress?.copy(addonName = "ترجمة موج ✨")
                 }
-                val translated = englishCandidates.value.take(2).firstNotNullOfOrNull { LuxoSubtitleTranslator.translate(it) }
+                val translated = LuxoSubtitleTranslator.rankSources(_foreignSubtitles.value).take(2).firstNotNullOfOrNull { LuxoSubtitleTranslator.translate(it) }
                 if (translated != null) _addonSubtitles.update { it + translated }
             }
 
@@ -80,6 +89,7 @@ object SubtitleRepository {
         activeFetchJob?.cancel()
         _loadingProgress.value = null
         _addonSubtitles.value = emptyList()
+        _foreignSubtitles.value = emptyList()
         _isLoading.value = false
         _error.value = null
     }

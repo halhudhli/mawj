@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.delay
@@ -425,6 +426,17 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 it.copy(speed = speed, dialogue = com.nuvio.app.features.luxo.LuxoAudioFx.dialogue, night = com.nuvio.app.features.luxo.LuxoAudioFx.night)
             }
         }
+        // MAWJ «ترميز الترجمة»: a new choice re-reads the add-on subtitle on screen with it.
+        val mawjEncodingRevision by MawjSubtitleEncoding.revision.collectAsState()
+        val mawjEncodingStart = remember { MawjSubtitleEncoding.revision.value }
+        LaunchedEffect(mawjEncodingRevision) {
+            if (mawjEncodingRevision == mawjEncodingStart) return@LaunchedEffect
+            val url = selectedAddonSubtitle?.url ?: return@LaunchedEffect
+            playerController?.setSubtitleUri(url)
+            LuxoPlayerBridge.toast = "أُعيدت قراءة الترجمة: ${MawjSubtitleEncoding.mode.value.label}"
+            kotlinx.coroutines.delay(2_500L)
+            LuxoPlayerBridge.toast = null
+        }
         // LUXO «ترجمة من ملف»: a subtitle file from the device, loaded like a selected add-on subtitle.
         val luxoSubtitleFilePicker = com.nuvio.app.features.luxo.rememberLuxoSubtitleFilePicker { text, extension ->
             val uri = com.nuvio.app.features.luxo.luxoWriteTempFile("luxo-file-${text.hashCode()}.$extension", text)
@@ -449,36 +461,53 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
             LuxoPlayerBridge.onSubtitleFileClick = if (luxoFeatures.subtitleFromFile) luxoSubtitleFilePicker else null
             onDispose { LuxoPlayerBridge.onSubtitleFileClick = null }
         }
-        DisposableEffect(luxoFeatures.subtitleTranslate, addonSubtitles) {
-            LuxoPlayerBridge.onTranslateSubtitlesClick = if (luxoFeatures.subtitleTranslate) {
+        // MAWJ «ترجمة الترجمة للعربي»: shown only with a Gemini key. Arabic is never sent; any other
+        // language (English first) is cleaned into WebVTT and translated with the same timings.
+        val mawjCanTranslate = luxoFeatures.subtitleTranslate && remember { LuxoSubtitleTranslator.hasKey() }
+        DisposableEffect(mawjCanTranslate, addonSubtitles) {
+            LuxoPlayerBridge.onTranslateSubtitlesClick = if (mawjCanTranslate) {
                 {
-                    fun isArabic(s: AddonSubtitle) = s.language.lowercase().let { it.startsWith("ar") || "arab" in it }
-                    val source = addonSubtitles.firstOrNull { it.isSelected && !isArabic(it) }
-                        ?: addonSubtitles.firstOrNull { it.language.lowercase().let { l -> l.startsWith("en") || "english" in l } }
-                        ?: addonSubtitles.firstOrNull { !isArabic(it) }
-                    if (source == null) {
-                        fetchAddonSubtitlesForActiveItem()
-                        LuxoPlayerBridge.toast = "يتم جلب الترجمات… يُعاد الضغط بعد لحظات"
-                    } else {
-                        luxoTranslateScope.launch {
+                    val shown = selectedAddonSubtitle
+                    val foreign = LuxoSubtitleTranslator.rankSources(SubtitleRepository.foreignSubtitles.value)
+                    val source = shown?.takeUnless(LuxoSubtitleTranslator::isArabicTagged) ?: foreign.firstOrNull()
+                    when {
+                        LuxoPlayerBridge.translateLabel.startsWith("يتم") -> Unit
+                        source == null && SubtitleRepository.isLoading.value -> {
+                            LuxoPlayerBridge.toast = "يتم البحث عن ترجمة بلغة أخرى… يُعاد الضغط بعد لحظات"
+                            luxoTranslateScope.launch { kotlinx.coroutines.delay(2_500L); LuxoPlayerBridge.toast = null }
+                        }
+                        source == null -> {
+                            if (addonSubtitles.isEmpty()) fetchAddonSubtitlesForActiveItem()
+                            LuxoPlayerBridge.toast = if (addonSubtitles.isEmpty()) {
+                                "يتم البحث عن ترجمة بلغة أخرى… يُعاد الضغط بعد لحظات"
+                            } else {
+                                "الترجمات المتاحة عربية ولا تحتاج ترجمة"
+                            }
+                            luxoTranslateScope.launch { kotlinx.coroutines.delay(2_500L); LuxoPlayerBridge.toast = null }
+                        }
+                        else -> luxoTranslateScope.launch {
                             LuxoPlayerBridge.translateLabel = "يتم الترجمة… 0%"
-                            val srt = com.nuvio.app.features.luxo.LuxoSubtitleTranslator.translate(source.url) { p ->
+                            val result = LuxoSubtitleTranslator.translateDetailed(source, headers = emptyMap()) { p ->
                                 LuxoPlayerBridge.translateLabel = "يتم الترجمة… ${(p * 100).toInt()}%"
                             }
-                            val uri = srt?.let { com.nuvio.app.features.luxo.luxoWriteTempFile("luxo-ar-${source.url.hashCode()}.srt", it) }
-                            if (uri != null) {
-                                clearAutoSubtitleState()
-                                isUserExplicitSubtitleSelection = true
-                                selectedAddonSubtitleId = "luxo-ar"
-                                selectedSubtitleIndex = -1
-                                useCustomSubtitles = true
-                                preferredSubtitleSelectionApplied = true
-                                playerController?.setSubtitleUri(uri)
-                                LuxoPlayerBridge.toast = "الترجمة العربية جاهزة ✅"
-                            } else {
-                                LuxoPlayerBridge.toast = "تعذّرت الترجمة الآن"
-                            }
                             LuxoPlayerBridge.translateLabel = "ترجمة الترجمة للعربي"
+                            LuxoPlayerBridge.toast = when (result) {
+                                is LuxoSubtitleTranslator.Result.Ready -> {
+                                    SubtitleRepository.addTranslated(result.subtitle)
+                                    clearAutoSubtitleState()
+                                    isUserExplicitSubtitleSelection = true
+                                    selectedAddonSubtitleId = result.subtitle.selectionKey
+                                    selectedSubtitleIndex = -1
+                                    useCustomSubtitles = true
+                                    preferredSubtitleSelectionApplied = true
+                                    playerController?.setSubtitleUri(result.subtitle.url)
+                                    "الترجمة العربية جاهزة ✅"
+                                }
+                                LuxoSubtitleTranslator.Result.AlreadyArabic -> "هذه الترجمة عربية ولا تحتاج ترجمة"
+                                LuxoSubtitleTranslator.Result.NoKey -> "الترجمة تحتاج مفتاح Gemini"
+                                LuxoSubtitleTranslator.Result.Unreadable -> "تعذّرت قراءة ملف الترجمة"
+                                LuxoSubtitleTranslator.Result.Failed -> "تعذّرت الترجمة الآن"
+                            }
                             kotlinx.coroutines.delay(2_500L)
                             LuxoPlayerBridge.toast = null
                         }

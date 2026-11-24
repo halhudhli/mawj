@@ -1210,6 +1210,7 @@ private fun ExoPlayerSurface(
                             url = url,
                             headers = headers,
                             useLibass = useLibass,
+                            languageHint = externalSubtitles.firstOrNull { it.url == url }?.language,
                         )
                         if (attached) {
                             exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
@@ -2408,7 +2409,18 @@ private class NuvioLibmpvView(
 
             override fun setSubtitleUri(url: String) {
                 InAppLogger.info("MPV/Android", "set external subtitle url=${InAppLogger.redactUrl(url)}")
-                executeMpv { mpv.command("sub-add", url, "select") }
+                executeMpv {
+                    // MAWJ «ترميز الترجمة»: mpv reads the file itself, so the chosen mode becomes its codepage.
+                    if (MawjSubtitleEncoding.enabled()) {
+                        val codepage = when (MawjSubtitleEncoding.effective()) {
+                            MawjSubtitleEncodingMode.Utf8 -> "utf8"
+                            MawjSubtitleEncodingMode.Arabic -> "+cp1256"
+                            MawjSubtitleEncodingMode.Auto -> "cp1256"
+                        }
+                        runCatching { mpv.setPropertyString("sub-codepage", codepage) }
+                    }
+                    mpv.command("sub-add", url, "select")
+                }
             }
 
             override fun clearExternalSubtitle() {
@@ -3972,46 +3984,25 @@ private suspend fun luxoUtf8SubtitleUri(
 ): Uri {
     val original = Uri.parse(url)
     val isText = mimeType == MimeTypes.APPLICATION_SUBRIP || mimeType == MimeTypes.TEXT_VTT || mimeType == MimeTypes.TEXT_SSA
-    if (!isText || !(url.startsWith("http://") || url.startsWith("https://"))) return original
+    val readable = url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file:")
+    if (!isText || !readable) return original
     return withContext(Dispatchers.IO) {
         runCatching {
-            val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 10_000
-                readTimeout = 15_000
-                instanceFollowRedirects = true
-                headers.forEach { (name, value) -> setRequestProperty(name, value) }
+            // MAWJ: the same bytes → text rule as every other subtitle path.
+            val bytes = MawjSubtitleText.fetchBytes(url, headers)
+            if (bytes.size < 4 || (bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte())) return@runCatching original
+            val text = MawjSubtitleText.decode(bytes, languageHint)
+            val extension = when (mimeType) {
+                MimeTypes.TEXT_VTT -> "vtt"
+                MimeTypes.TEXT_SSA -> "ass"
+                else -> "srt"
             }
-            try {
-                if (connection.responseCode !in 200..299) return@runCatching original
-                val bytes = connection.inputStream.use { input ->
-                    val out = java.io.ByteArrayOutputStream()
-                    val buffer = ByteArray(16 * 1024)
-                    while (true) {
-                        val read = input.read(buffer)
-                        if (read < 0) break
-                        out.write(buffer, 0, read)
-                        if (out.size() > 8 * 1024 * 1024) return@runCatching original
-                    }
-                    out.toByteArray()
-                }
-                // Compressed or binary answers are left to ExoPlayer.
-                if (bytes.size < 4 || (bytes[0] == 0x1F.toByte() && bytes[1] == 0x8B.toByte()) || (bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte())) {
-                    return@runCatching original
-                }
-                val text = com.nuvio.app.features.autosync.SubtitleCharsetDetector.decode(bytes, languageHint = languageHint)
-                val extension = when (mimeType) {
-                    MimeTypes.TEXT_VTT -> "vtt"
-                    MimeTypes.TEXT_SSA -> "ass"
-                    else -> "srt"
-                }
-                val dir = File(context.cacheDir, "luxo_subtitles").apply { mkdirs() }
-                dir.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 24L * 60 * 60 * 1000 }?.forEach { it.delete() }
-                val file = File(dir, "${url.hashCode().toUInt().toString(16)}.$extension")
-                file.writeText(text, Charsets.UTF_8)
-                Uri.fromFile(file)
-            } finally {
-                connection.disconnect()
-            }
+            val dir = File(context.cacheDir, "luxo_subtitles").apply { mkdirs() }
+            dir.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 24L * 60 * 60 * 1000 }?.forEach { it.delete() }
+            val mode = MawjSubtitleEncoding.effective().key
+            val file = File(dir, "${url.hashCode().toUInt().toString(16)}-$mode.$extension")
+            file.writeText(text, Charsets.UTF_8)
+            Uri.fromFile(file)
         }.getOrDefault(original)
     }
 }

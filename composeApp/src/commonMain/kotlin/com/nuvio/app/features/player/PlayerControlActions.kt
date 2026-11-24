@@ -43,6 +43,7 @@ import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.TextFormat
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
@@ -249,6 +250,9 @@ internal fun PlayerControlActions(
         },
         LuxoPlayerBridge.onSoundClick?.let {
             PlayerControlAction("تحسين الصوت", it, icon = Icons.Rounded.GraphicEq)
+        },
+        LuxoPlayerBridge.onEncodingClick?.let {
+            PlayerControlAction("ترميز الترجمة · ${MawjSubtitleEncoding.mode.value.label}", it, icon = Icons.Rounded.TextFormat)
         },
         LuxoPlayerBridge.onTranslateSubtitlesClick?.let {
             PlayerControlAction(LuxoPlayerBridge.translateLabel, it, icon = Icons.Rounded.Translate)

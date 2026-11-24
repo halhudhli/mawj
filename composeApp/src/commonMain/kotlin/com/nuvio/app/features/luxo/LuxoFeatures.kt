@@ -241,6 +241,8 @@ data class LuxoFeatures(
     val tvPlayerKeys: Boolean = true,
     /** A subtitle timing change is kept for the whole series (and the film), and comes back next time. */
     val subtitleDelayPerTitle: Boolean = true,
+    /** Subtitle text is read by one Mawj rule everywhere (UTF-8 kept, Arabic Windows-1256 repaired), with a manual choice in the player menu. */
+    val subtitleEncodingFix: Boolean = true,
     /** TV: the first posters of every home row are downloaded ahead, so they are ready under the focus. */
     val tvPrefetch: Boolean = true,
     /** TV: the title page shows the artwork and play first, then the cast, related and the rest. */

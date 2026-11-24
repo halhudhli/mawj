@@ -672,8 +672,8 @@ private fun LuxoExtrasControls(isTablet: Boolean) {
     SettingsSwitchRow(
         title = lx("ترجمة الترجمات للعربي تلقائياً ✨", "Auto-translate subtitles to Arabic ✨"),
         description = lx(
-            "إذا الحلقة ما لها ترجمة عربية، رفيق موج يترجم الإنجليزية ويضيفها «عربي ✨ ترجمة موج». يحتاج مفتاح Gemini",
-            "When there's no Arabic subtitle, Mawj Companion translates the English one. Needs a Gemini key",
+            "عند غياب ترجمة عربية للحلقة تُترجَم ترجمة بلغة أخرى (الإنجليزية أولاً) وتُضاف باسم «عربي ✨ ترجمة موج». يتطلب مفتاح Gemini",
+            "When there's no Arabic subtitle, one in another language (English first) is translated. Needs a Gemini key",
         ),
         checked = autoTranslate,
         isTablet = isTablet,

@@ -230,6 +230,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.subtitleDelayPerTitle }, { f, v -> f.copy(subtitleDelayPerTitle = v) },
         ),
         LuxoFeatureSwitch(
+            lx("إصلاح ترميز الترجمة 🔤", "Subtitle encoding fix 🔤"),
+            lx("تُقرأ كل ملفات الترجمة بقاعدة واحدة: ملف UTF-8 السليم يبقى كما هو، والعربي المحفوظ بترميز ويندوز يُصلَح تلقائياً، مع خيار يدوي في قائمة المشغل", "Every subtitle is read by one rule: valid UTF-8 stays as it is, Arabic in the Windows encoding is repaired, with a manual choice in the player menu"),
+            { it.subtitleEncodingFix }, { f, v -> f.copy(subtitleEncodingFix = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),
             lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
             { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },

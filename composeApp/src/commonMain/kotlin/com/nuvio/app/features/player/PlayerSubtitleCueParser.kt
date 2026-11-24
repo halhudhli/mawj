@@ -32,32 +32,10 @@ object PlayerSubtitleCueParser {
             SubtitleFormatHint.Ttml -> "ttml"
         }
 
-    private fun fixArabicEncoding(text: String): String {
-        val mojibakeCount = text.count { it.code in 0xC0..0xEC || it.code in listOf(0xBA, 0xBB, 0xBF) }
-        if (mojibakeCount < 5) return text
-
-        val arabicMap = mapOf(
-            0xC0 to 'ء', 0xC1 to 'آ', 0xC2 to 'أ', 0xC3 to 'ؤ', 0xC4 to 'إ',
-            0xC5 to 'ئ', 0xC6 to 'ا', 0xC7 to 'ب', 0xC8 to 'ة', 0xC9 to 'ت',
-            0xCA to 'ث', 0xCB to 'ج', 0xCC to 'ح', 0xCD to 'خ', 0xCE to 'د',
-            0xCF to 'ذ', 0xD0 to 'ر', 0xD1 to 'ز', 0xD2 to 'س', 0xD3 to 'ش',
-            0xD4 to 'ص', 0xD5 to 'ض', 0xD6 to 'ط', 0xD7 to 'ظ', 0xD8 to 'ع',
-            0xD9 to 'غ', 0xDA to 'ـ', 0xDB to 'ف', 0xDC to 'ق', 0xDD to 'ك',
-            0xDE to 'ل', 0xDF to 'م', 0xE0 to 'ن', 0xE1 to 'ه', 0xE2 to 'و',
-            0xE3 to 'ى', 0xE4 to 'ي', 0xE5 to 'ً', 0xE6 to 'ٌ', 0xE7 to 'ٍ',
-            0xE8 to 'َ', 0xE9 to 'ُ', 0xEA to 'ِ', 0xEB to 'ّ', 0xEC to 'ْ',
-            0xBA to '؛', 0xBB to '،', 0xBF to '؟'
-        )
-
-        val sb = StringBuilder(text.length)
-        for (ch in text) {
-            sb.append(arabicMap[ch.code] ?: ch)
-        }
-        return sb.toString()
-    }
-
     private fun cleanText(rawText: String): String =
-        fixArabicEncoding(rawText)
+        // MAWJ: the old byte table here was shifted by one letter and also turned French and Spanish
+        // accents into Arabic. Only clear Latin-1 damage is repaired now, with the real Windows-1256 table.
+        MawjArabicText.repairLatin1Mojibake(rawText)
             .replace("\uFEFF", "")
             .replace("\r\n", "\n")
             .replace('\r', '\n')
