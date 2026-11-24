@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     # Instructions for coding assistants only: no new release for them.
-    paths-ignore: [ "AGENTS.md" ]
+    paths-ignore: [ "AGENTS.md", "tvApp/**", ".github/workflows/build-tv.yml", "design/**" ]
   workflow_dispatch:
 
 concurrency:
@@ -153,6 +153,6 @@ jobs:
               --title "موج ${VERSION}" --notes-file notes.txt --target "${{ github.sha }}"
           fi
           # نخلي آخر 5 إصدارات بس
-          gh release list --limit 100 --json tagName -q '[.[] | select(.tagName != "iphone")] | .[5:][].tagName' | while read -r tag; do
+          gh release list --limit 100 --json tagName -q '[.[] | select(.tagName != "iphone" and .tagName != "tv")] | .[5:][].tagName' | while read -r tag; do
             gh release delete "$tag" --yes --cleanup-tag || true
           done
