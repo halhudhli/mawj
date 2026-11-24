@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     # Instructions for coding assistants only: no new release for them.
-    paths-ignore: [ "AGENTS.md", "tvApp/**", ".github/workflows/build-tv.yml", "design/**" ]
+    paths-ignore: [ "AGENTS.md", "tv/**", "tvApp/**", ".github/workflows/build-tv.yml", "design/**" ]
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,367 @@
+package com.nuvio.tv.data.simkl
+
+import com.nuvio.tv.core.tracking.TrackingEpisode
+import com.nuvio.tv.core.tracking.TrackingExternalIds
+import com.nuvio.tv.core.tracking.TrackingHistoryItem
+import com.nuvio.tv.core.tracking.TrackingListStatus
+import com.nuvio.tv.core.tracking.TrackingMediaKind
+import com.nuvio.tv.core.tracking.TrackingMediaReference
+import com.nuvio.tv.core.tracking.TrackingScrobbleEvent
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlin.math.round
+
+fun buildSimklListMutationBody(
+    items: Collection<TrackingMediaReference>,
+    destination: TrackingListStatus,
+    json: Json = SimklMutationJson
+): String {
+    val requestItems = items.map { item ->
+        item to SimklListItemDto(
+            to = destination.wireValue,
+            title = item.title.nonBlankOrNull(),
+            year = item.year,
+            ids = item.ids.toSimklJsonObjectOrNull()
+        )
+    }
+    return json.encodeToString(
+        SimklListMutationRequestDto(
+            movies = requestItems.filter { (item, _) -> item.kind == TrackingMediaKind.MOVIE }
+                .map { it.second },
+            shows = requestItems.filter { (item, _) -> item.kind != TrackingMediaKind.MOVIE }
+                .map { it.second }
+        )
+    )
+}
+
+fun buildSimklHistoryMutationBody(
+    items: Collection<TrackingHistoryItem>,
+    isRewatch: Boolean = false,
+    json: Json = SimklMutationJson
+): String = json.encodeToString(
+    buildHistoryRequest(items, includeWatchedAt = true, isRewatch = isRewatch)
+)
+
+/**
+ * Closes a running rewatch session.
+ *
+ * The write names the session and the state it moves to, and carries no watch: closing changes what
+ * the account keeps about the session, it is not a viewing. It has to say `is_rewatch: true` as well,
+ * because that flag is what makes Simkl read the write through its rewatch logic at all: without it
+ * the very same body is answered as a plain history write, the session is left alone, and nothing in
+ * the answer says so.
+ */
+fun buildSimklRewatchCloseBody(
+    media: TrackingMediaReference,
+    rewatchId: Long,
+    json: Json = SimklMutationJson
+): String = json.encodeToString(
+    SimklHistoryMutationRequestDto(
+        shows = listOf(
+            SimklHistoryItemDto(
+                title = media.title.nonBlankOrNull(),
+                year = media.year,
+                ids = media.ids.toSimklJsonObjectOrNull(),
+                isRewatch = true,
+                rewatchId = rewatchId,
+                rewatchStatus = SimklRewatchStatus.CLOSED.name.lowercase()
+            )
+        )
+    )
+)
+
+fun buildSimklHistoryRemovalBody(
+    items: Collection<TrackingMediaReference>,
+    json: Json = SimklMutationJson
+): String = json.encodeToString(
+    buildHistoryRequest(
+        items = items.map { media -> TrackingHistoryItem(media = media) },
+        includeWatchedAt = false,
+        isRewatch = false
+    )
+)
+
+/**
+ * Removes one viewing from a named rewatch session.
+ *
+ * The session id rides on the show entry, next to the episode coordinates, which is the shape
+ * Simkl's history removal accepts. Without the id the same request would clear the canonical watch
+ * and leave the rewatch behind.
+ */
+fun buildSimklRewatchRemovalBody(
+    items: Collection<TrackingMediaReference>,
+    rewatchId: Long,
+    json: Json = SimklMutationJson
+): String = json.encodeToString(
+    buildHistoryRequest(
+        items = items.map { media -> TrackingHistoryItem(media = media, rewatchId = rewatchId) },
+        includeWatchedAt = false,
+        isRewatch = false
+    )
+)
+
+fun buildSimklScrobbleBody(
+    event: TrackingScrobbleEvent,
+    json: Json = SimklMutationJson
+): String {
+    val media = event.media.toScrobbleMediaDto()
+    val usesTvStyleAnimeCoordinates = event.media.kind == TrackingMediaKind.ANIME &&
+        event.media.episode?.season != null
+    return json.encodeToString(
+        SimklScrobbleRequestDto(
+            progress = event.progressPercent.clampAndRoundProgress(),
+            movie = media.takeIf { event.media.kind == TrackingMediaKind.MOVIE },
+            show = media.takeIf {
+                event.media.kind == TrackingMediaKind.SHOW || usesTvStyleAnimeCoordinates
+            },
+            anime = media.takeIf {
+                event.media.kind == TrackingMediaKind.ANIME && !usesTvStyleAnimeCoordinates
+            },
+            episode = event.media.episode?.toEpisodeDto(
+                includeSeason = true,
+                includeWatchedAt = false,
+                watchedAtEpochMs = null
+            )
+        )
+    )
+}
+
+private fun buildHistoryRequest(
+    items: Collection<TrackingHistoryItem>,
+    includeWatchedAt: Boolean,
+    isRewatch: Boolean
+): SimklHistoryMutationRequestDto {
+    val movies = items.filter { item -> item.media.kind == TrackingMediaKind.MOVIE }
+        .map { item ->
+            item.media.toHistoryItemDto(
+                watchedAtEpochMs = item.watchedAtEpochMs.takeIf { includeWatchedAt },
+                includeWatchedAt = includeWatchedAt,
+                isRewatch = item.isRewatch || isRewatch,
+                rewatchId = item.rewatchId
+            )
+        }
+    val shows = items.filter { item -> item.media.kind != TrackingMediaKind.MOVIE }
+        .groupBy { item -> item.media.stableKey }
+        .values
+        .map { matchingItems -> buildShowHistoryItem(matchingItems, includeWatchedAt, isRewatch) }
+    return SimklHistoryMutationRequestDto(movies = movies, shows = shows)
+}
+
+private fun buildShowHistoryItem(
+    items: List<TrackingHistoryItem>,
+    includeWatchedAt: Boolean,
+    requestRewatch: Boolean
+): SimklHistoryItemDto {
+    val first = items.first()
+    val parentMutation = items.lastOrNull { item -> item.media.episode == null }
+    // The session the write belongs to is carried by the show entry, not by the episode: Simkl
+    // documents it as a field of the movie or show entry, and so is the flag. One show entry can
+    // carry only one answer, so a batch that mixes a repeat with a first watch travels as first
+    // watches: the account already holds the repeats, while a plain add of one is dropped, and a
+    // rewatch of a genuinely new episode would join the run.
+    val isRewatch = requestRewatch || items.all(TrackingHistoryItem::isRewatch)
+    // Only a group that agrees on its session may name one. A removal says `isRewatch = false` but
+    // still needs its id, which is why the id is not tied to the flag.
+    val rewatchId = items.mapNotNull(TrackingHistoryItem::rewatchId)
+        .distinct()
+        .singleOrNull()
+        ?.takeIf { isRewatch || !includeWatchedAt }
+    if (parentMutation != null) {
+        return parentMutation.media.toHistoryItemDto(
+            watchedAtEpochMs = parentMutation.watchedAtEpochMs.takeIf { includeWatchedAt },
+            includeWatchedAt = includeWatchedAt,
+            status = if (includeWatchedAt) TrackingListStatus.COMPLETED.wireValue else null,
+            isRewatch = isRewatch,
+            rewatchId = rewatchId
+        )
+    }
+
+    val episodeMutations = items.mapNotNull { item ->
+        item.media.episode?.let { episode -> item to episode }
+    }
+    val flatEpisodes = episodeMutations.filter { (_, episode) -> episode.season == null }
+        .map { (item, episode) ->
+            episode.toEpisodeDto(false, includeWatchedAt, item.watchedAtEpochMs)
+        }
+        .distinctBy(SimklEpisodeMutationDto::number)
+    val seasons = episodeMutations.filter { (_, episode) -> episode.season != null }
+        .groupBy { (_, episode) -> requireNotNull(episode.season) }
+        .map { (season, seasonItems) ->
+            SimklSeasonMutationDto(
+                number = season,
+                episodes = seasonItems.map { (item, episode) ->
+                    episode.toEpisodeDto(false, includeWatchedAt, item.watchedAtEpochMs)
+                }.distinctBy(SimklEpisodeMutationDto::number)
+            )
+        }
+        .sortedBy(SimklSeasonMutationDto::number)
+
+    return first.media.toHistoryItemDto(
+        watchedAtEpochMs = null,
+        includeWatchedAt = includeWatchedAt,
+        episodes = flatEpisodes,
+        seasons = seasons,
+        useTvdbAnimeSeasons = first.media.kind == TrackingMediaKind.ANIME && seasons.isNotEmpty(),
+        isRewatch = isRewatch,
+        rewatchId = rewatchId
+    )
+}
+
+private fun TrackingMediaReference.toHistoryItemDto(
+    watchedAtEpochMs: Long?,
+    includeWatchedAt: Boolean,
+    status: String? = null,
+    episodes: List<SimklEpisodeMutationDto> = emptyList(),
+    seasons: List<SimklSeasonMutationDto> = emptyList(),
+    useTvdbAnimeSeasons: Boolean = false,
+    isRewatch: Boolean = false,
+    rewatchId: Long? = null
+): SimklHistoryItemDto = SimklHistoryItemDto(
+    title = title.nonBlankOrNull(),
+    year = year,
+    ids = ids.toSimklJsonObjectOrNull(),
+    watchedAt = watchedAtEpochMs.takeIf { includeWatchedAt }?.epochMsToUtcIso(),
+    status = status,
+    episodes = episodes,
+    seasons = seasons,
+    useTvdbAnimeSeasons = useTvdbAnimeSeasons,
+    isRewatch = isRewatch.takeIf { it },
+    rewatchId = rewatchId
+)
+
+private fun TrackingMediaReference.toScrobbleMediaDto(): SimklScrobbleMediaDto =
+    SimklScrobbleMediaDto(title.nonBlankOrNull(), year, ids.toSimklJsonObjectOrNull())
+
+private fun TrackingEpisode.toEpisodeDto(
+    includeSeason: Boolean,
+    includeWatchedAt: Boolean,
+    watchedAtEpochMs: Long?
+): SimklEpisodeMutationDto = SimklEpisodeMutationDto(
+    season = season.takeIf { includeSeason },
+    number = number,
+    watchedAt = watchedAtEpochMs.takeIf { includeWatchedAt }?.epochMsToUtcIso()
+)
+
+internal fun TrackingExternalIds.toSimklJsonObjectOrNull(): JsonObject? {
+    val value = buildJsonObject {
+        simkl?.let { put("simkl", it) }
+        imdb.nonBlankOrNull()?.let { put("imdb", it) }
+        tmdb?.let { put("tmdb", it) }
+        tvdb.nonBlankOrNull()?.let { tvdbValue ->
+            tvdbValue.toLongOrNull()?.let { put("tvdb", it) } ?: put("tvdb", tvdbValue)
+        }
+        mal?.let { put("mal", it) }
+        anidb?.let { put("anidb", it) }
+        anilist?.let { put("anilist", it) }
+        kitsu?.let { put("kitsu", it) }
+    }
+    return value.takeIf { it.isNotEmpty() }
+}
+
+private fun Double.clampAndRoundProgress(): Double =
+    round(coerceIn(0.0, 100.0) * 100.0) / 100.0
+
+private fun String?.nonBlankOrNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)
+
+fun Long.epochMsToUtcIso(): String? {
+    if (this < 10_000_000_000L) return null
+    val totalSeconds = this / 1_000L
+    val second = (totalSeconds % 60L).toInt()
+    val minute = ((totalSeconds / 60L) % 60L).toInt()
+    val hour = ((totalSeconds / 3_600L) % 24L).toInt()
+    var days = totalSeconds / 86_400L
+    var year = 1970
+    while (true) {
+        val daysInYear = if (year.isLeapYear()) 366 else 365
+        if (days < daysInYear) break
+        days -= daysInYear
+        year += 1
+    }
+    val monthDays = if (year.isLeapYear()) {
+        intArrayOf(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    } else {
+        intArrayOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    }
+    var monthIndex = 0
+    while (monthIndex < monthDays.size && days >= monthDays[monthIndex]) {
+        days -= monthDays[monthIndex]
+        monthIndex += 1
+    }
+    val month = monthIndex + 1
+    val day = days.toInt() + 1
+    return "${year.pad(4)}-${month.pad(2)}-${day.pad(2)}T${hour.pad(2)}:${minute.pad(2)}:${second.pad(2)}Z"
+}
+
+private fun Int.isLeapYear(): Boolean = (this % 4 == 0 && this % 100 != 0) || this % 400 == 0
+private fun Int.pad(length: Int): String = toString().padStart(length, '0')
+
+private val SimklMutationJson = Json { encodeDefaults = false; explicitNulls = false }
+
+@Serializable
+private data class SimklListMutationRequestDto(
+    val movies: List<SimklListItemDto> = emptyList(),
+    val shows: List<SimklListItemDto> = emptyList()
+)
+
+@Serializable
+private data class SimklListItemDto(
+    val to: String,
+    val title: String? = null,
+    val year: Int? = null,
+    val ids: JsonObject? = null
+)
+
+@Serializable
+private data class SimklHistoryMutationRequestDto(
+    val movies: List<SimklHistoryItemDto> = emptyList(),
+    val shows: List<SimklHistoryItemDto> = emptyList()
+)
+
+@Serializable
+private data class SimklHistoryItemDto(
+    val title: String? = null,
+    val year: Int? = null,
+    val ids: JsonObject? = null,
+    @SerialName("watched_at") val watchedAt: String? = null,
+    val status: String? = null,
+    val episodes: List<SimklEpisodeMutationDto> = emptyList(),
+    val seasons: List<SimklSeasonMutationDto> = emptyList(),
+    @SerialName("use_tvdb_anime_seasons") val useTvdbAnimeSeasons: Boolean = false,
+    @SerialName("is_rewatch") val isRewatch: Boolean? = null,
+    @SerialName("rewatch_id") val rewatchId: Long? = null,
+    @SerialName("rewatch_status") val rewatchStatus: String? = null
+)
+
+@Serializable
+private data class SimklSeasonMutationDto(
+    val number: Int,
+    val episodes: List<SimklEpisodeMutationDto> = emptyList()
+)
+
+@Serializable
+private data class SimklEpisodeMutationDto(
+    val season: Int? = null,
+    val number: Int,
+    @SerialName("watched_at") val watchedAt: String? = null
+)
+
+@Serializable
+private data class SimklScrobbleRequestDto(
+    val progress: Double,
+    val movie: SimklScrobbleMediaDto? = null,
+    val show: SimklScrobbleMediaDto? = null,
+    val anime: SimklScrobbleMediaDto? = null,
+    val episode: SimklEpisodeMutationDto? = null
+)
+
+@Serializable
+private data class SimklScrobbleMediaDto(
+    val title: String? = null,
+    val year: Int? = null,
+    val ids: JsonObject? = null
+)

@@ -4,7 +4,7 @@ name: Build Mawj TV
 on:
   push:
     branches: [ "main" ]
-    paths: [ "tvApp/**", ".github/workflows/build-tv.yml" ]
+    paths: [ "tv/**", ".github/workflows/build-tv.yml" ]
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +17,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Add swap
         run: |
@@ -33,31 +33,52 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Lower Gradle memory for CI
+      - name: Prepare build (Mawj key, Nuvio account servers, no secrets in the repo)
+        working-directory: tv
+        env:
+          SUPA_URL: ${{ secrets.NUVIO_SUPABASE_URL }}
+          SUPA_KEY: ${{ secrets.NUVIO_SUPABASE_ANON_KEY }}
         run: |
           sed -i -E 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx5g -Xms512m -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC/' gradle.properties
-          sed -i -E 's/^kotlin\.daemon\.jvmargs=.*/kotlin.daemon.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g/' gradle.properties
-          sed -i -E 's/^org\.gradle\.configuration-cache=.*/org.gradle.configuration-cache=false/' gradle.properties
           echo "org.gradle.workers.max=2" >> gradle.properties
-          touch local.properties
+          # Same public client settings the phone app already uses (read from its build file).
+          [ -z "$SUPA_URL" ] && SUPA_URL=$(grep -o 'NUVIO_SUPABASE_URL", "[^"]*' ../composeApp/build.gradle.kts | sed 's/.*"//')
+          [ -z "$SUPA_KEY" ] && SUPA_KEY=$(grep -o 'NUVIO_SUPABASE_ANON_KEY", "[^"]*' ../composeApp/build.gradle.kts | sed 's/.*"//')
+          {
+            echo "SUPABASE_URL=$SUPA_URL"
+            echo "SUPABASE_ANON_KEY=$SUPA_KEY"
+            echo "NUVIO_SUPABASE_URL=$SUPA_URL"
+            echo "NUVIO_SUPABASE_ANON_KEY=$SUPA_KEY"
+            echo "TRAKT_REDIRECT_URI=urn:ietf:wg:oauth:2.0:oob"
+            echo "USE_LOCAL_FFMPEG_DECODER=false"
+            echo "DOVI_NATIVE_ENABLED=true"
+            echo "DOVI_EXTRACTOR_HOOK_READY=true"
+            echo "DOVI_ENABLE_REAL_LINK=true"
+            echo "DOVI_LIBDOVI_PREBUILT_ROOT=DV7/libdovi"
+          } > local.properties
+          touch local.dev.properties
+          echo "NUVIO_RELEASE_STORE_FILE=$GITHUB_WORKSPACE/androidApp/luxo-debug.keystore" >> "$GITHUB_ENV"
+          echo "NUVIO_RELEASE_KEY_ALIAS=androiddebugkey" >> "$GITHUB_ENV"
+          echo "NUVIO_RELEASE_KEY_PASSWORD=android" >> "$GITHUB_ENV"
+          echo "NUVIO_RELEASE_STORE_PASSWORD=android" >> "$GITHUB_ENV"
+          python3 native/usenet/scripts/fetch_prebuilts.py
+          python3 native/usenet/scripts/check_prebuilts.py
 
       - name: Build TV APK
+        working-directory: tv
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: |
           set -o pipefail
-          ./gradlew :tvApp:assembleRelease \
-            -Pnuvio.app.versionName=1.0.0 -Pnuvio.app.versionCode=1 \
-            -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore \
-            -Pmawj.tv.versionName=0.${{ github.run_number }} \
-            -Pmawj.tv.versionCode=${{ github.run_number }} \
-            -Pkotlin.compiler.execution.strategy=in-process \
-            --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew :app:assembleFullRelease \
+            -Pmawj.tv.versionName=1.2.${{ github.run_number }}-mawj \
+            -Pmawj.tv.versionCode=$((2000 + ${{ github.run_number }})) \
+            --no-daemon --stacktrace 2>&1 | tee ../build.log
 
       - name: Report compile errors
         if: failure()
         run: |
-          grep -E '^e: ' build.log | sed 's#.*/tvApp/src/main/kotlin/##' | head -80 > errs.txt || true
+          grep -E '^e: ' build.log | sed 's#.*/tv/app/src/main/java/##' | head -80 > errs.txt || true
           split -l 8 errs.txt errpart_ || true
           for f in errpart_*; do
             [ -s "$f" ] && echo "::error::$(sed ':a;N;$!ba;s/\n/%0A/g' "$f")"
@@ -70,8 +91,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          APK=$(ls tvApp/build/outputs/apk/release/*.apk | head -1)
-          NAME="Mawj-TV-0.${{ github.run_number }}.apk"
+          APK=$(ls tv/app/build/outputs/apk/full/release/*.apk | grep -i 'armeabi-v7a\|universal' | head -1)
+          [ -z "$APK" ] && APK=$(ls tv/app/build/outputs/apk/full/release/*.apk | head -1)
+          ls -la tv/app/build/outputs/apk/full/release/
+          NAME="Mawj-TV-1.2.${{ github.run_number }}.apk"
           cp "$APK" "$NAME"
           if ! gh release view tv >/dev/null 2>&1; then
             gh release create tv --title "موج للشاشة" --notes "تطبيق الشاشة الجديد. آخر نسخة دائماً هنا." --target "${{ github.sha }}"

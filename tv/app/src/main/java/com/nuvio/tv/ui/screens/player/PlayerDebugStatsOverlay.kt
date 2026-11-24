@@ -1,0 +1,571 @@
+package com.nuvio.tv.ui.screens.player
+
+import android.content.Context
+import android.net.TrafficStats
+import android.os.Build
+import android.os.Debug
+import android.os.PowerManager
+import android.os.Process
+import android.system.Os
+import android.system.OsConstants
+import androidx.annotation.OptIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.tv.material3.LocalTextStyle
+import androidx.tv.material3.Text
+import com.nuvio.tv.core.network.StreamSpeedTester
+import com.nuvio.tv.core.player.streamFallbackMessages
+import com.nuvio.tv.core.usenet.UsenetLiveStats
+import com.nuvio.tv.core.usenet.UsenetProviderLive
+import com.nuvio.tv.core.usenet.UsenetSidecar
+import com.nuvio.tv.core.usenet.UsenetSourceStats
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.net.URI
+import java.util.Locale
+
+internal enum class DebugStatSeverity {
+    NORMAL,
+    WARNING,
+    DANGER
+}
+
+internal data class DebugStat(
+    val label: String,
+    val value: String,
+    val severity: DebugStatSeverity = DebugStatSeverity.NORMAL,
+    val inSection: Boolean = false
+) {
+    val warn: Boolean get() = severity != DebugStatSeverity.NORMAL
+
+    constructor(label: String, value: String, warn: Boolean) : this(
+        label = label,
+        value = value,
+        severity = if (warn) DebugStatSeverity.WARNING else DebugStatSeverity.NORMAL
+    )
+}
+
+internal data class PlayerSnapshot(
+    val aheadMs: Long,
+    val videoBitrate: Int,
+    val audioBitrate: Int,
+    val durationMs: Long,
+    val droppedFrames: Int,
+    val fileSizeBytes: Long?,
+    val nativeMemoryBytes: Long? = null,
+    val playWhenReady: Boolean = false,
+    val buffering: Boolean = false,
+    val ready: Boolean = false,
+    val positionMs: Long = 0L
+)
+
+@OptIn(UnstableApi::class)
+@Composable
+internal fun PlayerDebugStatsOverlay(
+    viewModel: PlayerViewModel,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val sampler = remember { DebugStatsSampler(context) }
+    val labelMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val labelStyle = LocalTextStyle.current.merge(LabelStyle)
+    var stats by remember { mutableStateOf(emptyList<DebugStat>()) }
+    var probedFileSize by remember { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(Unit) {
+        // Hold off until playback is running so the first samples are not startup noise, but give up
+        // waiting on the mpv engine, which never exposes an ExoPlayer.
+        var waited = 0L
+        while (viewModel.exoPlayer?.playbackState != Player.STATE_READY && waited < 30_000L) {
+            delay(250L)
+            waited += 250L
+        }
+        delay(2000L)
+
+        // Only some addons send videoSize, so ask the server once when nothing upstream knew it.
+        if (viewModel.getCurrentFileSizeBytes() == null) {
+            val url = viewModel.getCurrentStreamUrl()
+            if (url.isNotBlank()) {
+                probedFileSize = StreamSpeedTester
+                    .getStreamContentLength(url, viewModel.getCurrentHeaders())
+                    .takeIf { it > 0L }
+            }
+        }
+
+        while (true) {
+            // Player fields must be read on this thread; everything else blocks, so it goes to IO.
+            val player = viewModel.exoPlayer
+            val snapshot = player?.let {
+                PlayerSnapshot(
+                    aheadMs = (it.bufferedPosition - it.currentPosition).coerceAtLeast(0L),
+                    videoBitrate = runCatching { it.videoFormat?.bitrate }.getOrNull() ?: -1,
+                    audioBitrate = runCatching { it.audioFormat?.bitrate }.getOrNull() ?: -1,
+                    durationMs = runCatching { it.duration }.getOrNull() ?: -1L,
+                    droppedFrames = runCatching { it.videoDecoderCounters?.droppedBufferCount }.getOrNull() ?: 0,
+                    fileSizeBytes = viewModel.getCurrentFileSizeBytes() ?: probedFileSize,
+                    nativeMemoryBytes = viewModel.getPlayerNativeMemoryBytes(),
+                    playWhenReady = it.playWhenReady,
+                    buffering = it.playbackState == Player.STATE_BUFFERING,
+                    ready = it.playbackState == Player.STATE_READY,
+                    positionMs = it.currentPosition
+                )
+            }
+            val streamUrl = viewModel.getCurrentStreamUrl()
+            val type = DebugStat("type", viewModel.getStreamTypeLabel())
+            stats = listOf(type) + withContext(Dispatchers.IO) { sampler.sample(snapshot, streamUrl) }
+            delay(1000L)
+        }
+    }
+
+    if (stats.isEmpty()) return
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0x99000000))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        var index = 0
+        while (index < stats.size) {
+            if (stats[index].inSection) {
+                val section = stats.drop(index).takeWhile { it.inSection }
+                val labelWidth = with(density) {
+                    section.maxOf { labelMeasurer.measure(it.label, labelStyle).size.width }.toDp()
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    SectionDivider(labelWidth)
+                    section.forEach { DebugStatRow(it) }
+                    SectionDivider(labelWidth)
+                }
+                index += section.size
+            } else {
+                DebugStatRow(stats[index])
+                index++
+            }
+        }
+    }
+}
+
+private val LabelStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+
+@Composable
+private fun SectionDivider(width: Dp) {
+    Box(
+        modifier = Modifier
+            .padding(vertical = 2.dp)
+            .width(width)
+            .height(1.dp)
+            .background(Color(0x33FFFFFF))
+    )
+}
+
+@Composable
+private fun DebugStatRow(stat: DebugStat) {
+    Row {
+        Text(
+            text = stat.label,
+            modifier = Modifier.width(64.dp),
+            style = LocalTextStyle.current.merge(LabelStyle),
+            color = Color(0xFF8A8A8A)
+        )
+        val (color, fontWeight) = when (stat.severity) {
+            DebugStatSeverity.DANGER -> Color(0xFFF44336) to FontWeight.Bold
+            DebugStatSeverity.WARNING -> Color(0xFFFFB300) to FontWeight.Bold
+            DebugStatSeverity.NORMAL -> Color(0xFFF0F0F0) to FontWeight.Normal
+        }
+        Text(
+            text = stat.value,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            fontWeight = fontWeight,
+            color = color
+        )
+    }
+}
+
+@OptIn(UnstableApi::class)
+private class DebugStatsSampler(context: Context) {
+
+    private val appContext = context.applicationContext
+    private val powerManager = appContext
+        .getSystemService(Context.POWER_SERVICE) as? PowerManager
+    private val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+    private val clockTicks = runCatching { Os.sysconf(OsConstants._SC_CLK_TCK) }
+        .getOrDefault(100L).coerceAtLeast(1L)
+
+    private var lastCpuTicks = -1L
+    private var lastMajorFaults = -1L
+    private var lastProcAtMs = 0L
+    private var lastRxBytes = -1L
+    private var lastRxAtMs = 0L
+    private var bufferTotal = 0.0
+    private var bufferSamples = 0
+    private var networkTotal = 0.0
+    private var networkSamples = 0
+    private var cpuTotal = 0.0
+    private var cpuSamples = 0
+    private var faultTotal = 0.0
+    private var faultSamples = 0
+    private var headroomMisses = 0
+    private var usenetUrl: String? = null
+    private var lastMissing = -1L
+    private var lastErrors = -1L
+    private var lastPositionMs = -1L
+    private var lastPositionAtMs = 0L
+    private var stalledSinceMs = 0L
+    private var seeking = false
+    private val failureReasons by lazy { streamFallbackMessages(appContext).reasons }
+
+    fun sample(snapshot: PlayerSnapshot?, streamUrl: String? = null): List<DebugStat> = buildList {
+        val live = usenetLive(streamUrl)
+        val proc = readProcTimes()
+        val now = System.currentTimeMillis()
+        val elapsedSeconds = if (lastProcAtMs > 0L) (now - lastProcAtMs) / 1000.0 else 0.0
+
+        add(cpuStat(proc, elapsedSeconds))
+        add(majorFaultStat(proc, elapsedSeconds))
+        if (proc != null) {
+            lastCpuTicks = proc.cpuTicks
+            lastMajorFaults = proc.majorFaults
+            lastProcAtMs = now
+        }
+
+        add(memoryStat(snapshot))
+        add(bufferStat(snapshot))
+        stalledStat(snapshot, live)?.let(::add)
+        add(bitrateStat(snapshot))
+        add(networkStat())
+        if (live != null) addAll(usenetStats(live))
+        live?.let {
+            lastMissing = it.missing
+            lastErrors = it.errors
+        }
+        add(droppedStat(snapshot))
+        addAll(thermalStats())
+    }.filterNot { it.value == UNAVAILABLE }
+
+    private fun cpuStat(proc: ProcTimes?, elapsedSeconds: Double): DebugStat {
+        if (proc == null) return DebugStat("cpu", UNAVAILABLE)
+        if (lastCpuTicks < 0L || elapsedSeconds <= 0.0) return DebugStat("cpu", "...")
+        val cpuSeconds = (proc.cpuTicks - lastCpuTicks).toDouble() / clockTicks
+        val percent = cpuSeconds / elapsedSeconds / cores * 100.0
+        cpuTotal += percent
+        cpuSamples++
+        return DebugStat(
+            label = "cpu",
+            value = String.format(Locale.US, "%.0f%%   avg %.0f%%", percent, cpuTotal / cpuSamples),
+            warn = percent >= 60.0
+        )
+    }
+
+    // Faults that had to hit storage, so a high rate means the device is paging rather than playing.
+    private fun majorFaultStat(proc: ProcTimes?, elapsedSeconds: Double): DebugStat {
+        if (proc == null) return DebugStat("paging", UNAVAILABLE)
+        if (lastMajorFaults < 0L || elapsedSeconds <= 0.0) return DebugStat("paging", "...")
+        val perSecond = (proc.majorFaults - lastMajorFaults).toDouble() / elapsedSeconds
+        faultTotal += perSecond
+        faultSamples++
+        return DebugStat(
+            label = "paging",
+            value = String.format(Locale.US, "%.0f/s   avg %.0f/s", perSecond, faultTotal / faultSamples),
+            warn = perSecond >= 100.0
+        )
+    }
+
+    // majflt, utime and stime are fields 12, 14 and 15, counted after a comm field that can itself
+    // contain spaces.
+    private fun readProcTimes(): ProcTimes? = runCatching {
+        val stat = File("/proc/self/stat").readText()
+        val f = stat.substring(stat.lastIndexOf(')') + 1).trim().split(" ")
+        ProcTimes(
+            cpuTicks = f[11].toLong() + f[12].toLong(),
+            majorFaults = f[9].toLong()
+        )
+    }.getOrNull()
+
+    // Performance mode puts the player buffers in native memory, so the java heap alone hides them.
+    private fun memoryStat(snapshot: PlayerSnapshot?): DebugStat {
+        val runtime = Runtime.getRuntime()
+        val usedMb = (runtime.totalMemory() - runtime.freeMemory()) / MB
+        val maxMb = runtime.maxMemory() / MB
+        val playerNativeBytes = snapshot?.nativeMemoryBytes
+        val nativeMb = if (playerNativeBytes != null && playerNativeBytes >= 0L) {
+            playerNativeBytes / MB
+        } else {
+            runCatching { Debug.getNativeHeapAllocatedSize() / MB }.getOrDefault(-1L)
+        }
+        val targetBufferMb = NuvioExoPlayerPerformanceHelper.calculatedMemoryUsageMb
+        val nativeText = when {
+            nativeMb < 0L -> ""
+            targetBufferMb > 0 -> "   native $nativeMb / $targetBufferMb MB"
+            else -> "   native $nativeMb MB"
+        }
+        val safeLimitMb = NuvioExoPlayerPerformanceHelper.getSafeNativeMemoryLimitMb(appContext)
+        val warningLimitMb = NuvioExoPlayerPerformanceHelper.getWarningNativeMemoryLimitMb(appContext)
+
+        val severity = when {
+            nativeMb > 0L && nativeMb > warningLimitMb -> DebugStatSeverity.DANGER
+            nativeMb > 0L && nativeMb > safeLimitMb -> DebugStatSeverity.WARNING
+            maxMb > 0L && usedMb.toDouble() / maxMb >= 0.90 -> DebugStatSeverity.DANGER
+            maxMb > 0L && usedMb.toDouble() / maxMb >= 0.80 -> DebugStatSeverity.WARNING
+            else -> DebugStatSeverity.NORMAL
+        }
+
+        return DebugStat(
+            label = "memory",
+            value = "$usedMb / $maxMb MB$nativeText",
+            severity = severity
+        )
+    }
+
+    private fun bufferStat(snapshot: PlayerSnapshot?): DebugStat {
+        if (snapshot == null) return DebugStat("buffer", UNAVAILABLE)
+        val ahead = snapshot.aheadMs / 1000.0
+        bufferTotal += ahead
+        bufferSamples++
+        return DebugStat(
+            label = "buffer",
+            value = String.format(Locale.US, "%.1fs   avg %.1fs", ahead, bufferTotal / bufferSamples),
+            warn = ahead < 5.0
+        )
+    }
+
+    // The file rate covers every track plus container overhead, so it reads higher than the video
+    // track alone and the two are labelled apart rather than mixed.
+    private fun bitrateStat(snapshot: PlayerSnapshot?): DebugStat {
+        val fileBps = PlayerBitrateEstimator.fileBitrateBps(
+            snapshot?.fileSizeBytes,
+            snapshot?.durationMs ?: -1L
+        )
+        if (fileBps != null) {
+            val sizeGb = (snapshot?.fileSizeBytes ?: 0L) / (1024.0 * 1024.0 * 1024.0)
+            return DebugStat(
+                "bitrate",
+                String.format(Locale.US, "%.1f Mbps file   %.1f GB", fileBps / 1_000_000.0, sizeGb)
+            )
+        }
+        val video = snapshot?.videoBitrate ?: -1
+        val audio = snapshot?.audioBitrate ?: -1
+        if (video <= 0 && audio <= 0) return DebugStat("bitrate", UNAVAILABLE)
+        val totalMbps = (video.coerceAtLeast(0) + audio.coerceAtLeast(0)) / 1_000_000.0
+        return DebugStat("bitrate", String.format(Locale.US, "%.1f Mbps tracks", totalMbps))
+    }
+
+    private fun networkStat(): DebugStat {
+        val rx = runCatching { TrafficStats.getUidRxBytes(Process.myUid()) }.getOrDefault(-1L)
+        if (rx < 0L) return DebugStat("network", UNAVAILABLE)
+        val now = System.currentTimeMillis()
+        val previousRx = lastRxBytes
+        val previousAt = lastRxAtMs
+        lastRxBytes = rx
+        lastRxAtMs = now
+        if (previousRx < 0L || now <= previousAt) return DebugStat("network", "...")
+        val mbps = (rx - previousRx).toDouble() / ((now - previousAt) / 1000.0) * 8.0 / 1_000_000.0
+        networkTotal += mbps
+        networkSamples++
+        return DebugStat(
+            label = "network",
+            value = String.format(
+                Locale.US,
+                "%.1f Mbps   avg %.1f",
+                mbps,
+                networkTotal / networkSamples
+            )
+        )
+    }
+
+    private fun usenetLive(streamUrl: String?): UsenetLiveStats? {
+        val url = streamUrl?.takeIf { UsenetSidecar.isSessionUrl(it) }
+        if (url != usenetUrl) {
+            usenetUrl = url
+            lastMissing = -1L
+            lastErrors = -1L
+        }
+        if (url == null) return null
+        return UsenetSidecar.peek()?.liveStats(url)
+    }
+
+    private fun usenetStats(live: UsenetLiveStats): List<DebugStat> {
+        val asked = live.providers.filter { it.articles + it.missing > 0 }.sortedByDescending { it.bytes }
+        val completion = live.completion
+        val articles = when {
+            completion == null -> "..."
+            live.filledArticles > 0 -> String.format(Locale.US, "%.1f%%  (%d missing, %d filled)", completion, live.missing, live.filledArticles)
+            else -> String.format(Locale.US, "%.1f%%  (%d missing)", completion, live.missing)
+        }
+        val articlesSeverity = when {
+            live.failure != null -> DebugStatSeverity.DANGER
+            live.missing > live.filledArticles -> DebugStatSeverity.WARNING
+            else -> DebugStatSeverity.NORMAL
+        }
+        val ttfb = live.ttfbMs
+        return listOfNotNull(
+            providerStat(live, asked),
+            DebugStat("articles", articles, articlesSeverity, inSection = true),
+            ttfb?.let {
+                DebugStat("ttfb", String.format(Locale.US, "%.0f ms", it),
+                    if (it >= SLOW_TTFB_MS) DebugStatSeverity.WARNING else DebugStatSeverity.NORMAL, inSection = true)
+            },
+            errorStat(live)
+        )
+    }
+
+    private fun providerStat(live: UsenetLiveStats, asked: List<UsenetProviderLive>): DebugStat? {
+        val showCompletion = asked.size > 1 && asked.any { it.missing > 0 }
+        val names = asked.mapNotNull { provider ->
+            live.server(provider)?.let { server ->
+                val requested = provider.articles + provider.missing
+                val completion = if (!showCompletion || requested <= 0L) ""
+                    else " (${if (provider.missing == 0L) 100 else provider.articles * 100 / requested}%)"
+                providerName(server) + completion
+            }
+        }.ifEmpty { live.servers.map(::providerName).distinct() }
+        if (names.isEmpty()) return null
+        return DebugStat("provider", names.joinToString("  •  "), inSection = true)
+    }
+
+    private fun errorStat(live: UsenetLiveStats): DebugStat? {
+        if (live.errors <= 0 && live.failure == null) return null
+        val failing = live.providers.filter { it.errors > 0 }
+        val who = when {
+            live.servers.size <= 1 -> null
+            failing.size == 1 -> live.server(failing.single())?.let(::providerName)
+            else -> failing.mapNotNull { provider -> live.server(provider)?.let { "${providerName(it)} ${provider.errors}" } }
+                .joinToString(", ").ifEmpty { null }
+        }
+        val parts = listOfNotNull(
+            live.errors.takeIf { it > 0 }?.toString(),
+            who,
+            live.failure?.let { failureReasons[it] ?: it }
+        )
+        return DebugStat("nntp err", parts.joinToString("  ·  "),
+            if (live.failure != null) DebugStatSeverity.DANGER else DebugStatSeverity.WARNING, inSection = true)
+    }
+
+    private fun providerName(server: String): String =
+        UsenetSourceStats.get(appContext).providerName(server)
+            ?: runCatching { URI(server).host }.getOrNull()?.takeIf { it.isNotBlank() }
+            ?: "?"
+
+    private fun stalledStat(snapshot: PlayerSnapshot?, live: UsenetLiveStats?): DebugStat? {
+        val now = System.currentTimeMillis()
+        val previousPosition = lastPositionMs
+        val elapsedMs = now - lastPositionAtMs
+        lastPositionMs = snapshot?.positionMs ?: -1L
+        lastPositionAtMs = now
+        if (snapshot == null) {
+            stalledSinceMs = 0L
+            seeking = false
+            return null
+        }
+        if (previousPosition >= 0L) {
+            val moved = snapshot.positionMs - previousPosition
+            if (moved < -SEEK_SLACK_MS || moved > elapsedMs + SEEK_SLACK_MS) seeking = true
+        }
+        val frozen = snapshot.ready && previousPosition >= 0L && snapshot.positionMs == previousPosition
+        val stuck = snapshot.playWhenReady && (snapshot.buffering || frozen)
+        if (!stuck) {
+            stalledSinceMs = 0L
+            if (snapshot.ready && snapshot.playWhenReady) seeking = false
+            return null
+        }
+        if (stalledSinceMs == 0L) stalledSinceMs = now
+        val seconds = (now - stalledSinceMs) / 1000.0
+        val reason = when {
+            live?.failure != null -> failureReasons[live.failure] ?: live.failure
+            live != null && lastMissing >= 0L && live.missing > lastMissing -> "missing articles"
+            live != null && lastErrors >= 0L && live.errors > lastErrors -> "provider errors"
+            frozen -> "picture frozen, position not moving"
+            seeking && live != null -> "loading the new position from the provider"
+            seeking -> "loading the new position"
+            live != null -> "waiting on the Usenet provider"
+            else -> "waiting for data"
+        }
+        if (seeking && live?.failure == null && seconds < SEEK_STALL_SECONDS) {
+            return DebugStat("seeking", String.format(Locale.US, "%.0fs  ·  %s", seconds, reason), DebugStatSeverity.WARNING)
+        }
+        return DebugStat("stalled", String.format(Locale.US, "%.0fs  ·  %s", seconds, reason), DebugStatSeverity.DANGER)
+    }
+
+    private fun droppedStat(snapshot: PlayerSnapshot?): DebugStat {
+        val dropped = snapshot?.droppedFrames ?: 0
+        return DebugStat("dropped", "$dropped frames", warn = dropped > 0)
+    }
+
+    // Headroom is normalised so 1.00 is the throttling point; the status line only matters once it trips.
+    private fun thermalStats(): List<DebugStat> {
+        val pm = powerManager ?: return listOf(DebugStat("thermal", UNAVAILABLE))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            return listOf(DebugStat("thermal", UNAVAILABLE))
+        }
+        val headroom = if (headroomMisses >= MAX_HEADROOM_MISSES) {
+            Float.NaN
+        } else {
+            runCatching { pm.getThermalHeadroom(0) }.getOrDefault(Float.NaN)
+        }
+        headroomMisses = if (headroom.isNaN()) headroomMisses + 1 else 0
+        val status = runCatching { pm.currentThermalStatus }.getOrDefault(PowerManager.THERMAL_STATUS_NONE)
+        val headroomStat = DebugStat(
+            label = "thermal",
+            value = if (headroom.isNaN()) UNAVAILABLE else String.format(Locale.US, "%.2f / 1.00", headroom),
+            warn = !headroom.isNaN() && headroom >= 0.9f
+        )
+        val throttleName = throttleName(status) ?: return listOf(headroomStat)
+        return listOf(headroomStat, DebugStat("throttle", throttleName, warn = true))
+    }
+
+    private fun throttleName(status: Int): String? = when (status) {
+        PowerManager.THERMAL_STATUS_LIGHT -> "light"
+        PowerManager.THERMAL_STATUS_MODERATE -> "moderate"
+        PowerManager.THERMAL_STATUS_SEVERE -> "severe"
+        PowerManager.THERMAL_STATUS_CRITICAL -> "critical"
+        PowerManager.THERMAL_STATUS_EMERGENCY -> "emergency"
+        PowerManager.THERMAL_STATUS_SHUTDOWN -> "shutdown"
+        else -> null
+    }
+
+    private data class ProcTimes(val cpuTicks: Long, val majorFaults: Long)
+
+    private companion object {
+        const val MB = 1024L * 1024L
+        const val MAX_HEADROOM_MISSES = 3
+        const val SLOW_TTFB_MS = 300.0
+        const val SEEK_SLACK_MS = 2_000L
+        const val SEEK_STALL_SECONDS = 15.0
+
+        // A row carrying this is one the device will never fill in, so it is dropped rather than
+        // taking a line; the warmup placeholder is left alone so no row appears a second later.
+        const val UNAVAILABLE = "n/a"
+    }
+}
