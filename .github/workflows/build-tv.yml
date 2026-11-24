@@ -50,7 +50,7 @@ jobs:
             -Pnuvio.app.versionName=1.0.0 -Pnuvio.app.versionCode=1 \
             -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore \
             -Pmawj.tv.versionName=0.${{ github.run_number }} \
-            -Pmawj.tv.versionCode=${{ github.run_number }} \
+            -Pmawj.tv.versionCode=$((3000 + ${{ github.run_number }})) \
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace 2>&1 | tee build.log
 
