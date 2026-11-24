@@ -65,6 +65,8 @@ sealed interface Route {
     data class Detail(val meta: MetaPreview) : Route
     data class Sources(val meta: MetaPreview, val episode: Episode?) : Route
     data class Player(val request: PlayRequest) : Route
+    data class Person(val id: Int, val name: String) : Route
+    data class Company(val id: Int, val name: String) : Route
 }
 
 /** A tiny back stack; the top-level pages (with the side rail) replace each other. */
@@ -127,6 +129,8 @@ private fun MawjApp(onExit: () -> Unit) {
                         is Route.Detail -> DetailScreen(route.meta)
                         is Route.Sources -> SourcesScreen(route.meta, route.episode)
                         is Route.Player -> PlayerScreen(route.request)
+                        is Route.Person -> com.mawj.tv.ui.PersonScreen(route.id, route.name)
+                        is Route.Company -> com.mawj.tv.ui.CompanyScreen(route.id, route.name)
                     }
                 }
             }

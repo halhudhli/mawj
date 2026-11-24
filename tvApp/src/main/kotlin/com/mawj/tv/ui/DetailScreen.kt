@@ -64,6 +64,9 @@ suspend fun resumeSameSource(meta: MetaPreview, episode: Episode?): Boolean {
 fun DetailScreen(preview: MetaPreview) {
     LaunchedEffect(preview.id) { Backdrop.show(preview.background ?: preview.poster) }
     var meta by remember(preview.id) { mutableStateOf<Meta?>(null) }
+    // Cast photos and studio logos (TMDB), loaded after the page shows.
+    var credits by remember(preview.id) { mutableStateOf<Pair<List<com.mawj.tv.data.CastMember>, List<com.mawj.tv.data.Company>>?>(null) }
+    LaunchedEffect(preview.id) { kotlinx.coroutines.delay(400); credits = com.mawj.tv.data.Tmdb.credits(preview.id, preview.type) }
     LaunchedEffect(preview.id) {
         meta = Addons.meta(preview.type, preview.id)
         meta?.preview?.background?.let(Backdrop::show)
@@ -142,7 +145,12 @@ fun DetailScreen(preview: MetaPreview) {
                 }
             }
         }
-        if (meta != null && (meta!!.cast.isNotEmpty() || meta!!.directors.isNotEmpty())) {
+        val c = credits
+        if (c != null && (c.first.isNotEmpty() || c.second.isNotEmpty())) {
+            item { CastRow(c.first) }
+            item { CompanyRow(c.second) }
+        }
+        if (meta != null && (c == null || c.first.isEmpty()) && (meta!!.cast.isNotEmpty() || meta!!.directors.isNotEmpty())) {
             item {
                 Column(Modifier.padding(top = 30.dp)) {
                     if (meta!!.directors.isNotEmpty()) T("إخراج: " + meta!!.directors.joinToString("، "), 15.sp, color = C.Muted)
