@@ -235,6 +235,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.subtitleEncodingFix }, { f, v -> f.copy(subtitleEncodingFix = v) },
         ),
         LuxoFeatureSwitch(
+            lx("فتح العمل بلا انتظار 🖼️", "Instant title opening 🖼️"),
+            lx("عند فتح عمل من الرئيسية تظهر صورته وشعاره وقصته فوراً بدل شاشة سوداء، إلى أن تكتمل صفحته", "A title opened from a row shows its artwork, logo and story at once instead of a black screen while its page loads"),
+            { it.openingPreview }, { f, v -> f.copy(openingPreview = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),
             lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
             { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },

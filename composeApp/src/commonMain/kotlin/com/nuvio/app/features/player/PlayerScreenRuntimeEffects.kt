@@ -662,6 +662,9 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         }
         val curSeason = activeSeasonNumber ?: return@LaunchedEffect
         val curEpisode = activeEpisodeNumber ?: return@LaunchedEffect
+        // MAWJ «تخطّي الحشو»: the filler list is loaded here too, so it works when the player is
+        // opened straight from «متابعة المشاهدة» without visiting the title page first.
+        playerMeta?.let { meta -> runCatching { com.nuvio.app.features.luxo.LuxoFiller.load(meta) } }
         val nextVideo = if (shuffleSettings.enabled) {
             EpisodeShuffleRepository.shuffle.select(
                 profileId, parentMetaId, playerMetaVideos, shuffleSettings.includeWatched,

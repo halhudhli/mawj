@@ -457,9 +457,15 @@ fun MetaDetailsScreen(
         ) {
             when {
             displayedMeta == null && uiState.isLoading -> {
-                NuvioLoadingIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                )
+                // MAWJ: the opened title's artwork and story right away (no black wait).
+                val opening = if (com.nuvio.app.features.luxo.rememberLuxoFeatures().openingPreview) MawjOpeningPreview.get(type, id) else null
+                if (opening != null) {
+                    MawjPreviewHero(opening, Modifier.fillMaxSize())
+                } else {
+                    NuvioLoadingIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
             }
 
             displayedMeta == null && uiState.errorMessage != null -> {
