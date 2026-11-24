@@ -1,4 +1,0 @@
-/prebuilt/*/*.so
-/prebuilt/*/*.part
-__pycache__/
-*.pyc
