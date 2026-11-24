@@ -117,6 +117,7 @@ private fun FeaturesCard() {
         T("ميزات موج", 15.sp, color = C.Muted)
         FeatureRow("الأيقونات المتحركة", "تتحرك الأيقونة مرة واحدة عند الوقوف عليها", com.mawj.tv.data.Store.animatedIcons) { com.mawj.tv.data.Store.setFeature("animatedIcons", it) }
         FeatureRow("تبديل البوسترات", "في الصف المحدد، والبوستر العربي أولاً", com.mawj.tv.data.Store.posterRotate) { com.mawj.tv.data.Store.setFeature("posterRotate", it) }
+        FeatureRow("تخطّي الحشو", "في الأنمي الطويل تُتخطّى حلقات الحشو عند الانتقال للحلقة التالية", com.mawj.tv.data.Store.fillerSkip) { com.mawj.tv.data.Store.setFeature("fillerSkip", it) }
         FeatureRow("«الأنسب» في المصادر", "يُعلَّم أنسب مصدر ويُوضع أولاً", com.mawj.tv.data.Store.bestSource) { com.mawj.tv.data.Store.setFeature("bestSource", it) }
     }
 }

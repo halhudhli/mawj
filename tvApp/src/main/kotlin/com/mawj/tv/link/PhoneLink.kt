@@ -64,6 +64,21 @@ object PhoneLink {
             val k = it.substringBefore('=', "")
             if (k.isEmpty()) null else k to URLDecoder.decode(it.substringAfter('='), "UTF-8")
         }.toMap()
+        // «لقطة شاشة»: the saved frames, served to the phone.
+        if (requestLine.startsWith("GET /shot/")) {
+            val name = URLDecoder.decode(requestLine.substringAfter("GET /shot/").substringBefore(' '), "UTF-8")
+            val file = java.io.File(shotsDir(), name).takeIf { it.isFile && it.parentFile == shotsDir() && !name.contains('/') }
+            val out = c.getOutputStream()
+            if (file == null) {
+                out.write("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".toByteArray())
+            } else {
+                val bytes = file.readBytes()
+                out.write("HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: ${bytes.size}\r\nContent-Disposition: inline; filename=\"${file.name}\"\r\nConnection: close\r\n\r\n".toByteArray())
+                out.write(bytes)
+            }
+            out.flush()
+            return
+        }
         var message = ""
         if (requestLine.startsWith("POST /add")) {
             val url = form["url"].orEmpty()
@@ -82,6 +97,18 @@ object PhoneLink {
         out.flush()
     }
 
+    private fun shotsDir() = java.io.File(com.mawj.tv.MawjTv.app.filesDir, "shots")
+
+    private fun shotsHtml(): String {
+        val shots = shotsDir().listFiles()?.filter { it.isFile }?.sortedByDescending { it.lastModified() }?.take(24).orEmpty()
+        if (shots.isEmpty()) return ""
+        val items = shots.joinToString("") { f ->
+            val u = "/shot/" + java.net.URLEncoder.encode(f.name, "UTF-8").replace("+", "%20")
+            "<a href=\"$u\" download=\"${f.name}\"><img src=\"$u\" loading=\"lazy\" alt=\"\"></a>"
+        }
+        return "<section class=\"shots\"><label>لقطات الشاشة</label><p>يُضغط على اللقطة لحفظها.</p><div class=\"grid\">$items</div></section>"
+    }
+
     private fun page(message: String) = """
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>موج — الربط بالجوال</title>
@@ -92,12 +119,16 @@ form{background:#0D1620;border:1px solid rgba(214,179,106,.3);border-radius:16px
 label{display:block;font-weight:600;margin-bottom:8px}
 input{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #2a3846;background:#070D14;color:#F6F1E4;direction:ltr}
 button{margin-top:10px;width:100%;font-size:17px;font-weight:700;padding:12px;border:0;border-radius:999px;background:#D6B36A;color:#070D14}
+.shots{background:#0D1620;border:1px solid rgba(214,179,106,.3);border-radius:16px;padding:16px;margin-bottom:16px}
+.shots p{margin:0 0 10px;font-size:14px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.grid img{width:100%;border-radius:10px;display:block}
 .msg{background:rgba(91,191,122,.15);border:1px solid rgba(91,191,122,.5);color:#BDEBCB;border-radius:12px;padding:10px 14px;margin-bottom:16px}
 </style></head><body>
 <h1>موج</h1><p>ما يُرسل من هنا يظهر على الشاشة مباشرة.</p>
 ${if (message.isNotEmpty()) "<div class=\"msg\">$message</div>" else ""}
 <form method="post" action="/add"><label>إضافة إضافة</label><input name="url" placeholder="https://…/manifest.json" autocomplete="off"><button>إضافة</button></form>
 <form method="post" action="/search"><label>البحث على الشاشة</label><input name="q" dir="auto" placeholder="اسم فيلم أو مسلسل"><button>بحث</button></form>
+${shotsHtml()}
 </body></html>
 """.trimIndent()
 }

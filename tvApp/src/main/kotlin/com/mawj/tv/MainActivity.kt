@@ -51,16 +51,17 @@ class MawjTv : Application(), SingletonImageLoader.Factory {
         app = this
         Store.init(this)
         com.mawj.tv.data.Account.init(this)
+        com.mawj.tv.data.Account.syncOnStart()
         com.mawj.tv.link.PhoneLink.start()
         com.mawj.tv.link.RemoteLink.start(this)
     }
 
-    /** Small memory cache, a disk cache for posters, 16-bit colour: light on a TV. */
+    /** Small memory cache and a disk cache; full colour (posters must stay sharp, no banding). */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
             .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.05).build() }
             .diskCache { DiskCache.Builder().directory(cacheDir.resolve("img").toOkioPath()).maxSizeBytes(150L * 1024 * 1024).build() }
-            .allowRgb565(true)
+            .allowRgb565(false)
             .crossfade(false)
             .build()
 }
@@ -127,7 +128,7 @@ private fun MawjApp(onExit: () -> Unit) {
     val holder = rememberSaveableStateHolder()
     BackHandler { if (!Nav.back()) onExit() }
     Box(Modifier.fillMaxSize()) {
-        if (route !is Route.Player) AppBackdrop(soft = route is Route.Sources)
+        if (route !is Route.Player) AppBackdrop(soft = route is Route.Sources, clear = route is Route.Home)
         val topLevel = route is Route.Home || route is Route.Search || route is Route.Library || route is Route.Settings
         Row(Modifier.fillMaxSize()) {
             if (topLevel) Rail(route)

@@ -46,12 +46,13 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           SUPA_URL_SECRET: ${{ secrets.NUVIO_SUPABASE_URL }}
           SUPA_KEY_SECRET: ${{ secrets.NUVIO_SUPABASE_ANON_KEY }}
+          LUXO_GEMINI_KEY: ${{ secrets.LUXO_GEMINI_KEY }}
         run: |
           set -o pipefail
           # The account service: secrets if set, otherwise the public client values the phone app already ships.
           export NUVIO_SUPABASE_URL="${SUPA_URL_SECRET:-$(grep -o 'NUVIO_SUPABASE_URL", "[^"]*' composeApp/build.gradle.kts | sed 's/.*"//')}"
           export NUVIO_SUPABASE_ANON_KEY="${SUPA_KEY_SECRET:-$(grep -o 'NUVIO_SUPABASE_ANON_KEY", "[^"]*' composeApp/build.gradle.kts | sed 's/.*"//')}"
-          echo "account service url length ${#NUVIO_SUPABASE_URL}, key length ${#NUVIO_SUPABASE_ANON_KEY}"
+          echo "account service url length ${#NUVIO_SUPABASE_URL}, key length ${#NUVIO_SUPABASE_ANON_KEY}, gemini key length ${#LUXO_GEMINI_KEY}"
           ./gradlew :tvApp:assembleRelease \
             -Pnuvio.app.versionName=1.0.0 -Pnuvio.app.versionCode=1 \
             -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore \

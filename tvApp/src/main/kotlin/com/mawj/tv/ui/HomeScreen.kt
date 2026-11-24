@@ -150,7 +150,7 @@ fun restoreFocus(key: String, first: Boolean): Modifier {
 
 @Composable
 fun RowTitle(text: String) {
-    T(text, 20.sp, weight = FontWeight.Bold, modifier = Modifier.padding(start = 30.dp, top = 8.dp))
+    T(text, 20.sp, weight = FontWeight.Bold, shadow = true, modifier = Modifier.padding(start = 30.dp, top = 8.dp))
 }
 
 @Composable
@@ -160,12 +160,12 @@ private fun Hero(m: MetaPreview?, modifier: Modifier) {
         if (!m.logo.isNullOrBlank()) {
             Img(m.logo, 340.dp, 96.dp, Modifier.width(340.dp).height(96.dp), ContentScale.Fit)
         } else {
-            T(m.name, 42.sp, weight = FontWeight.Bold, maxLines = 1)
+            T(m.name, 42.sp, weight = FontWeight.Bold, maxLines = 1, shadow = true)
         }
         Spacer(Modifier.height(10.dp))
         MetaLine(listOfNotNull(m.year, m.genres.take(2).joinToString(" · "), m.rating?.let { "★ $it" }))
         Spacer(Modifier.height(10.dp))
-        T(m.description.orEmpty(), 16.sp, color = C.Muted, maxLines = 3, lineHeight = 26.sp, modifier = Modifier.width(560.dp))
+        T(m.description.orEmpty(), 16.sp, color = C.Ink, maxLines = 3, lineHeight = 26.sp, shadow = true, modifier = Modifier.width(560.dp))
     }
 }
 

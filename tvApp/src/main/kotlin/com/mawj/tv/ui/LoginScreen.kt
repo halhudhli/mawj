@@ -91,9 +91,8 @@ fun LoginScreen() {
     LaunchedEffect(Unit) { delay(200); runCatching { emailFocus.requestFocus() } }
 
     Box(
-        Modifier.fillMaxSize().background(
-            Brush.linearGradient(listOf(Color(0xFF0F2233), C.Sea), start = Offset.Zero, end = Offset(1400f, 900f)),
-        ),
+        // A plain page: one colour, nothing drawn behind (light on the TV).
+        Modifier.fillMaxSize().background(C.Sea),
         contentAlignment = Alignment.Center,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(70.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -137,7 +136,7 @@ fun LoginScreen() {
             }
             // The brand.
             Column(Modifier.width(400.dp)) {
-                Box(Modifier.size(92.dp).background(Brush.radialGradient(listOf(Color(0xFFF7EAC6), C.Gold, Color(0xFF8E733A))), CircleShape))
+                Box(Modifier.size(92.dp).background(C.Gold, CircleShape))
                 Spacer(Modifier.height(18.dp))
                 T("موج", 64.sp, color = C.GoldLight, weight = FontWeight.Bold)
                 T("تُنزَّل الإضافات من الحساب تلقائياً بعد الدخول.", 18.sp, color = C.Muted, lineHeight = 30.sp)

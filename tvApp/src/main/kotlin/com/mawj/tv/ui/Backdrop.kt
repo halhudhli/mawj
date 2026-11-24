@@ -52,7 +52,7 @@ object Backdrop {
 }
 
 @Composable
-fun AppBackdrop(soft: Boolean = false) {
+fun AppBackdrop(soft: Boolean = false, clear: Boolean = false) {
     var shown by remember { mutableStateOf<String?>(null) }
     val target = Backdrop.target
     LaunchedEffect(target) {
@@ -65,14 +65,19 @@ fun AppBackdrop(soft: Boolean = false) {
         }
         // Dark towards the side where the text sits (the right, in Arabic) and towards the bottom.
         // The sources page keeps the artwork clear (its own scrim darkens only under the list).
-        if (!soft) Box(
+        if (!soft && !clear) Box(
             Modifier.fillMaxSize().background(
                 Brush.horizontalGradient(0f to Color(0x2E070D14), 0.55f to Color(0x9E070D14), 1f to Color(0xF0070D14)),
             ),
         )
         Box(
             Modifier.fillMaxSize().background(
-                Brush.verticalGradient(0.35f to Color.Transparent, 1f to if (soft) Color(0x99070D14) else Color(0xF5070D14)),
+                when {
+                    // Home: the focused title's artwork stays fully clear; only the rows' strip at the bottom is shaded.
+                    clear -> Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color(0xB3070D14))
+                    soft -> Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color(0x99070D14))
+                    else -> Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color(0xF5070D14))
+                },
             ),
         )
     }
@@ -82,7 +87,7 @@ fun AppBackdrop(soft: Boolean = false) {
 @Composable
 fun Rail(current: Route) {
     Column(
-        Modifier.width(92.dp).fillMaxHeight().background(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color(0xD9070D14))).padding(top = 26.dp),
+        Modifier.width(92.dp).fillMaxHeight().padding(top = 26.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val initial = com.mawj.tv.data.Account.email?.firstOrNull()?.uppercase() ?: "م"

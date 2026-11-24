@@ -21,6 +21,8 @@ android {
         // The Nuvio account service (same public client settings the phone app uses; set by CI).
         buildConfigField("String", "SUPA_URL", "\"${providers.environmentVariable("NUVIO_SUPABASE_URL").orNull.orEmpty()}\"")
         buildConfigField("String", "SUPA_KEY", "\"${providers.environmentVariable("NUVIO_SUPABASE_ANON_KEY").orNull.orEmpty()}\"")
+        // Gemini for Mawj's companion tools (a CI secret; empty means the tools stay hidden).
+        buildConfigField("String", "GEMINI_KEY", "\"${providers.environmentVariable("LUXO_GEMINI_KEY").orNull.orEmpty()}\"")
     }
 
     buildFeatures {

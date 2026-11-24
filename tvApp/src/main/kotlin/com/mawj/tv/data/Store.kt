@@ -43,8 +43,13 @@ object Store {
     var bestSource by androidx.compose.runtime.mutableStateOf(true)
         private set
 
+    /** Long anime: the next episode passes over filler episodes. */
+    var fillerSkip by androidx.compose.runtime.mutableStateOf(true)
+        private set
+
     fun setFeature(key: String, value: Boolean) {
         when (key) {
+            "fillerSkip" -> fillerSkip = value
             "animatedIcons" -> animatedIcons = value
             "posterRotate" -> posterRotate = value
             "bestSource" -> bestSource = value
@@ -75,6 +80,19 @@ object Store {
     fun number(key: String, default: Int): Int = prefs.getInt("p:$key", default)
     fun setNumber(key: String, value: Int) = prefs.edit().putInt("p:$key", value).apply()
 
+    // ---- saved lines (player → حفظ العبارة) ----
+
+    fun quotes(videoId: String): List<Pair<Long, String>> =
+        prefs.getString("q:$videoId", null)?.split("\u001E")?.mapNotNull { e ->
+            val ms = e.substringBefore('\u001F').toLongOrNull() ?: return@mapNotNull null
+            ms to e.substringAfter('\u001F')
+        }.orEmpty()
+
+    fun addQuote(videoId: String, ms: Long, text: String) {
+        val list = (quotes(videoId) + (ms to text.replace('\u001E', ' ').replace('\u001F', ' '))).distinctBy { it.second }.sortedBy { it.first }.takeLast(50)
+        prefs.edit().putString("q:$videoId", list.joinToString("\u001E") { "${it.first}\u001F${it.second}" }).apply()
+    }
+
     // ---- player look (picture colours preset, kept for every video) ----
 
     var colorPreset: String
@@ -86,6 +104,7 @@ object Store {
         animatedIcons = prefs.getBoolean("f:animatedIcons", true)
         posterRotate = prefs.getBoolean("f:posterRotate", true)
         bestSource = prefs.getBoolean("f:bestSource", true)
+        fillerSkip = prefs.getBoolean("f:fillerSkip", true)
         val saved = prefs.getString("addons", null)
         addonUrls.addAll(saved?.lines()?.map(String::trim)?.filter(String::isNotEmpty) ?: DEFAULT_ADDONS)
         progress.addAll(loadProgress())

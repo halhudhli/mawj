@@ -98,7 +98,7 @@ object Tmdb {
         fun pick(filter: (String?) -> Boolean) = list
             .filter { filter((it["iso_639_1"] as? JsonPrimitive)?.contentOrNull) }
             .sortedByDescending { (it["vote_average"] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull() ?: 0.0 }
-            .mapNotNull { img((it["file_path"] as? JsonPrimitive)?.contentOrNull, "w342") }
+            .mapNotNull { img((it["file_path"] as? JsonPrimitive)?.contentOrNull, "w500") }
             .take(2)
         return PosterSet(pick { it == "ar" }, pick { it == "en" || it == null }).also { posterSets[meta.id] = it }
     }

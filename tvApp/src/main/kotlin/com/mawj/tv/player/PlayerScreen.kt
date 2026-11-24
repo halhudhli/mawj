@@ -69,10 +69,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-private enum class Panel { None, Subs, Audio, Speed, Info, Tools, Colors, Bookmarks, Sleep }
+private enum class Panel { None, Subs, Audio, Speed, Info, Tools, Colors, Bookmarks, Sleep, Companion, Who, Quiz, Quotes }
 
 /** Panels and bars are see-through a little, so the picture stays in view. */
-private val PanelBg = Color(0xD1070D14)
+internal val PanelBg = Color(0xD1070D14)
 
 /** «ألوان الصورة»: ready looks (mpv brightness, contrast, saturation, gamma). */
 private val COLOR_PRESETS = listOf(
@@ -130,6 +130,11 @@ fun PlayerScreen(req: PlayRequest) {
     var sleepAtEnd by remember { mutableStateOf(false) }
     var toast by remember { mutableStateOf<String?>(null) }
     var bookmarksVersion by remember { mutableIntStateOf(0) }
+    var quotesVersion by remember { mutableIntStateOf(0) }
+    // The last subtitle lines shown (the companion's context); read only when Gemini is on.
+    val subLines = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    var addonSubs by remember { mutableStateOf<List<com.mawj.tv.data.Subtitle>>(emptyList()) }
+    var translatePct by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
     val rootFocus = remember { FocusRequester() }
@@ -143,17 +148,18 @@ fun PlayerScreen(req: PlayRequest) {
         scope.launch { delay(2_500); if (toast == text) toast = null }
     }
 
-    fun save() {
+    /** Keeps the position; [push] also sends it to the account (on pause and on leaving, not every few seconds). */
+    fun save(push: Boolean = false) {
         val v = view ?: return
         val d = v.durationMs
         if (d <= 0) return
-        Store.saveProgress(
-            Progress(
-                meta = req.meta, videoId = req.videoId,
-                season = req.episode?.season ?: 0, episode = req.episode?.number ?: 0, episodeTitle = req.episode?.title,
-                positionMs = v.positionMs, durationMs = d, updatedAt = System.currentTimeMillis(),
-            ),
+        val p = Progress(
+            meta = req.meta, videoId = req.videoId,
+            season = req.episode?.season ?: 0, episode = req.episode?.number ?: 0, episodeTitle = req.episode?.title,
+            positionMs = v.positionMs, durationMs = d, updatedAt = System.currentTimeMillis(),
         )
+        Store.saveProgress(p)
+        if (push) com.mawj.tv.data.Account.pushProgress(p)
     }
 
     fun playNext() {
@@ -184,7 +190,7 @@ fun PlayerScreen(req: PlayRequest) {
     }
 
     fun closePanel() {
-        val back = if (panel in listOf(Panel.Tools, Panel.Colors, Panel.Bookmarks, Panel.Sleep, Panel.Info)) moreFocus else openers[panel]
+        val back = if (panel in listOf(Panel.Tools, Panel.Colors, Panel.Bookmarks, Panel.Sleep, Panel.Info, Panel.Companion, Panel.Who, Panel.Quiz, Panel.Quotes)) moreFocus else openers[panel]
         panel = Panel.None
         scope.launch { delay(30); runCatching { (back ?: playFocus).requestFocus() } }
     }
@@ -238,6 +244,7 @@ fun PlayerScreen(req: PlayRequest) {
         if (dialogue || night || level) applyFx()
         if (colorKey != "natural0") applyColors()
         val subs = Addons.subtitles(req.meta.type, req.videoId)
+        addonSubs = subs
         var waited = 0
         while (v.durationMs <= 0 && waited < 40) { delay(250); waited++ }
         var hasArabic = v.tracks().any { it.type == "sub" && it.lang.startsWith("ar") }
@@ -302,7 +309,9 @@ fun PlayerScreen(req: PlayRequest) {
         val ep = req.episode ?: return@LaunchedEffect
         val eps = Addons.meta(req.meta.type, req.meta.id)?.videos.orEmpty().filter { it.season > 0 }
         val i = eps.indexOfFirst { it.id == ep.id }
-        next = if (i >= 0) eps.getOrNull(i + 1) else null
+        // «تخطّي الحشو»: the next episode that isn't filler.
+        val filler = com.mawj.tv.data.Filler.fillerIds(req.meta, eps)
+        next = if (i >= 0) eps.drop(i + 1).firstOrNull { it.id !in filler } else null
     }
 
     // A light poll twice a second.
@@ -313,13 +322,18 @@ fun PlayerScreen(req: PlayRequest) {
             delay(500)
             pos = v.positionMs
             dur = v.durationMs
-            paused = v.paused
+            val nowPaused = v.paused
+            if (nowPaused && !paused && dur > 0) save(push = true)
+            paused = nowPaused
             buffering = v.buffering || dur == 0L
             if (controls && panel == Panel.None && !paused && System.currentTimeMillis() - lastInput > 5_000) {
                 controls = false
                 runCatching { rootFocus.requestFocus() }
             }
             if (++tick % 30 == 0) save()
+            if (com.mawj.tv.data.Gemini.enabled) v.subText()?.let { line ->
+                if (subLines.lastOrNull() != line) { subLines.add(line); if (subLines.size > 30) subLines.removeAt(0) }
+            }
             // «مؤقت النوم»: counts only while the video plays.
             if (sleepLeftMs > 0 && !paused) {
                 sleepLeftMs -= 500
@@ -337,7 +351,7 @@ fun PlayerScreen(req: PlayRequest) {
         }
     }
 
-    DisposableEffect(Unit) { onDispose { save(); view?.release() } }
+    DisposableEffect(Unit) { onDispose { save(push = true); view?.release() } }
     LaunchedEffect(Unit) {
         delay(300)
         if (runCatching { playFocus.requestFocus() }.isFailure) runCatching { rootFocus.requestFocus() }
@@ -446,6 +460,13 @@ fun PlayerScreen(req: PlayRequest) {
                 val list = remember(bookmarksVersion) { Store.bookmarks(req.videoId) }
                 BookmarksPanel(list, onJump = { ms -> v.seekTo(ms); closePanel() }, onRemove = { ms -> Store.removeBookmark(req.videoId, ms); bookmarksVersion++ })
             }
+            Panel.Companion -> CompanionPanel(req, pos, dur, subLines.toList())
+            Panel.Who -> WhoPanel(req, v)
+            Panel.Quiz -> QuizPanel(req, pos, dur, subLines.toList())
+            Panel.Quotes -> {
+                val list = remember(quotesVersion) { Store.quotes(req.videoId) }
+                QuotesPanel(list) { ms -> v.seekTo(ms); closePanel() }
+            }
             Panel.Tools -> ToolsPanel(
                 dialogue = dialogue, night = night, level = level,
                 colorLabel = COLOR_PRESETS.firstOrNull { it.first == colorKey }?.second ?: "الأصلي",
@@ -470,6 +491,43 @@ fun PlayerScreen(req: PlayRequest) {
                     }
                 },
                 onSleep = { panel = Panel.Sleep },
+                gemini = com.mawj.tv.data.Gemini.enabled,
+                translateLabel = translatePct?.let { "$it٪" },
+                onTranslate = {
+                    if (translatePct == null) {
+                        val src = addonSubs.filterNot { it.lang.lowercase().startsWith("ar") }
+                            .sortedBy { if (it.lang.lowercase().startsWith("en")) 0 else 1 }.firstOrNull()
+                        if (src == null) say("لا توجد ترجمة بلغة أخرى لهذه الحلقة") else scope.launch {
+                            translatePct = 0
+                            val r = com.mawj.tv.data.SubTranslate.translate(src) { p -> translatePct = p }
+                            translatePct = null
+                            when (r) {
+                                is com.mawj.tv.data.SubTranslate.Result.Ready -> {
+                                    v.addSubtitle(r.path, "عربي ✨ ترجمة موج", "ar", select = true); tracksVersion++
+                                    say("الترجمة العربية جاهزة ✅")
+                                }
+                                com.mawj.tv.data.SubTranslate.Result.AlreadyArabic -> say("هذه الترجمة عربية ولا تحتاج ترجمة")
+                                com.mawj.tv.data.SubTranslate.Result.Unreadable -> say("تعذّرت قراءة ملف الترجمة")
+                                com.mawj.tv.data.SubTranslate.Result.Failed -> say("تعذّرت الترجمة الآن")
+                            }
+                        }
+                    }
+                },
+                onCompanion = { v.pause(); panel = Panel.Companion },
+                onWho = { v.pause(); panel = Panel.Who },
+                onQuiz = { v.pause(); panel = Panel.Quiz },
+                onQuote = {
+                    val line = v.subText()
+                    if (line == null) say("لا توجد عبارة على الشاشة الآن")
+                    else { Store.addQuote(req.videoId, v.positionMs, line); quotesVersion++; say("حُفظت العبارة") }
+                },
+                onQuotes = { panel = Panel.Quotes },
+                onShot = {
+                    scope.launch {
+                        val ok = saveShot(v, req.meta.name, v.positionMs)
+                        say(if (ok) "حُفظت اللقطة، وتُفتح من الجوال عبر «الربط بالجوال»" else "تعذّر التقاط هذا المشهد")
+                    }
+                },
                 onInfo = { panel = Panel.Info },
                 onSwitch = { switchSource() },
             )
@@ -606,16 +664,19 @@ private fun ToolsPanel(
     onEncoding: () -> Unit, onSync: () -> Unit,
     onMark: () -> Unit, onBookmarks: () -> Unit, onLoop: () -> Unit,
     onSleep: () -> Unit, onInfo: () -> Unit, onSwitch: () -> Unit,
+    gemini: Boolean, translateLabel: String?, onTranslate: () -> Unit,
+    onCompanion: () -> Unit, onWho: () -> Unit, onQuiz: () -> Unit,
+    onQuote: () -> Unit, onQuotes: () -> Unit, onShot: () -> Unit,
 ) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(40); runCatching { first.requestFocus() } }
-    Box(Modifier.fillMaxSize().padding(start = 34.dp, end = 34.dp, bottom = 100.dp), contentAlignment = Alignment.BottomCenter) {
+    Box(Modifier.fillMaxSize().padding(start = 30.dp, end = 30.dp, bottom = 96.dp), contentAlignment = Alignment.BottomCenter) {
         Column(
             Modifier.fillMaxWidth().background(PanelBg, RoundedCornerShape(16.dp)).border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(16.dp))
                 .padding(horizontal = 18.dp, vertical = 14.dp),
         ) {
             T("أدوات موج", 18.sp, weight = FontWeight.Bold)
-            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ToolGroup("الصورة والصوت", Modifier.weight(1f)) {
                     Tool("color-filter-sparkle-split", "ألوان الصورة", colorLabel.takeIf { it != "الأصلي" }, Modifier.focusRequester(first), onClick = onColors)
                     Tool("user-voice-speak", "توضيح الحوار", if (dialogue) "مفعّل" else null, on = dialogue, onClick = onDialogue)
@@ -623,13 +684,22 @@ private fun ToolsPanel(
                     Tool("waveform-scroll", "تحسين الصوت", if (level) "مفعّل" else null, on = level, onClick = onLevel)
                 }
                 ToolGroup("الترجمة", Modifier.weight(1f)) {
+                    if (gemini) Tool("speech-to-text-transcribe", "ترجمة للعربي", translateLabel, on = translateLabel != null, onClick = onTranslate)
                     Tool("code-block-type", "ترميز الترجمة", null, onClick = onEncoding)
                     Tool("ear-sound-hear", "سمعت · ظهرت", null, onClick = onSync)
                 }
                 ToolGroup("اللحظة", Modifier.weight(1f)) {
                     Tool("bookmark-drop", "علامة هنا", null, onClick = onMark)
                     Tool("bookmarks-cycle", "العلامات", null, onClick = onBookmarks)
+                    Tool("message-text-type", "حفظ العبارة", null, onClick = onQuote)
+                    Tool("messages-reply", "العبارات", null, onClick = onQuotes)
+                    Tool("camera-snap", "لقطة شاشة", null, onClick = onShot)
                     Tool("repeat-chase", "تكرار مقطع", loopState, on = loopState != null, onClick = onLoop)
+                }
+                if (gemini) ToolGroup("رفيق موج", Modifier.weight(1f)) {
+                    Tool("bots-chat", "رفيق موج", null, onClick = onCompanion)
+                    Tool("eye-sparkle-focus", "من في المشهد؟", null, onClick = onWho)
+                    Tool("help-circle-tilt", "اختبار الحلقة", null, onClick = onQuiz)
                 }
                 ToolGroup("التشغيل", Modifier.weight(1f)) {
                     Tool("zzz-float", "مؤقت النوم", sleepLabel, on = sleepLabel != null, onClick = onSleep)
@@ -713,7 +783,7 @@ private fun SyncChip(icon: String, label: String, at: Long?, modifier: Modifier 
 // ---------------- panels ----------------
 
 @Composable
-private fun PanelBox(title: String, width: Int = 300, content: @Composable () -> Unit) {
+internal fun PanelBox(title: String, width: Int = 300, content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
         Column(
             Modifier.width(width.dp).fillMaxHeight().background(PanelBg).verticalScroll(rememberScrollState())
@@ -728,7 +798,7 @@ private fun PanelBox(title: String, width: Int = 300, content: @Composable () ->
 
 /** One choice row; the current one is gold and receives the focus when the panel opens. */
 @Composable
-private fun ChoiceRow(label: String, selected: Boolean, focus: FocusRequester?, count: Int? = null, sub: String? = null, onClick: () -> Unit) {
+internal fun ChoiceRow(label: String, selected: Boolean, focus: FocusRequester?, count: Int? = null, sub: String? = null, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     Row(
         Modifier.fillMaxWidth().height(if (sub != null) 46.dp else 38.dp)
@@ -932,7 +1002,7 @@ private fun timeMs(ms: Long): String {
     return String.format(Locale.US, "%02d:%02d.%d", (s % 3600) / 60, s % 60, (ms % 1000) / 100)
 }
 
-private fun time(ms: Long): String {
+internal fun time(ms: Long): String {
     val s = ms / 1000
     val h = s / 3600
     val m = (s % 3600) / 60

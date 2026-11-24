@@ -133,6 +133,16 @@ class MpvView(context: Context) : BaseMPVView(context, null) {
         mpv.setPropertyString("sub-margin-y", marginY.toString())
     }
 
+    /** The subtitle line on screen now (for «حفظ العبارة» and the companion's context). */
+    fun subText(): String? = prop("sub-text")?.trim()?.takeIf { it.isNotEmpty() }
+
+    /** «لقطة شاشة» / «من في المشهد»: the current frame (video only) to a file; true when written. */
+    fun screenshot(path: String): Boolean = runCatching { mpv.command("screenshot-to-file", path, "video") }.isSuccess && java.io.File(path).let { f ->
+        var tries = 0
+        while (!f.exists() && tries < 20) { Thread.sleep(100); tries++ }
+        f.exists() && f.length() > 0
+    }
+
     /** What «معلومات الملف» shows. */
     fun info(): List<Pair<String, String>> {
         val w = prop("video-params/w"); val h = prop("video-params/h")

@@ -76,6 +76,8 @@ fun T(
     /** Numbers and Latin labels (years, sizes, times): Barlow, as on the tablet. */
     num: Boolean = false,
     serif: Boolean = false,
+    /** A soft dark shadow, for text drawn straight over artwork. */
+    shadow: Boolean = false,
 ) {
     BasicText(
         text = text,
@@ -83,6 +85,7 @@ fun T(
         style = TextStyle(
             color = color, fontSize = size, fontWeight = weight, textAlign = align, lineHeight = lineHeight,
             fontFamily = when { num -> Fonts.num; serif -> Fonts.serif; else -> Fonts.ui },
+            shadow = if (shadow) androidx.compose.ui.graphics.Shadow(Color(0xD9000000), androidx.compose.ui.geometry.Offset(0f, 2f), 10f) else null,
         ),
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
@@ -112,6 +115,14 @@ fun Modifier.tvFocus(
         .clip(shape)
         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
 }
+
+/**
+ * Posters at their best: the largest version the source offers for the size drawn (TMDB w500/w780,
+ * Metahub «large»), so they stay sharp on a big screen.
+ */
+fun hqPoster(url: String?): String? = url
+    ?.replace(Regex("/t/p/w(92|154|185|342)/"), "/t/p/w500/")
+    ?.replace(Regex("/poster/(small|medium)/"), "/poster/large/")
 
 /** Loads an image at the size it is drawn, never bigger (memory is short on TVs). */
 @Composable
@@ -199,7 +210,8 @@ private fun PosterArt(meta: MetaPreview, w: Dp, h: Dp, rotate: Boolean, index: I
         }
     }
     androidx.compose.animation.Crossfade(urls.getOrNull(at) ?: meta.poster, animationSpec = tween(1600), label = "poster") { url ->
-        Img(url, w, h, Modifier.fillMaxSize())
+        // Decoded a little above the drawn size: the focused card grows 6%, and it must stay sharp.
+        Img(hqPoster(url), w * 1.15f, h * 1.15f, Modifier.fillMaxSize())
     }
 }
 
@@ -291,7 +303,7 @@ fun Tag(text: String, gold: Boolean = false) {
 @Composable
 fun MetaLine(parts: List<String>, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        parts.filter { it.isNotBlank() }.forEach { T(it, 15.sp, color = C.Muted, maxLines = 1) }
+        parts.filter { it.isNotBlank() }.forEach { T(it, 15.sp, color = C.Ink, maxLines = 1, shadow = true) }
     }
 }
 
