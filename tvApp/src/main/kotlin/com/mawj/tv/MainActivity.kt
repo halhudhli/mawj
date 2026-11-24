@@ -44,6 +44,7 @@ class MawjTv : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         Store.init(this)
+        com.mawj.tv.data.Account.init(this)
         com.mawj.tv.link.PhoneLink.start()
     }
 
@@ -66,6 +67,7 @@ sealed interface Route {
     data class Sources(val meta: MetaPreview, val episode: Episode?) : Route
     data class Player(val request: PlayRequest) : Route
     data class Person(val id: Int, val name: String) : Route
+    data object Login : Route
     data class Company(val id: Int, val name: String) : Route
 }
 
@@ -98,6 +100,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // First start: Mawj's sign-in page (it can be skipped).
+        if (savedInstanceState == null && !com.mawj.tv.data.Account.introSeen && com.mawj.tv.data.Account.configured) Nav.tab(Route.Login)
         setContent {
             CompositionLocalProvider(
                 LocalLayoutDirection provides LayoutDirection.Rtl,
@@ -129,6 +133,7 @@ private fun MawjApp(onExit: () -> Unit) {
                         is Route.Detail -> DetailScreen(route.meta)
                         is Route.Sources -> SourcesScreen(route.meta, route.episode)
                         is Route.Player -> PlayerScreen(route.request)
+                        Route.Login -> com.mawj.tv.ui.LoginScreen()
                         is Route.Person -> com.mawj.tv.ui.PersonScreen(route.id, route.name)
                         is Route.Company -> com.mawj.tv.ui.CompanyScreen(route.id, route.name)
                     }

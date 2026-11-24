@@ -36,6 +36,7 @@ import com.mawj.tv.BuildConfig
 import com.mawj.tv.data.Addons
 import com.mawj.tv.data.Store
 import com.mawj.tv.link.PhoneLink
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen() {
@@ -45,6 +46,7 @@ fun SettingsScreen() {
     Row(Modifier.fillMaxSize().padding(start = 24.dp, end = 32.dp, top = 36.dp)) {
         Column(Modifier.weight(1f)) {
             T("الإعدادات", 34.sp, weight = FontWeight.Bold)
+            AccountCard()
             T("الإضافات المثبّتة، بترتيب ظهورها في الرئيسية", 15.sp, color = C.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 40.dp)) {
                 items(urls, key = { it }) { u ->
@@ -101,6 +103,33 @@ private fun Qr(text: String) {
         val cell = size.width / matrix.width
         for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
             if (matrix[x, y]) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
+        }
+    }
+}
+
+/** The Nuvio account: who is signed in, refresh the addons from it, or sign out / in. */
+@Composable
+private fun AccountCard() {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var note by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    Row(
+        Modifier.fillMaxWidth().padding(top = 12.dp).background(C.Raised, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            T("الحساب", 15.sp, color = C.Muted)
+            T(com.mawj.tv.data.Account.email ?: "غير مسجَّل", 17.sp, weight = FontWeight.SemiBold, maxLines = 1)
+            note?.let { T(it, 13.sp, color = C.Green) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (com.mawj.tv.data.Account.signedIn) {
+                Chip("تحديث الإضافات من الحساب", false, onClick = {
+                    scope.launch { val n = com.mawj.tv.data.Account.pullAddons(); note = if (n > 0) "نُزّلت $n إضافة من الحساب" else "لم تُعثر على إضافات في الحساب" }
+                })
+                Chip("تسجيل الخروج", false, onClick = { com.mawj.tv.data.Account.signOut(); note = null })
+            } else {
+                Chip("تسجيل الدخول", false, onClick = { com.mawj.tv.Nav.go(com.mawj.tv.Route.Login) })
+            }
         }
     }
 }

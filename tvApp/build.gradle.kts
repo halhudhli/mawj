@@ -18,6 +18,9 @@ android {
         ndk { abiFilters += listOf("armeabi-v7a") }
         val tmdb = providers.environmentVariable("TMDB_API_KEY").orNull.orEmpty()
         buildConfigField("String", "TMDB_KEY", "\"$tmdb\"")
+        // The Nuvio account service (same public client settings the phone app uses; set by CI).
+        buildConfigField("String", "SUPA_URL", "\"${providers.environmentVariable("NUVIO_SUPABASE_URL").orNull.orEmpty()}\"")
+        buildConfigField("String", "SUPA_KEY", "\"${providers.environmentVariable("NUVIO_SUPABASE_ANON_KEY").orNull.orEmpty()}\"")
     }
 
     buildFeatures {

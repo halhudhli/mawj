@@ -42,6 +42,13 @@ object Store {
         return true
     }
 
+    /** The account's list replaces the local one (same order). */
+    fun replaceAddons(urls: List<String>) {
+        addonUrls.clear()
+        addonUrls.addAll(urls)
+        saveAddons()
+    }
+
     fun removeAddon(url: String) {
         addonUrls.remove(url)
         saveAddons()
