@@ -32,9 +32,6 @@ class MpvView(context: Context, private val direct: Boolean = false) : BaseMPVVi
             mpv.setOptionString("profile", "fast")
             mpv.setOptionString("hwdec", "mediacodec-copy,mediacodec,no")
         }
-        // If the chip cannot decode it, software decoding takes the lighter path.
-        mpv.setOptionString("vd-lavc-skiploopfilter", "nonkey")
-        mpv.setOptionString("vd-lavc-threads", "${Runtime.getRuntime().availableProcessors().coerceIn(2, 8)}")
         mpv.setOptionString("tls-verify", "yes")
         mpv.setOptionString("tls-ca-file", "${context.filesDir.path}/cacert.pem")
         // Start sooner and keep playing through short network dips.

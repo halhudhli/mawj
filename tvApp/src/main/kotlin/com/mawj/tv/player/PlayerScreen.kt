@@ -67,6 +67,7 @@ import com.mawj.tv.ui.T
 import com.mawj.tv.ui.tvFocus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 private enum class Panel { None, Subs, Audio, Speed, Info, Tools, Colors, Bookmarks, Sleep, Companion, Who, Quiz, Quotes }
@@ -100,7 +101,9 @@ suspend fun nextEpisodeStream(type: String, next: Episode, current: Stream): Str
 fun PlayerScreen(req: PlayRequest) {
     var view by remember { mutableStateOf<MpvView?>(null) }
     // Heavy files play straight to the screen (no frame copy): lighter, but no picture tools.
-    val direct = remember { com.mawj.tv.data.Store.feature("directHeavy") && com.mawj.tv.data.Caps.heavy(req.stream) }
+    var direct by remember { mutableStateOf(com.mawj.tv.data.Store.feature("directHeavy") && com.mawj.tv.data.Caps.heavy(req.stream)) }
+    // Where to start: the saved place, or where direct mode stopped when it falls back.
+    var startAt by remember { mutableStateOf(req.startMs) }
     var pos by remember { mutableLongStateOf(req.startMs) }
     var dur by remember { mutableLongStateOf(0L) }
     var paused by remember { mutableStateOf(false) }
@@ -239,7 +242,7 @@ fun PlayerScreen(req: PlayRequest) {
     // Load, the saved subtitle delay and look, the sound and colour tools, and the addons' subtitles.
     LaunchedEffect(view) {
         val v = view ?: return@LaunchedEffect
-        v.load(req.stream.url, req.stream.headers, req.startMs)
+        v.load(req.stream.url, req.stream.headers, startAt)
         if (subDelay != 0.0) v.setSubDelay(subDelay)
         if (subScale != 1.0) v.setSubScale(subScale)
         applySubStyle()
@@ -316,6 +319,24 @@ fun PlayerScreen(req: PlayRequest) {
         next = if (i >= 0) eps.drop(i + 1).firstOrNull { it.id !in filler } else null
     }
 
+    // Direct mode guard: if the picture does not start moving within a few seconds, the same
+    // source reopens at once in the normal mode (the one that plays every 1080p file).
+    LaunchedEffect(view, direct) {
+        val v = view ?: return@LaunchedEffect
+        if (!direct) return@LaunchedEffect
+        delay(9_000)
+        val a = withContext(kotlinx.coroutines.Dispatchers.IO) { v.positionMs }
+        delay(3_000)
+        val b = withContext(kotlinx.coroutines.Dispatchers.IO) { v.positionMs }
+        val stuck = withContext(kotlinx.coroutines.Dispatchers.IO) { v.durationMs <= 0 || (b <= a && !v.paused) }
+        if (stuck) {
+            startAt = maxOf(b, req.startMs)
+            view = null
+            v.release()
+            direct = false
+        }
+    }
+
     // A light poll twice a second.
     LaunchedEffect(view) {
         val v = view ?: return@LaunchedEffect
@@ -389,7 +410,9 @@ fun PlayerScreen(req: PlayRequest) {
             }
             .focusable(),
     ) {
-        AndroidView(factory = { ctx -> MpvView(ctx, direct).also { it.start(); view = it } }, modifier = Modifier.fillMaxSize())
+        androidx.compose.runtime.key(direct) {
+            AndroidView(factory = { ctx -> MpvView(ctx, direct).also { it.start(); view = it } }, modifier = Modifier.fillMaxSize())
+        }
         if (direct) DirectSubtitles(view)
 
         if (buffering) {
@@ -1022,7 +1045,11 @@ private fun DirectSubtitles(v: MpvView?) {
     var line by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(v) {
         if (v == null) return@LaunchedEffect
-        while (true) { line = v.subText()?.trim()?.takeIf { it.isNotEmpty() }; delay(120) }
+        while (true) {
+            // Read off the main thread: a busy player must never freeze the screen.
+            line = withContext(kotlinx.coroutines.Dispatchers.IO) { v.subText() }?.trim()?.takeIf { it.isNotEmpty() }
+            delay(200)
+        }
     }
     val text = line ?: return
     val size = 25f * com.mawj.tv.data.Store.number("subScale", 100) / 100f

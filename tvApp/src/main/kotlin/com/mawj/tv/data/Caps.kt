@@ -51,9 +51,9 @@ object Caps {
     }
 
     /**
-     * A heavy file: 4K, 10-bit HEVC, or very large. Copying its decoded frames costs a weak TV
-     * too much memory, so it plays straight to the screen (direct mode).
+     * A heavy file: 4K or very large. Copying its decoded frames costs a weak TV too much memory,
+     * so it tries straight-to-screen playback first (the player falls back by itself if it stalls).
+     * 1080p, 10-bit included, keeps the normal path that already plays well.
      */
-    fun heavy(s: Stream): Boolean =
-        s.quality >= 2160 || s.tenBit || s.dolbyVision || s.sizeBytes > 20L * 1_073_741_824L
+    fun heavy(s: Stream): Boolean = s.quality >= 2160 || s.sizeBytes > 20L * 1_073_741_824L
 }
