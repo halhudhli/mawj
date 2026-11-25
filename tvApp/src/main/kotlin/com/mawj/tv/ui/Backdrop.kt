@@ -83,26 +83,61 @@ fun AppBackdrop(soft: Boolean = false, clear: Boolean = false) {
     }
 }
 
-/** The side rail, as on the tablet: icons only, the open page on a dark-gold tile with a gold mark at the edge. */
+/** The side rail, as on the tablet: the profile picture, then icons only; the open page on a dark-gold tile with a gold mark at the edge. */
 @Composable
 fun Rail(current: Route) {
     Column(
-        Modifier.width(92.dp).fillMaxHeight().padding(top = 26.dp),
+        Modifier.width(92.dp).fillMaxHeight().padding(top = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val initial = com.mawj.tv.data.Account.email?.firstOrNull()?.uppercase() ?: "م"
+        var avFocus by remember { mutableStateOf(false) }
         Box(
-            Modifier.size(34.dp).background(Brush.radialGradient(listOf(Color(0xFF7A6AA8), Color(0xFF2B2340))), CircleShape),
+            Modifier.size(38.dp).onFocusChanged { avFocus = it.isFocused }
+                .tvFocus(shape = CircleShape, scale = 1.1f, onClick = { Nav.tab(Route.Profile) })
+                .background(Brush.radialGradient(listOf(Color(0xFF7A6AA8), Color(0xFF2B2340))), CircleShape),
             contentAlignment = Alignment.Center,
-        ) { T(initial, 15.sp, weight = FontWeight.Bold) }
-        Spacer(Modifier.height(30.dp))
-        RailItem("home-write", current == Route.Home) { Nav.tab(Route.Home) }
-        Spacer(Modifier.height(10.dp))
-        RailItem("search-scan", current == Route.Search) { Nav.tab(Route.Search) }
-        Spacer(Modifier.height(10.dp))
-        RailItem("bookmarks-cycle", current == Route.Library) { Nav.tab(Route.Library) }
-        Spacer(Modifier.height(10.dp))
-        RailItem("sliders-move", current == Route.Settings) { Nav.tab(Route.Settings) }
+        ) { T(initial, 16.sp, weight = FontWeight.Bold) }
+        Spacer(Modifier.height(22.dp))
+        val items = listOf(
+            Triple("home-write", Route.Home, "الرئيسية"), Triple("clapperboard-clap", Route.Movies, "أفلام"),
+            Triple("tv-channel", Route.Series, "مسلسلات"), Triple("sparkles-spark", Route.Islands, "الجزر"),
+            Triple("bookmarks-cycle", Route.Lists, "قوائمي"), Triple("search-scan", Route.Search, "البحث"),
+            Triple("library-lean", Route.Library, "المكتبة"),
+        )
+        items.forEach { (icon, r, _) ->
+            RailItem(icon, current == r) { Nav.tab(r) }
+            Spacer(Modifier.height(6.dp))
+        }
+    }
+}
+
+/** The calm sea of the tablet behind the inner pages: drawn once, never moving. */
+@Composable
+fun SeaBackground() {
+    Canvas(Modifier.fillMaxSize().background(C.Sea)) {
+        val w = size.width
+        val h = size.height
+        fun wave(y: Float, amp: Float, color: Color, line: Color?) {
+            val p = Path().apply {
+                moveTo(0f, y)
+                cubicTo(w * 0.15f, y - amp, w * 0.3f, y + amp, w * 0.45f, y)
+                cubicTo(w * 0.6f, y - amp, w * 0.78f, y + amp, w, y - amp * 0.3f)
+                lineTo(w, h); lineTo(0f, h); close()
+            }
+            drawPath(p, color)
+            if (line != null) {
+                val l = Path().apply {
+                    moveTo(0f, y)
+                    cubicTo(w * 0.15f, y - amp, w * 0.3f, y + amp, w * 0.45f, y)
+                    cubicTo(w * 0.6f, y - amp, w * 0.78f, y + amp, w, y - amp * 0.3f)
+                }
+                drawPath(l, line, style = Stroke(width = 1.5f))
+            }
+        }
+        wave(h * 0.40f, h * 0.035f, Color(0x8C14263A), Color(0x2ED6B36A))
+        wave(h * 0.57f, h * 0.03f, Color(0x8C132539), null)
+        wave(h * 0.74f, h * 0.03f, Color(0xB310202F), Color(0x1FD6B36A))
     }
 }
 

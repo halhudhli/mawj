@@ -40,7 +40,7 @@ data class CompanyPage(val company: Company, val country: String?, val works: Li
 
 /** A title from TMDB; opening it looks up its IMDb id so the addons can serve it. */
 @Immutable
-data class TmdbWork(val tmdbId: Int, val type: String, val name: String, val poster: String?, val backdrop: String?, val year: String?, val rating: Double)
+data class TmdbWork(val tmdbId: Int, val type: String, val name: String, val poster: String?, val backdrop: String?, val year: String?, val rating: Double, val genres: List<Int> = emptyList(), val overview: String? = null, val date: String? = null, val votes: Int = 0)
 
 /** Cast photos, actor and studio pages. Answers cached in memory; nothing if no key is set. */
 object Tmdb {
@@ -52,7 +52,7 @@ object Tmdb {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val cache = ConcurrentHashMap<String, JsonObject>()
 
-    private suspend fun get(path: String, query: String = ""): JsonObject? = withContext(Dispatchers.IO) {
+    internal suspend fun get(path: String, query: String = ""): JsonObject? = withContext(Dispatchers.IO) {
         if (!enabled) return@withContext null
         val bearer = key.length > 60
         val url = "$API$path?${if (bearer) "" else "api_key=$key&"}$query"
@@ -161,7 +161,7 @@ object Tmdb {
         return o.str("imdb_id")
     }
 
-    private fun work(o: JsonObject, forcedType: String? = null): TmdbWork? {
+    internal fun work(o: JsonObject, forcedType: String? = null): TmdbWork? {
         val type = forcedType ?: o.str("media_type") ?: return null
         if (type != "movie" && type != "tv") return null
         return TmdbWork(
@@ -172,10 +172,14 @@ object Tmdb {
             backdrop = img(o.str("backdrop_path"), "w780"),
             year = (o.str("release_date") ?: o.str("first_air_date"))?.take(4),
             rating = (o["vote_average"] as? JsonPrimitive)?.doubleOrNull ?: 0.0,
+            genres = (o["genre_ids"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.intOrNull },
+            overview = o.str("overview")?.takeIf { it.isNotBlank() },
+            date = o.str("release_date") ?: o.str("first_air_date"),
+            votes = o.int("vote_count") ?: 0,
         )
     }
 
-    private fun JsonObject.int(k: String): Int? = (this[k] as? JsonPrimitive)?.intOrNull
+    internal fun JsonObject.int(k: String): Int? = (this[k] as? JsonPrimitive)?.intOrNull
 }
 
 /** Opens a TMDB title in the app (through its IMDb id, which the addons understand). */

@@ -108,7 +108,7 @@ fun SourcesScreen(meta: MetaPreview, episode: Episode?) {
     }
     var filter by rememberSaveable { mutableStateOf(Filter.All) }
     var addonFilter by rememberSaveable { mutableStateOf<String?>(null) }
-    val all = results.values.flatten()
+    val all = results.values.flatten().filter { !(Store.feature("hideCam") && it.source == "CAM") }
     val best = if (Store.bestSource) pickBest(all) else null
     val shown = all.filter { filter.accepts(it) && (addonFilter == null || it.addonName == addonFilter) }
         .sortedWith(ORDER)

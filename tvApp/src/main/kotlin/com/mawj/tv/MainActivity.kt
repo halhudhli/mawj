@@ -50,6 +50,7 @@ class MawjTv : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         app = this
         Store.init(this)
+        com.mawj.tv.data.Library.init(this)
         com.mawj.tv.data.Account.init(this)
         com.mawj.tv.data.Account.syncOnStart()
         com.mawj.tv.link.PhoneLink.start()
@@ -77,6 +78,14 @@ sealed interface Route {
     data class Person(val id: Int, val name: String) : Route
     data object Login : Route
     data class Company(val id: Int, val name: String) : Route
+    data object Movies : Route
+    data object Series : Route
+    data object Islands : Route
+    data object Lists : Route
+    data object Profile : Route
+    data class Works(val title: String, val island: com.mawj.tv.data.Island) : Route
+    data class SettingsPage(val page: String) : Route
+    data class Tool(val kind: String) : Route
 }
 
 /** A tiny back stack; the top-level pages (with the side rail) replace each other. */
@@ -128,8 +137,15 @@ private fun MawjApp(onExit: () -> Unit) {
     val holder = rememberSaveableStateHolder()
     BackHandler { if (!Nav.back()) onExit() }
     Box(Modifier.fillMaxSize()) {
-        if (route !is Route.Player) AppBackdrop(soft = route is Route.Sources, clear = route is Route.Home)
-        val topLevel = route is Route.Home || route is Route.Search || route is Route.Library || route is Route.Settings
+        val sea = route is Route.Islands || route is Route.Profile || route is Route.Settings || route is Route.SettingsPage ||
+            route is Route.Lists || route is Route.Tool || route is Route.Company
+        when {
+            route is Route.Player -> Unit
+            sea -> com.mawj.tv.ui.SeaBackground()
+            else -> AppBackdrop(soft = route is Route.Sources, clear = route is Route.Home || route is Route.Movies || route is Route.Series)
+        }
+        val topLevel = route is Route.Home || route is Route.Search || route is Route.Library || route is Route.Settings ||
+            route is Route.Movies || route is Route.Series || route is Route.Islands || route is Route.Lists || route is Route.Profile
         Row(Modifier.fillMaxSize()) {
             if (topLevel) Rail(route)
             Box(Modifier.weight(1f).fillMaxSize()) {
@@ -145,6 +161,14 @@ private fun MawjApp(onExit: () -> Unit) {
                         Route.Login -> com.mawj.tv.ui.LoginScreen()
                         is Route.Person -> com.mawj.tv.ui.PersonScreen(route.id, route.name)
                         is Route.Company -> com.mawj.tv.ui.CompanyScreen(route.id, route.name)
+                        Route.Movies -> com.mawj.tv.ui.BrowseScreen("movie")
+                        Route.Series -> com.mawj.tv.ui.BrowseScreen("tv")
+                        Route.Islands -> com.mawj.tv.ui.IslandsScreen()
+                        Route.Lists -> com.mawj.tv.ui.ListsScreen()
+                        Route.Profile -> com.mawj.tv.ui.ProfileScreen()
+                        is Route.Works -> com.mawj.tv.ui.WorksScreen(route.title, route.island)
+                        is Route.SettingsPage -> com.mawj.tv.ui.SettingsPageScreen(route.page)
+                        is Route.Tool -> com.mawj.tv.ui.ToolScreen(route.kind)
                     }
                 }
             }

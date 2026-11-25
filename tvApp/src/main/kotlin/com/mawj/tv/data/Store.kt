@@ -41,7 +41,7 @@ object Store {
         "uiSounds" to false, "screensaver" to true, "kidsLimit" to false, "privateMode" to false,
         "seasonalThemes" to true, "timeTint" to false, "top10Rank" to true, "becauseWatched" to true,
         "countdown" to true, "hideCam" to true, "smartSource" to true, "stallGuard" to true,
-        "timeLeft" to true, "seriesMemory" to true, "perfMeter" to false, "googleTvRow" to true,
+        "timeLeft" to true, "seriesMemory" to true, "perfMeter" to false, "googleTvRow" to true, "kidsMode" to false,
     )
 
     private val features = androidx.compose.runtime.mutableStateMapOf<String, Boolean>()
@@ -183,8 +183,11 @@ object Store {
     // ---- progress ----
 
     fun saveProgress(p: Progress) {
+        val before = progress.firstOrNull { it.videoId == p.videoId }?.positionMs ?: 0L
+        Library.record(p.meta, p.positionMs - before)
         progress.removeAll { it.meta.id == p.meta.id }
         val watched = p.durationMs > 0 && p.positionMs > p.durationMs * 0.92
+        if (watched && !isWatched(p.videoId)) Library.finished(p.meta, episode = p.season > 0)
         if (!watched && p.positionMs > 30_000) progress.add(0, p)
         while (progress.size > 30) progress.removeAt(progress.lastIndex)
         prefs.edit().putString("progress", JsonArray(progress.map(::encode)).toString()).apply()

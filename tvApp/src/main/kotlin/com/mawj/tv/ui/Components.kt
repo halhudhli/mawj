@@ -150,8 +150,8 @@ fun PosterCard(
     onFocused: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    w: Dp = 150.dp,
-    h: Dp = 223.dp,
+    w: Dp = PosterSize.w,
+    h: Dp = PosterSize.h,
     rotate: Boolean = false,
     index: Int = 0,
     showTitle: Boolean = true,
@@ -165,7 +165,9 @@ fun PosterCard(
                 .tvFocus(shape = RoundedCornerShape(10.dp), onFocused = onFocused, onClick = onClick)
                 .background(C.Card),
         ) {
-            PosterArt(meta, w, h, rotate && com.mawj.tv.data.Store.posterRotate, index)
+            MotionLayer(focused && com.mawj.tv.data.Store.feature("posterMotion")) {
+                PosterArt(meta, w, h, rotate && com.mawj.tv.data.Store.posterRotate, index)
+            }
             if (meta.poster.isNullOrBlank()) {
                 T(meta.name, 15.sp, weight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center).padding(10.dp), align = TextAlign.Center)
             }
@@ -309,3 +311,49 @@ fun MetaLine(parts: List<String>, modifier: Modifier = Modifier) {
 
 @Composable
 fun SideGap() = Box(Modifier.width(96.dp).fillMaxHeight())
+
+
+/** «حجم البوسترات» (الإعدادات): small, medium, large, very large. */
+object PosterSize {
+    private val sizes = listOf(120.dp to 178.dp, 135.dp to 200.dp, 150.dp to 223.dp, 168.dp to 250.dp)
+    private val pick get() = PosterSizeVersion.v.let { sizes[com.mawj.tv.data.Store.number("posterSize", 2).coerceIn(0, 3)] }
+    val w: Dp get() = pick.first
+    val h: Dp get() = pick.second
+}
+
+/**
+ * «حركة البوسترات» for a TV: only the focused card moves, and only after the focus rests (so fast
+ * remote presses never start it). It breathes slowly and a light passes over it every few seconds.
+ * Transform and alpha only: the graphics chip draws it without new layouts.
+ */
+@Composable
+fun MotionLayer(active: Boolean, content: @Composable () -> Unit) {
+    var moving by remember { mutableStateOf(false) }
+    LaunchedEffect(active) {
+        moving = false
+        if (active) { kotlinx.coroutines.delay(650); moving = true }
+    }
+    if (!moving) {
+        content()
+        return
+    }
+    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "motion")
+    val breath by t.animateFloat(1f, 1.06f, androidx.compose.animation.core.infiniteRepeatable(tween(9_000), androidx.compose.animation.core.RepeatMode.Reverse), label = "breath")
+    val sweep by t.animateFloat(-0.6f, 2.4f, androidx.compose.animation.core.infiniteRepeatable(tween(6_000, easing = androidx.compose.animation.core.LinearEasing)), label = "sweep")
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().graphicsLayer { scaleX = breath; scaleY = breath; translationX = (breath - 1f) * -60f; translationY = (breath - 1f) * -80f }) { content() }
+        // The light: one soft band crossing in the first quarter of every 6 seconds.
+        if (sweep in -0.4f..1.4f) {
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val x = size.width * sweep
+                drawRect(
+                    Brush.linearGradient(
+                        0f to Color.Transparent, 0.5f to Color(0x47FFFFFF), 1f to Color.Transparent,
+                        start = androidx.compose.ui.geometry.Offset(x - size.width * 0.35f, 0f),
+                        end = androidx.compose.ui.geometry.Offset(x + size.width * 0.15f, size.height),
+                    ),
+                )
+            }
+        }
+    }
+}
