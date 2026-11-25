@@ -99,6 +99,8 @@ suspend fun nextEpisodeStream(type: String, next: Episode, current: Stream): Str
 @Composable
 fun PlayerScreen(req: PlayRequest) {
     var view by remember { mutableStateOf<MpvView?>(null) }
+    // Heavy files play straight to the screen (no frame copy): lighter, but no picture tools.
+    val direct = remember { com.mawj.tv.data.Store.feature("directHeavy") && com.mawj.tv.data.Caps.heavy(req.stream) }
     var pos by remember { mutableLongStateOf(req.startMs) }
     var dur by remember { mutableLongStateOf(0L) }
     var paused by remember { mutableStateOf(false) }
@@ -387,7 +389,8 @@ fun PlayerScreen(req: PlayRequest) {
             }
             .focusable(),
     ) {
-        AndroidView(factory = { ctx -> MpvView(ctx).also { it.start(); view = it } }, modifier = Modifier.fillMaxSize())
+        AndroidView(factory = { ctx -> MpvView(ctx, direct).also { it.start(); view = it } }, modifier = Modifier.fillMaxSize())
+        if (direct) DirectSubtitles(view)
 
         if (buffering) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -530,6 +533,7 @@ fun PlayerScreen(req: PlayRequest) {
                 },
                 onInfo = { panel = Panel.Info },
                 onSwitch = { switchSource() },
+                direct = direct,
             )
             Panel.None -> Unit
         }
@@ -667,6 +671,7 @@ private fun ToolsPanel(
     gemini: Boolean, translateLabel: String?, onTranslate: () -> Unit,
     onCompanion: () -> Unit, onWho: () -> Unit, onQuiz: () -> Unit,
     onQuote: () -> Unit, onQuotes: () -> Unit, onShot: () -> Unit,
+    direct: Boolean = false,
 ) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(40); runCatching { first.requestFocus() } }
@@ -678,8 +683,8 @@ private fun ToolsPanel(
             T("أدوات موج", 18.sp, weight = FontWeight.Bold)
             Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ToolGroup("الصورة والصوت", Modifier.weight(1f)) {
-                    Tool("color-filter-sparkle-split", "ألوان الصورة", colorLabel.takeIf { it != "الأصلي" }, Modifier.focusRequester(first), onClick = onColors)
-                    Tool("user-voice-speak", "توضيح الحوار", if (dialogue) "مفعّل" else null, on = dialogue, onClick = onDialogue)
+                    if (!direct) Tool("color-filter-sparkle-split", "ألوان الصورة", colorLabel.takeIf { it != "الأصلي" }, Modifier.focusRequester(first), onClick = onColors)
+                    Tool("user-voice-speak", "توضيح الحوار", if (dialogue) "مفعّل" else null, if (direct) Modifier.focusRequester(first) else Modifier, on = dialogue, onClick = onDialogue)
                     Tool("moon-star-twinkle", "صوت ليلي", if (night) "مفعّل" else null, on = night, onClick = onNight)
                     Tool("waveform-scroll", "تحسين الصوت", if (level) "مفعّل" else null, on = level, onClick = onLevel)
                 }
@@ -693,12 +698,12 @@ private fun ToolsPanel(
                     Tool("bookmarks-cycle", "العلامات", null, onClick = onBookmarks)
                     Tool("message-text-type", "حفظ العبارة", null, onClick = onQuote)
                     Tool("messages-reply", "العبارات", null, onClick = onQuotes)
-                    Tool("camera-snap", "لقطة شاشة", null, onClick = onShot)
+                    if (!direct) Tool("camera-snap", "لقطة شاشة", null, onClick = onShot)
                     Tool("repeat-chase", "تكرار مقطع", loopState, on = loopState != null, onClick = onLoop)
                 }
                 if (gemini) ToolGroup("رفيق موج", Modifier.weight(1f)) {
                     Tool("bots-chat", "رفيق موج", null, onClick = onCompanion)
-                    Tool("eye-sparkle-focus", "من في المشهد؟", null, onClick = onWho)
+                    if (!direct) Tool("eye-sparkle-focus", "من في المشهد؟", null, onClick = onWho)
                     Tool("help-circle-tilt", "اختبار الحلقة", null, onClick = onQuiz)
                 }
                 ToolGroup("التشغيل", Modifier.weight(1f)) {
@@ -1008,4 +1013,21 @@ internal fun time(ms: Long): String {
     val m = (s % 3600) / 60
     val sec = s % 60
     return if (h > 0) String.format(Locale.US, "%d:%02d:%02d", h, m, sec) else String.format(Locale.US, "%02d:%02d", m, sec)
+}
+
+
+/** Direct mode: mpv shows no subtitles itself, so the current line is drawn here, at the bottom. */
+@Composable
+private fun DirectSubtitles(v: MpvView?) {
+    var line by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(v) {
+        if (v == null) return@LaunchedEffect
+        while (true) { line = v.subText()?.trim()?.takeIf { it.isNotEmpty() }; delay(120) }
+    }
+    val text = line ?: return
+    val size = 25f * com.mawj.tv.data.Store.number("subScale", 100) / 100f
+    Box(Modifier.fillMaxSize().padding(start = 80.dp, end = 80.dp, bottom = 46.dp), contentAlignment = Alignment.BottomCenter) {
+        T(text, size.sp, weight = FontWeight.SemiBold, align = androidx.compose.ui.text.style.TextAlign.Center, shadow = true, lineHeight = (size * 1.45f).sp,
+            modifier = Modifier.background(Color(0x59000000), RoundedCornerShape(8.dp)).padding(horizontal = 14.dp, vertical = 4.dp))
+    }
 }

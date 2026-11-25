@@ -71,7 +71,8 @@ private fun Filter.accepts(s: Stream) = when (this) {
 
 /** «الأنسب»: the highest quality that is ready at once, HDR first, at a sensible size. */
 private fun pickBest(list: List<Stream>): Stream? {
-    val pool = list.filter { it.source != "CAM" && it.quality > 0 }
+    val guard = Store.feature("codecGuard")
+    val pool = list.filter { it.source != "CAM" && it.quality > 0 && !(guard && com.mawj.tv.data.Caps.slowReason(it) != null) }
     val ready = pool.filter { it.cached }.ifEmpty { pool }
     return ready.maxWithOrNull(
         compareBy<Stream> { minOf(it.quality, 2160) }
@@ -280,6 +281,7 @@ private fun SourceRow(s: Stream, isBest: Boolean, modifier: Modifier, onClick: (
                     s.audio?.let { SrcTag(it, gold = "Atmos" in it || "TrueHD" in it) }
                     if (s.arabic) SrcTag("عربي", green = true)
                     if (s.source == "CAM") SrcTag("نسخة كام", red = true)
+                    if (Store.feature("codecGuard")) com.mawj.tv.data.Caps.slowReason(s)?.let { SrcTag("بطيء على هذه الشاشة · $it", red = true) }
                 }
                 if (focused) {
                     val file = s.file ?: s.title.lineSequence().lastOrNull { it.isNotBlank() }

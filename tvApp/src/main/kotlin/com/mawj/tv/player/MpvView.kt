@@ -12,7 +12,7 @@ data class Track(val id: Int, val type: String, val label: String, val lang: Str
  * The video surface: libmpv with hardware decoding and settings tuned for TVs (fast start, a
  * read-ahead that rides out network dips, Arabic subtitles from the system fonts).
  */
-class MpvView(context: Context) : BaseMPVView(context, null) {
+class MpvView(context: Context, private val direct: Boolean = false) : BaseMPVView(context, null) {
     @Volatile private var released = false
 
     fun start() {
@@ -21,9 +21,20 @@ class MpvView(context: Context) : BaseMPVView(context, null) {
     }
 
     override fun initOptions() {
-        setVo("gpu")
-        mpv.setOptionString("profile", "fast")
-        mpv.setOptionString("hwdec", "mediacodec-copy,mediacodec,no")
+        if (direct) {
+            // Heavy files (4K, 10-bit, very large): frames go straight from the chip to the screen,
+            // with no copy through memory. The app draws the subtitles itself in this mode.
+            setVo("mediacodec_embed")
+            mpv.setOptionString("hwdec", "mediacodec")
+            mpv.setOptionString("sub-visibility", "no")
+        } else {
+            setVo("gpu")
+            mpv.setOptionString("profile", "fast")
+            mpv.setOptionString("hwdec", "mediacodec-copy,mediacodec,no")
+        }
+        // If the chip cannot decode it, software decoding takes the lighter path.
+        mpv.setOptionString("vd-lavc-skiploopfilter", "nonkey")
+        mpv.setOptionString("vd-lavc-threads", "${Runtime.getRuntime().availableProcessors().coerceIn(2, 8)}")
         mpv.setOptionString("tls-verify", "yes")
         mpv.setOptionString("tls-ca-file", "${context.filesDir.path}/cacert.pem")
         // Start sooner and keep playing through short network dips.

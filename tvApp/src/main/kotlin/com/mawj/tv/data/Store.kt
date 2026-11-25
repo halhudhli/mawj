@@ -31,29 +31,30 @@ object Store {
 
     // ---- Mawj feature switches (Settings → ميزات موج) ----
 
-    /** Icons move once when the focus lands on them. */
-    var animatedIcons by androidx.compose.runtime.mutableStateOf(true)
-        private set
+    /** Every switch and its default. All Mawj additions can be turned off. */
+    val FEATURE_DEFAULTS: Map<String, Boolean> = mapOf(
+        "animatedIcons" to true, "posterRotate" to true, "bestSource" to true, "fillerSkip" to true,
+        "directHeavy" to true, "codecGuard" to true, "posterMotion" to true, "animatedCatalog" to true,
+        "moodCompass" to true, "tonightPick" to true, "heroHome" to true, "episodeCurve" to true,
+        "whyLike" to true, "finishPlan" to true, "parentsGuide" to true, "whereToWatch" to true,
+        "geminiExtras" to true, "actorStart" to true, "companyHall" to true, "profileHub" to true,
+        "uiSounds" to false, "screensaver" to true, "kidsLimit" to false, "privateMode" to false,
+        "seasonalThemes" to true, "timeTint" to false, "top10Rank" to true, "becauseWatched" to true,
+        "countdown" to true, "hideCam" to true, "smartSource" to true, "stallGuard" to true,
+        "timeLeft" to true, "seriesMemory" to true, "perfMeter" to false, "googleTvRow" to true,
+    )
 
-    /** A title with several posters changes them slowly in the focused row, Arabic first. */
-    var posterRotate by androidx.compose.runtime.mutableStateOf(true)
-        private set
+    private val features = androidx.compose.runtime.mutableStateMapOf<String, Boolean>()
 
-    /** The sources page marks one source as «الأنسب» and puts it first. */
-    var bestSource by androidx.compose.runtime.mutableStateOf(true)
-        private set
+    fun feature(key: String): Boolean = features[key] ?: FEATURE_DEFAULTS[key] ?: true
 
-    /** Long anime: the next episode passes over filler episodes. */
-    var fillerSkip by androidx.compose.runtime.mutableStateOf(true)
-        private set
+    val animatedIcons: Boolean get() = feature("animatedIcons")
+    val posterRotate: Boolean get() = feature("posterRotate")
+    val bestSource: Boolean get() = feature("bestSource")
+    val fillerSkip: Boolean get() = feature("fillerSkip")
 
     fun setFeature(key: String, value: Boolean) {
-        when (key) {
-            "fillerSkip" -> fillerSkip = value
-            "animatedIcons" -> animatedIcons = value
-            "posterRotate" -> posterRotate = value
-            "bestSource" -> bestSource = value
-        }
+        features[key] = value
         prefs.edit().putBoolean("f:$key", value).apply()
     }
 
@@ -101,10 +102,7 @@ object Store {
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences("mawj_tv", Context.MODE_PRIVATE)
-        animatedIcons = prefs.getBoolean("f:animatedIcons", true)
-        posterRotate = prefs.getBoolean("f:posterRotate", true)
-        bestSource = prefs.getBoolean("f:bestSource", true)
-        fillerSkip = prefs.getBoolean("f:fillerSkip", true)
+        FEATURE_DEFAULTS.forEach { (k, d) -> features[k] = prefs.getBoolean("f:$k", d) }
         val saved = prefs.getString("addons", null)
         addonUrls.addAll(saved?.lines()?.map(String::trim)?.filter(String::isNotEmpty) ?: DEFAULT_ADDONS)
         progress.addAll(loadProgress())
