@@ -146,9 +146,6 @@ fun SettingsPageScreen(page: String) {
                 Triple("تبديل البوسترات", "في الصف المحدد، والبوستر العربي أولاً", "posterRotate"),
                 Triple("حركة البوسترات", "البوستر المحدد وحده يتنفس ببطء وتعبره لمعة، وتتوقف أثناء التنقل", "posterMotion"),
                 Triple("الكتالوج المتحرك", "بطاقة «الجزر» المحددة وحدها تقلّب صورها", "animatedCatalog"),
-                Triple("زينة المواسم", "لمسة ثابتة في رمضان والعيد واليوم الوطني", "seasonalThemes"),
-                Triple("أصوات التنقل", "صوت قصير جداً عند التنقل", "uiSounds"),
-                Triple("شاشة التوقف", "تبديل هادئ للخلفيات عند ترك الشاشة دقائق", "screensaver"),
             ))
             "pages" -> switches(listOf(
                 Triple("بوصلة المزاج", "خمسة أمزجة في الرئيسية", "moodCompass"),
@@ -185,7 +182,6 @@ fun SettingsPageScreen(page: String) {
             "advanced" -> switches(listOf(
                 Triple("الوضع الخاص", "لا يُسجَّل شيء في الملف ولا في «متابعة المشاهدة»", "privateMode"),
                 Triple("ملف الأطفال", "يقتصر الاكتشاف على ما يناسب الصغار", "kidsMode"),
-                Triple("مقياس الأداء", "رقم صغير يبين سلاسة الحركة", "perfMeter"),
             ))
             "updates" -> item { Glass { T("الإصدار الحالي: ${BuildConfig.VERSION_NAME}", 16.sp); T("تُنزَّل الإصدارات الجديدة من صفحة إصدارات موج.", 13.sp, color = C.Muted, modifier = Modifier.padding(top = 6.dp)) } }
             "about" -> item {
