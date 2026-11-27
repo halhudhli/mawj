@@ -41,7 +41,8 @@ object Skip {
     }
 
     private suspend fun introDb(imdb: String, episode: Episode?): List<SkipPart>? {
-        val base = com.mawj.tv.BuildConfig.INTRODB_URL.trimEnd('/')
+        // The address set for the build, otherwise the public one (reads need no key).
+        val base = com.mawj.tv.BuildConfig.INTRODB_URL.ifBlank { "https://api.introdb.app" }.trimEnd('/')
         if (base.isBlank()) return null
         val url = if (episode == null) "$base/segments?imdb_id=$imdb" else "$base/segments?imdb_id=$imdb&season=${episode.season}&episode=${episode.number}"
         val o = fetch(url) as? JsonObject ?: return null
