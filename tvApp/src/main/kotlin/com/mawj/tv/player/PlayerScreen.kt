@@ -75,6 +75,9 @@ private enum class Panel { None, Subs, Audio, Speed, Info, Tools, Colors, Bookma
 /** Panels and bars are see-through a little, so the picture stays in view. */
 internal val PanelBg = Color(0xD1070D14)
 
+/** As on the tablet: the panels sit on the dimmed picture, with no box around them. */
+internal val PanelDim = Color(0xBD000000)
+
 /** «ألوان الصورة»: ready looks (mpv brightness, contrast, saturation, gamma). */
 private val COLOR_PRESETS = listOf(
     Triple("natural0", "الأصلي", intArrayOf(0, 0, 0, 0)),
@@ -140,6 +143,14 @@ fun PlayerScreen(req: PlayRequest) {
     val subLines = remember { androidx.compose.runtime.mutableStateListOf<String>() }
     var addonSubs by remember { mutableStateOf<List<com.mawj.tv.data.Subtitle>>(emptyList()) }
     var translatePct by remember { mutableStateOf<Int?>(null) }
+    // The tablet's bar: closed (three tools and «›») or open (every tool).
+    var expanded by remember { mutableStateOf(false) }
+    // «تخطّي المقدمة» and «دليل المحتوى».
+    var skipParts by remember { mutableStateOf<List<com.mawj.tv.data.SkipPart>>(emptyList()) }
+    var skipped by remember { mutableStateOf(setOf<String>()) }
+    var advisory by remember { mutableStateOf<Pair<String?, List<String>>?>(null) }
+    var advisoryOn by remember { mutableStateOf(false) }
+    val skipFocus = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
 
     val rootFocus = remember { FocusRequester() }
@@ -227,6 +238,68 @@ fun PlayerScreen(req: PlayRequest) {
         save()
         Nav.back()
         if (Nav.top !is Route.Sources) Nav.go(Route.Sources(req.meta, req.episode))
+    }
+
+    /** Every tool of the open bar, in the tablet's order (the ones that suit a TV). */
+    fun playerTools(v: MpvView): List<ToolItem> = buildList {
+        if (com.mawj.tv.data.Gemini.enabled) add(ToolItem("speech-to-text-transcribe", "ترجمة للعربي", translatePct?.let { "$it٪" }) {
+            if (translatePct == null) {
+                val src = addonSubs.filterNot { it.lang.lowercase().startsWith("ar") }
+                    .sortedBy { if (it.lang.lowercase().startsWith("en")) 0 else 1 }.firstOrNull()
+                if (src == null) say("لا توجد ترجمة بلغة أخرى لهذه الحلقة") else scope.launch {
+                    translatePct = 0
+                    val r = com.mawj.tv.data.SubTranslate.translate(src) { p -> translatePct = p }
+                    translatePct = null
+                    when (r) {
+                        is com.mawj.tv.data.SubTranslate.Result.Ready -> { v.addSubtitle(r.path, "عربي ✨ ترجمة موج", "ar", select = true); tracksVersion++; say("الترجمة العربية جاهزة ✅") }
+                        com.mawj.tv.data.SubTranslate.Result.AlreadyArabic -> say("هذه الترجمة عربية ولا تحتاج ترجمة")
+                        com.mawj.tv.data.SubTranslate.Result.Unreadable -> say("تعذّرت قراءة ملف الترجمة")
+                        com.mawj.tv.data.SubTranslate.Result.Failed -> say("تعذّرت الترجمة الآن")
+                    }
+                }
+            }
+        })
+        add(ToolItem("bookmark-drop", "علامة هنا") { Store.addBookmark(req.videoId, v.positionMs); bookmarksVersion++; say("حُفظت علامة عند ${time(v.positionMs)}") })
+        add(ToolItem("bookmarks-cycle", "العلامات", focus = openers.getValue(Panel.Bookmarks)) { panel = Panel.Bookmarks })
+        add(ToolItem("user-voice-speak", "توضيح الحوار", if (dialogue) "مفعّل" else null, on = dialogue) { dialogue = !dialogue; applyFx() })
+        add(ToolItem("moon-star-twinkle", "صوت ليلي", if (night) "مفعّل" else null, on = night) { night = !night; applyFx() })
+        add(ToolItem("message-text-type", "حفظ العبارة") {
+            val line = v.subText()
+            if (line == null) say("لا توجد عبارة على الشاشة الآن") else { Store.addQuote(req.videoId, v.positionMs, line); quotesVersion++; say("حُفظت العبارة") }
+        })
+        add(ToolItem("messages-reply", "العبارات", focus = openers.getValue(Panel.Quotes)) { panel = Panel.Quotes })
+        if (!direct) add(ToolItem("color-filter-sparkle-split", "ألوان الصورة", COLOR_PRESETS.firstOrNull { it.first == colorKey }?.second?.takeIf { colorKey != "natural0" }, on = colorKey != "natural0", focus = openers.getValue(Panel.Colors)) { panel = Panel.Colors })
+        add(ToolItem("waveform-scroll", "موازنة الصوت", if (level) "مفعّلة" else null, on = level) { level = !level; applyFx() })
+        if (!direct) add(ToolItem("camera-snap", "لقطة شاشة") {
+            scope.launch { val ok = saveShot(v, req.meta.name, v.positionMs); say(if (ok) "حُفظت اللقطة، وتُفتح من الجوال عبر «الربط بالجوال»" else "تعذّر التقاط هذا المشهد") }
+        })
+        add(ToolItem("repeat-chase", "تكرار مقطع", when { loopA == null -> null; loopB == null -> "البداية محددة"; else -> "يعمل" }, on = loopB != null) {
+            when {
+                loopA == null -> { loopA = v.positionMs; say("حُددت بداية المقطع، ويُضغط مرة أخرى عند نهايته") }
+                loopB == null -> { val b = v.positionMs; if (b > loopA!! + 1_000) { loopB = b; v.setAbLoop(loopA, loopB); v.seekTo(loopA!!); say("يتكرر المقطع الآن") } }
+                else -> { loopA = null; loopB = null; v.setAbLoop(null, null); say("أُلغي تكرار المقطع") }
+            }
+        })
+        add(ToolItem("zzz-float", "مؤقت النوم", when { sleepAtEnd -> "نهاية الحلقة"; sleepLeftMs > 0 -> "${(sleepLeftMs + 59_999) / 60_000} د"; else -> null }, on = sleepAtEnd || sleepLeftMs > 0, focus = openers.getValue(Panel.Sleep)) { panel = Panel.Sleep })
+        add(ToolItem("ear-sound-hear", "سمعت · ظهرت", if (subDelay != 0.0) fmtDelay(subDelay) else null) { openSync() })
+        add(ToolItem("code-block-type", "ترميز الترجمة") { tracksVersion++; panel = Panel.Subs })
+        // «ماذا قال؟»: back ten seconds with the subtitles shown for that moment only.
+        add(ToolItem("undo-return", "ماذا قال؟") {
+            v.seekBy(-10)
+            val subs = v.tracks().filter { it.type == "sub" }
+            if (subs.none { it.selected }) {
+                val pick = subs.firstOrNull { it.lang.startsWith("ar") } ?: subs.firstOrNull()
+                if (pick != null) {
+                    v.select(pick, "sub"); tracksVersion++
+                    scope.launch { delay(14_000); v.select(null, "sub"); tracksVersion++ }
+                } else say("لا توجد ترجمة لهذا المقطع")
+            }
+        })
+        if (com.mawj.tv.data.Gemini.enabled) {
+            add(ToolItem("help-circle-tilt", "اختبار الحلقة") { v.pause(); panel = Panel.Quiz })
+            if (!direct) add(ToolItem("eye-sparkle-focus", "من في المشهد؟") { v.pause(); panel = Panel.Who })
+        }
+        add(ToolItem("replace-exchange", "تبديل المصدر ") { switchSource() })
     }
 
     BackHandler {
@@ -319,6 +392,30 @@ fun PlayerScreen(req: PlayRequest) {
         next = if (i >= 0) eps.drop(i + 1).firstOrNull { it.id !in filler } else null
     }
 
+    // «تخطّي المقدمة»: the parts of this episode that can be skipped.
+    LaunchedEffect(req.videoId) {
+        if (!Store.feature("skipIntro")) return@LaunchedEffect
+        skipParts = runCatching { com.mawj.tv.data.Skip.parts(req.meta, req.episode) }.getOrDefault(emptyList())
+    }
+
+    // «دليل المحتوى»: the age rating and kinds of scenes, top right, for eight seconds once the picture moves.
+    LaunchedEffect(req.videoId) {
+        if (!Store.feature("playerAdvisory")) return@LaunchedEffect
+        val id = com.mawj.tv.data.Discover.tmdbIdOf(req.meta) ?: return@LaunchedEffect
+        val kind = com.mawj.tv.data.Discover.kindOf(req.meta)
+        val cert = com.mawj.tv.data.Discover.certification(kind, id)
+        val facts = com.mawj.tv.data.Discover.facts(req.meta)
+        val flags = facts?.genres.orEmpty().mapNotNull { g ->
+            when (g) { "رعب" -> "رعب"; "جريمة" -> "عنف وجريمة"; "حرب" -> "مشاهد حرب"; "إثارة" -> "توتر وإثارة"; "رومانسي" -> "مشاهد عاطفية"; else -> null }
+        }.distinct().take(3)
+        val rating = cert?.let { c -> if (c.any(Char::isDigit)) "+" + c.filter(Char::isDigit) else c }
+        advisory = rating to flags
+        while (dur <= 0L || pos < 1_000) delay(500)
+        advisoryOn = true
+        delay(8_000)
+        advisoryOn = false
+    }
+
     // Direct mode guard: if the picture does not start moving within a few seconds, the same
     // source reopens at once in the normal mode (the one that plays every 1080p file).
     LaunchedEffect(view, direct) {
@@ -349,8 +446,9 @@ fun PlayerScreen(req: PlayRequest) {
             if (nowPaused && !paused && dur > 0) save(push = true)
             paused = nowPaused
             buffering = v.buffering || dur == 0L
-            if (controls && panel == Panel.None && !paused && System.currentTimeMillis() - lastInput > 5_000) {
+            if (controls && panel == Panel.None && !paused && System.currentTimeMillis() - lastInput > (if (expanded) 9_000 else 5_000)) {
                 controls = false
+                expanded = false
                 runCatching { rootFocus.requestFocus() }
             }
             if (++tick % 30 == 0) save()
@@ -398,9 +496,22 @@ fun PlayerScreen(req: PlayRequest) {
                     AndroidKey.KEYCODE_MEDIA_PAUSE -> { vv.pause(); true }
                     AndroidKey.KEYCODE_MEDIA_FAST_FORWARD -> { vv.seekBy(30); true }
                     AndroidKey.KEYCODE_MEDIA_REWIND -> { vv.seekBy(-30); true }
-                    AndroidKey.KEYCODE_CAPTIONS -> { panel = Panel.Subs; controls = true; true }
+                    AndroidKey.KEYCODE_CAPTIONS, AndroidKey.KEYCODE_PROG_RED -> { tracksVersion++; panel = Panel.Subs; controls = true; true }
+                    // The remote's colour keys, as on the tablet's TV mode.
+                    AndroidKey.KEYCODE_PROG_GREEN -> { tracksVersion++; panel = Panel.Audio; controls = true; true }
+                    AndroidKey.KEYCODE_PROG_YELLOW -> { openSync(); true }
+                    AndroidKey.KEYCODE_PROG_BLUE -> { panel = Panel.Speed; controls = true; true }
                     else -> if (controls || syncBar) false else when (e.key.nativeKeyCode) {
-                        AndroidKey.KEYCODE_DPAD_CENTER, AndroidKey.KEYCODE_ENTER, AndroidKey.KEYCODE_SPACE -> { vv.togglePause(); showControls(); true }
+                        AndroidKey.KEYCODE_DPAD_CENTER, AndroidKey.KEYCODE_ENTER, AndroidKey.KEYCODE_SPACE -> {
+                            val part = skipParts.firstOrNull { pos in it.startMs until it.endMs - 1_000 && it.kind !in skipped }
+                            when {
+                                // A long press opens every tool at once.
+                                e.nativeKeyEvent.repeatCount > 0 -> { expanded = true; showControls(moreFocus) }
+                                part != null -> { vv.seekTo(part.endMs); skipped = skipped + part.kind }
+                                else -> { vv.togglePause(); showControls() }
+                            }
+                            true
+                        }
                         AndroidKey.KEYCODE_DPAD_RIGHT -> { vv.seekBy(10); showControls(seekFocus); true }
                         AndroidKey.KEYCODE_DPAD_LEFT -> { vv.seekBy(-10); showControls(seekFocus); true }
                         AndroidKey.KEYCODE_DPAD_UP, AndroidKey.KEYCODE_DPAD_DOWN, AndroidKey.KEYCODE_MENU -> { showControls(); true }
@@ -422,24 +533,42 @@ fun PlayerScreen(req: PlayRequest) {
             }
         }
 
+        if (advisoryOn && !controls && panel == Panel.None) advisory?.let { (r, lines) -> Advisory(lines, r) }
+
         if (controls && v != null && !syncBar) {
-            Controls(
+            val subLabel = currentSub?.let { it.label.substringBefore(" — ").substringBefore(" · ") } ?: "إيقاف"
+            val audioLabel = currentAudio?.label?.substringBefore(" — ")?.substringBefore(" · ")
+            val short = listOf(
+                ToolItem("gauge-rise", "السرعة", "×" + if (speed == 1.0) "1" else speed.toString(), focus = openers.getValue(Panel.Speed)) { panel = Panel.Speed },
+                ToolItem("subtitles-sparkle-transcribe", "الترجمات", subLabel, focus = openers.getValue(Panel.Subs)) { tracksVersion++; panel = Panel.Subs },
+                ToolItem("audio-lines-meter", "الصوت", audioLabel, focus = openers.getValue(Panel.Audio)) { tracksVersion++; panel = Panel.Audio },
+            )
+            TabletControls(
                 req = req, pos = pos, dur = dur, paused = paused, speed = speed,
-                subLabel = currentSub?.let { it.label.substringBefore(" — ").substringBefore(" · ") } ?: "إيقاف",
-                audioLabel = currentAudio?.label?.substringBefore(" — ")?.substringBefore(" · ") ?: "—",
-                hasNext = next != null, delay = subDelay, dim = panel != Panel.None,
-                playFocus = playFocus, seekFocus = seekFocus, moreFocus = moreFocus, openers = openers,
+                top = listOfNotNull(
+                    ToolItem("replace-exchange", "تبديل المصدر") { switchSource() },
+                    if (next != null) ToolItem("skip-forward-push", "الحلقة التالية") { playNext() } else null,
+                    ToolItem("info-drop", "معلومات الملف", focus = openers.getValue(Panel.Info)) { panel = Panel.Info },
+                ),
+                short = short,
+                all = short + playerTools(v),
+                expanded = expanded, dim = panel != Panel.None,
+                playFocus = playFocus, seekFocus = seekFocus, moreFocus = moreFocus,
+                onBack = { save(); Nav.back() },
                 onPlay = { v.togglePause() },
                 onSeek = { v.seekBy(it) },
-                onOpen = { p -> tracksVersion++; panel = p },
-                onSync = { openSync() },
-                onNext = { playNext() },
+                onExpand = { expanded = it },
             )
+        }
+
+        val part = skipParts.firstOrNull { pos in it.startMs until it.endMs - 1_000 && it.kind !in skipped }
+        if (part != null && panel == Panel.None && !syncBar && countdown < 0) {
+            SkipButton(part, controls, skipFocus) { v?.seekTo(part.endMs); skipped = skipped + part.kind }
         }
 
         if (syncBar) SyncBar(heardMs, seenMs, lastShift, subDelay, onMark = { mark(it) })
 
-        if (countdown >= 0 && next != null) NextUp(next!!, countdown, onPlay = { playNext() }, onCancel = { nextDismissed = true; countdown = -1 })
+        if (countdown >= 0 && next != null) NextUpCard(next!!, req.meta.background, countdown, onPlay = { playNext() }, onCancel = { nextDismissed = true; countdown = -1 })
 
         if (v != null) when (panel) {
             Panel.Subs -> SubsPanel(
@@ -450,9 +579,14 @@ fun PlayerScreen(req: PlayRequest) {
                 onStyle = { applySubStyle() },
                 onPick = { tracksVersion++ },
             )
-            Panel.Audio -> ChoicePanel("الصوت", tracks.filter { it.type == "audio" }.map { it.label to it.selected }) { i ->
-                v.select(tracks.filter { it.type == "audio" }[i], "audio"); tracksVersion++
-            }
+            Panel.Audio -> AudioPanel(
+                tracks.filter { it.type == "audio" }, speed, dialogue, night, level,
+                onTrack = { t -> v.select(t, "audio"); tracksVersion++ },
+                onDialogue = { dialogue = !dialogue; applyFx() },
+                onNight = { night = !night; applyFx() },
+                onLevel = { level = !level; applyFx() },
+                onSpeed = { speed = it; v.setSpeed(it) },
+            )
             Panel.Speed -> {
                 val speeds = listOf(0.75, 1.0, 1.25, 1.5)
                 ChoicePanel("السرعة", speeds.map { (if (it == 1.0) "×1 (عادية)" else "×$it") to (kotlin.math.abs(it - speed) < 0.01) }) { i ->
@@ -486,78 +620,14 @@ fun PlayerScreen(req: PlayRequest) {
                 val list = remember(bookmarksVersion) { Store.bookmarks(req.videoId) }
                 BookmarksPanel(list, onJump = { ms -> v.seekTo(ms); closePanel() }, onRemove = { ms -> Store.removeBookmark(req.videoId, ms); bookmarksVersion++ })
             }
-            Panel.Companion -> CompanionPanel(req, pos, dur, subLines.toList())
+            Panel.Companion -> Unit
             Panel.Who -> WhoPanel(req, v)
             Panel.Quiz -> QuizPanel(req, pos, dur, subLines.toList())
             Panel.Quotes -> {
                 val list = remember(quotesVersion) { Store.quotes(req.videoId) }
                 QuotesPanel(list) { ms -> v.seekTo(ms); closePanel() }
             }
-            Panel.Tools -> ToolsPanel(
-                dialogue = dialogue, night = night, level = level,
-                colorLabel = COLOR_PRESETS.firstOrNull { it.first == colorKey }?.second ?: "الأصلي",
-                loopState = when { loopA == null -> null; loopB == null -> "البداية محددة"; else -> "يعمل" },
-                sleepLabel = when { sleepAtEnd -> "نهاية الحلقة"; sleepLeftMs > 0 -> "${(sleepLeftMs + 59_999) / 60_000} د"; else -> null },
-                onColors = { panel = Panel.Colors },
-                onDialogue = { dialogue = !dialogue; applyFx() },
-                onNight = { night = !night; applyFx() },
-                onLevel = { level = !level; applyFx() },
-                onEncoding = { panel = Panel.Subs },
-                onSync = { openSync() },
-                onMark = { Store.addBookmark(req.videoId, v.positionMs); bookmarksVersion++; say("حُفظت علامة عند ${time(v.positionMs)}") },
-                onBookmarks = { panel = Panel.Bookmarks },
-                onLoop = {
-                    when {
-                        loopA == null -> { loopA = v.positionMs; say("حُددت بداية المقطع، ويُضغط مرة أخرى عند نهايته") }
-                        loopB == null -> {
-                            val b = v.positionMs
-                            if (b > loopA!! + 1_000) { loopB = b; v.setAbLoop(loopA, loopB); v.seekTo(loopA!!); say("يتكرر المقطع الآن") }
-                        }
-                        else -> { loopA = null; loopB = null; v.setAbLoop(null, null); say("أُلغي تكرار المقطع") }
-                    }
-                },
-                onSleep = { panel = Panel.Sleep },
-                gemini = com.mawj.tv.data.Gemini.enabled,
-                translateLabel = translatePct?.let { "$it٪" },
-                onTranslate = {
-                    if (translatePct == null) {
-                        val src = addonSubs.filterNot { it.lang.lowercase().startsWith("ar") }
-                            .sortedBy { if (it.lang.lowercase().startsWith("en")) 0 else 1 }.firstOrNull()
-                        if (src == null) say("لا توجد ترجمة بلغة أخرى لهذه الحلقة") else scope.launch {
-                            translatePct = 0
-                            val r = com.mawj.tv.data.SubTranslate.translate(src) { p -> translatePct = p }
-                            translatePct = null
-                            when (r) {
-                                is com.mawj.tv.data.SubTranslate.Result.Ready -> {
-                                    v.addSubtitle(r.path, "عربي ✨ ترجمة موج", "ar", select = true); tracksVersion++
-                                    say("الترجمة العربية جاهزة ✅")
-                                }
-                                com.mawj.tv.data.SubTranslate.Result.AlreadyArabic -> say("هذه الترجمة عربية ولا تحتاج ترجمة")
-                                com.mawj.tv.data.SubTranslate.Result.Unreadable -> say("تعذّرت قراءة ملف الترجمة")
-                                com.mawj.tv.data.SubTranslate.Result.Failed -> say("تعذّرت الترجمة الآن")
-                            }
-                        }
-                    }
-                },
-                onCompanion = { v.pause(); panel = Panel.Companion },
-                onWho = { v.pause(); panel = Panel.Who },
-                onQuiz = { v.pause(); panel = Panel.Quiz },
-                onQuote = {
-                    val line = v.subText()
-                    if (line == null) say("لا توجد عبارة على الشاشة الآن")
-                    else { Store.addQuote(req.videoId, v.positionMs, line); quotesVersion++; say("حُفظت العبارة") }
-                },
-                onQuotes = { panel = Panel.Quotes },
-                onShot = {
-                    scope.launch {
-                        val ok = saveShot(v, req.meta.name, v.positionMs)
-                        say(if (ok) "حُفظت اللقطة، وتُفتح من الجوال عبر «الربط بالجوال»" else "تعذّر التقاط هذا المشهد")
-                    }
-                },
-                onInfo = { panel = Panel.Info },
-                onSwitch = { switchSource() },
-                direct = direct,
-            )
+            Panel.Tools -> Unit
             Panel.None -> Unit
         }
 
@@ -569,201 +639,7 @@ fun PlayerScreen(req: PlayRequest) {
     }
 }
 
-@Composable
-private fun Controls(
-    req: PlayRequest, pos: Long, dur: Long, paused: Boolean, speed: Double,
-    subLabel: String, audioLabel: String, hasNext: Boolean, delay: Double, dim: Boolean,
-    playFocus: FocusRequester, seekFocus: FocusRequester, moreFocus: FocusRequester, openers: Map<Panel, FocusRequester>,
-    onPlay: () -> Unit, onSeek: (Int) -> Unit, onOpen: (Panel) -> Unit, onSync: () -> Unit, onNext: () -> Unit,
-) {
-    Box(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().background(Brush.verticalGradient(0f to Color(0xCC000000), 1f to Color.Transparent))
-                .padding(horizontal = 40.dp, vertical = 22.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column(Modifier.weight(1f)) {
-                T(req.meta.name, 26.sp, weight = FontWeight.Bold, serif = true, maxLines = 1)
-                val sub = req.episode?.let { "الموسم ${it.season} · الحلقة ${it.number}" + it.title.takeIf { t -> t.isNotBlank() }?.let { t -> " — $t" }.orEmpty() }
-                    ?: req.meta.year?.take(4)
-                sub?.let { T(it, 14.sp, color = C.Muted, maxLines = 1) }
-            }
-            if (dur > 0) {
-                val ends = System.currentTimeMillis() + ((dur - pos) / speed).toLong()
-                T("ينتهي " + java.text.SimpleDateFormat("h:mm", Locale.US).format(java.util.Date(ends)), 15.sp, color = C.Muted)
-            }
-        }
-        Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color(0xE6000000)))
-                .padding(start = 36.dp, end = 36.dp, top = 40.dp, bottom = 22.dp),
-        ) {
-            SeekBar(pos, dur, seekFocus, onSeek)
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
-                PlayButton(paused, Modifier.focusRequester(playFocus), onPlay)
-                CtrlButton("subtitles-sparkle-transcribe", "الترجمة", subLabel, Modifier.focusRequester(openers.getValue(Panel.Subs))) { onOpen(Panel.Subs) }
-                CtrlButton("audio-lines-meter", "الصوت", audioLabel, Modifier.focusRequester(openers.getValue(Panel.Audio))) { onOpen(Panel.Audio) }
-                CtrlButton("clock-spin", "ضبط التوقيت", if (delay != 0.0) fmtDelay(delay) else null) { onSync() }
-                CtrlButton("gauge-rise", "السرعة", "×" + if (speed == 1.0) "1" else speed.toString(), Modifier.focusRequester(openers.getValue(Panel.Speed))) { onOpen(Panel.Speed) }
-                if (hasNext) CtrlButton("skip-forward-push", "الحلقة التالية", null) { onNext() }
-                CtrlButton("more-horizontal-wave", "المزيد", null, Modifier.focusRequester(moreFocus), accent = true) { onOpen(Panel.Tools) }
-            }
-        }
-        if (dim) Box(Modifier.fillMaxSize().background(Color(0x66000000)))
-    }
-}
-
-@Composable
-private fun PlayButton(paused: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    Box(
-        modifier.size(38.dp)
-            .onFocusChanged { focused = it.isFocused }
-            .tvFocus(shape = CircleShape, scale = 1.08f, onClick = onClick)
-            .background(if (focused) C.GoldLight else C.Ink),
-        contentAlignment = Alignment.Center,
-    ) {
-        MIcon("play-pause-toggle", C.Sea, focused, Modifier.size(20.dp))
-    }
-}
-
-/** A named control with its animated icon and what is chosen in it. */
-@Composable
-private fun CtrlButton(icon: String, label: String, value: String?, modifier: Modifier = Modifier, accent: Boolean = false, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    Row(
-        modifier.height(38.dp)
-            .onFocusChanged { focused = it.isFocused }
-            .tvFocus(shape = CircleShape, scale = 1.05f, onClick = onClick)
-            .background(if (focused) Color(0x33F1DDA6) else if (accent) Color(0x2ED6B36A) else Color(0x1FFFFFFF))
-            .padding(horizontal = 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MIcon(icon, if (accent || focused) C.GoldLight else C.Ink, focused, Modifier.size(17.dp))
-        Spacer(Modifier.width(7.dp))
-        T(label, 13.sp, color = if (accent) C.GoldLight else C.Ink, maxLines = 1)
-        if (value != null) {
-            Spacer(Modifier.width(5.dp))
-            T(value, 11.sp, color = C.Muted, maxLines = 1)
-        }
-    }
-}
-
-/** The time line. Focused, left/right jump 10 seconds. Video time always reads left to right. */
-@Composable
-private fun SeekBar(pos: Long, dur: Long, focus: FocusRequester, onSeek: (Int) -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Row(
-            Modifier.fillMaxWidth()
-                .focusRequester(focus)
-                .onFocusChanged { focused = it.isFocused }
-                .onKeyEvent { e ->
-                    if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
-                    when (e.key.nativeKeyCode) {
-                        AndroidKey.KEYCODE_DPAD_RIGHT -> { onSeek(10); true }
-                        AndroidKey.KEYCODE_DPAD_LEFT -> { onSeek(-10); true }
-                        else -> false
-                    }
-                }
-                .focusable(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            T(time(pos), 13.sp, num = true)
-            Spacer(Modifier.width(12.dp))
-            Box(Modifier.weight(1f).height(if (focused) 7.dp else 4.dp).background(Color(0x2EFFFFFF), RoundedCornerShape(4.dp))) {
-                val f = if (dur > 0) (pos.toFloat() / dur).coerceIn(0f, 1f) else 0f
-                Box(Modifier.fillMaxWidth(f).fillMaxHeight().background(if (focused) C.GoldLight else C.Gold, RoundedCornerShape(4.dp)))
-            }
-            Spacer(Modifier.width(12.dp))
-            T(time(dur), 13.sp, color = C.Muted, num = true)
-        }
-    }
-}
-
 // ---------------- Mawj tools («المزيد») ----------------
-
-@Composable
-private fun ToolsPanel(
-    dialogue: Boolean, night: Boolean, level: Boolean, colorLabel: String, loopState: String?, sleepLabel: String?,
-    onColors: () -> Unit, onDialogue: () -> Unit, onNight: () -> Unit, onLevel: () -> Unit,
-    onEncoding: () -> Unit, onSync: () -> Unit,
-    onMark: () -> Unit, onBookmarks: () -> Unit, onLoop: () -> Unit,
-    onSleep: () -> Unit, onInfo: () -> Unit, onSwitch: () -> Unit,
-    gemini: Boolean, translateLabel: String?, onTranslate: () -> Unit,
-    onCompanion: () -> Unit, onWho: () -> Unit, onQuiz: () -> Unit,
-    onQuote: () -> Unit, onQuotes: () -> Unit, onShot: () -> Unit,
-    direct: Boolean = false,
-) {
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { delay(40); runCatching { first.requestFocus() } }
-    Box(Modifier.fillMaxSize().padding(start = 30.dp, end = 30.dp, bottom = 96.dp), contentAlignment = Alignment.BottomCenter) {
-        Column(
-            Modifier.fillMaxWidth().background(PanelBg, RoundedCornerShape(16.dp)).border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(16.dp))
-                .padding(horizontal = 18.dp, vertical = 14.dp),
-        ) {
-            T("أدوات موج", 18.sp, weight = FontWeight.Bold)
-            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                ToolGroup("الصورة والصوت", Modifier.weight(1f)) {
-                    if (!direct) Tool("color-filter-sparkle-split", "ألوان الصورة", colorLabel.takeIf { it != "الأصلي" }, Modifier.focusRequester(first), onClick = onColors)
-                    Tool("user-voice-speak", "توضيح الحوار", if (dialogue) "مفعّل" else null, if (direct) Modifier.focusRequester(first) else Modifier, on = dialogue, onClick = onDialogue)
-                    Tool("moon-star-twinkle", "صوت ليلي", if (night) "مفعّل" else null, on = night, onClick = onNight)
-                    Tool("waveform-scroll", "تحسين الصوت", if (level) "مفعّل" else null, on = level, onClick = onLevel)
-                }
-                ToolGroup("الترجمة", Modifier.weight(1f)) {
-                    if (gemini) Tool("speech-to-text-transcribe", "ترجمة للعربي", translateLabel, on = translateLabel != null, onClick = onTranslate)
-                    Tool("code-block-type", "ترميز الترجمة", null, onClick = onEncoding)
-                    Tool("ear-sound-hear", "سمعت · ظهرت", null, onClick = onSync)
-                }
-                ToolGroup("اللحظة", Modifier.weight(1f)) {
-                    Tool("bookmark-drop", "علامة هنا", null, onClick = onMark)
-                    Tool("bookmarks-cycle", "العلامات", null, onClick = onBookmarks)
-                    Tool("message-text-type", "حفظ العبارة", null, onClick = onQuote)
-                    Tool("messages-reply", "العبارات", null, onClick = onQuotes)
-                    if (!direct) Tool("camera-snap", "لقطة شاشة", null, onClick = onShot)
-                    Tool("repeat-chase", "تكرار مقطع", loopState, on = loopState != null, onClick = onLoop)
-                }
-                if (gemini) ToolGroup("رفيق موج", Modifier.weight(1f)) {
-                    Tool("bots-chat", "رفيق موج", null, onClick = onCompanion)
-                    if (!direct) Tool("eye-sparkle-focus", "من في المشهد؟", null, onClick = onWho)
-                    Tool("help-circle-tilt", "اختبار الحلقة", null, onClick = onQuiz)
-                }
-                ToolGroup("التشغيل", Modifier.weight(1f)) {
-                    Tool("zzz-float", "مؤقت النوم", sleepLabel, on = sleepLabel != null, onClick = onSleep)
-                    Tool("info-drop", "معلومات الملف", null, onClick = onInfo)
-                    Tool("replace-exchange", "تبديل المصدر", null, onClick = onSwitch)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ToolGroup(title: String, modifier: Modifier, content: @Composable () -> Unit) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        T(title, 11.sp, color = C.Gold, modifier = Modifier.padding(bottom = 2.dp))
-        content()
-    }
-}
-
-@Composable
-private fun Tool(icon: String, label: String, value: String?, modifier: Modifier = Modifier, on: Boolean = false, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    Row(
-        modifier.fillMaxWidth().height(36.dp)
-            .onFocusChanged { focused = it.isFocused }
-            .tvFocus(shape = RoundedCornerShape(9.dp), scale = 1.03f, onClick = onClick)
-            .background(if (focused) Color(0x29F1DDA6) else Color(0x0DFFFFFF))
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MIcon(icon, C.GoldLight, focused, Modifier.size(16.dp))
-        Spacer(Modifier.width(8.dp))
-        T(label, 12.sp, maxLines = 1, modifier = Modifier.weight(1f))
-        if (value != null) T(value, 10.sp, color = if (on) C.Green else C.Muted, maxLines = 1)
-    }
-}
 
 /** «سمعت · ظهرت»: a small bar at the top; the difference shows once both are pressed. */
 @Composable
@@ -772,7 +648,7 @@ private fun SyncBar(heard: Long?, seen: Long?, lastShift: Double?, delay: Double
     LaunchedEffect(Unit) { kotlinx.coroutines.delay(40); runCatching { first.requestFocus() } }
     Box(Modifier.fillMaxSize().padding(top = 18.dp), contentAlignment = Alignment.TopCenter) {
         Row(
-            Modifier.background(PanelBg, CircleShape).border(1.dp, Color(0x14FFFFFF), CircleShape).padding(5.dp),
+            Modifier.background(Color(0x80070D14), CircleShape).border(1.dp, Color(0x24FFFFFF), CircleShape).padding(5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SyncChip("ear-sound-hear", "سمعت", heard, Modifier.focusRequester(first)) { onMark("heard") }
@@ -795,16 +671,16 @@ private fun SyncChip(icon: String, label: String, at: Long?, modifier: Modifier 
         modifier.height(32.dp)
             .onFocusChanged { focused = it.isFocused }
             .tvFocus(shape = CircleShape, scale = 1.05f, onClick = onClick)
-            .background(if (focused) Color(0x24F1DDA6) else Color.Transparent)
-            .border(1.dp, if (focused) C.GoldLight else Color.Transparent, CircleShape)
+            .background(if (focused) C.GoldLight else Color(0x14FFFFFF))
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MIcon(icon, if (done) C.Green else C.Ink, focused, Modifier.size(15.dp))
+        val ink = if (focused) C.Sea else if (done) C.Green else C.Ink
+        MIcon(icon, ink, focused, Modifier.size(15.dp))
         Spacer(Modifier.width(6.dp))
-        T(label, 13.sp, color = if (done) C.Green else C.Ink)
+        T(label, 13.sp, color = ink)
         Spacer(Modifier.width(6.dp))
-        T(at?.let { timeMs(it) } ?: "—", 10.sp, color = if (done) C.Green else C.Dim, num = true)
+        T(at?.let { timeMs(it) } ?: "—", 10.sp, color = if (focused) C.Sea else if (done) C.Green else C.Dim, num = true)
     }
 }
 
@@ -812,13 +688,13 @@ private fun SyncChip(icon: String, label: String, at: Long?, modifier: Modifier 
 
 @Composable
 internal fun PanelBox(title: String, width: Int = 300, content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+    Box(Modifier.fillMaxSize().background(PanelDim), contentAlignment = Alignment.TopStart) {
         Column(
-            Modifier.width(width.dp).fillMaxHeight().background(PanelBg).verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 22.dp),
+            Modifier.width((width + 40).dp).fillMaxHeight().verticalScroll(rememberScrollState())
+                .padding(start = 30.dp, end = 10.dp, top = 26.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            T(title, 24.sp, weight = FontWeight.Bold, serif = true)
+            T(title, 30.sp, weight = FontWeight.Bold, serif = true, modifier = Modifier.padding(bottom = 8.dp))
             content()
         }
     }
@@ -833,8 +709,8 @@ internal fun ChoiceRow(label: String, selected: Boolean, focus: FocusRequester?,
             .then(if (focus != null) Modifier.focusRequester(focus) else Modifier)
             .onFocusChanged { focused = it.isFocused }
             .tvFocus(shape = RoundedCornerShape(10.dp), scale = 1.02f, onClick = onClick)
-            .background(if (selected) Color(0xE6D6B36A) else if (focused) Color(0x29F1DDA6) else Color(0x0DF6F1E4))
-            .padding(horizontal = 12.dp),
+            .background(if (selected) C.GoldLight else if (focused) Color(0x24FFFFFF) else Color.Transparent)
+            .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -842,8 +718,8 @@ internal fun ChoiceRow(label: String, selected: Boolean, focus: FocusRequester?,
             if (sub != null) T(sub, 10.sp, color = if (selected) Color(0xFF4A3A1A) else C.Dim, maxLines = 1, num = true)
         }
         if (count != null) {
-            T(count.toString(), 10.sp, num = true, color = if (selected) C.Sea else C.GoldLight,
-                modifier = Modifier.background(if (selected) Color(0x26070D14) else Color(0x47D6B36A), CircleShape).padding(horizontal = 7.dp, vertical = 1.dp))
+            T(count.toString(), 10.sp, num = true, color = C.Sea,
+                modifier = Modifier.background(if (selected) Color(0x26070D14) else C.Gold, CircleShape).padding(horizontal = 7.dp, vertical = 1.dp))
         }
     }
 }
@@ -886,30 +762,25 @@ private fun SubsPanel(
     var edge by remember { mutableStateOf(Store.text("subEdge", "border")) }
     var margin by remember { mutableIntStateOf(Store.number("subMargin", 40)) }
 
-    Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to Color(0x73060A0E), 0.45f to Color(0xD1060A0E), 1f to Color(0xDB060A0E)))) {
-        Row(Modifier.fillMaxSize().padding(start = 30.dp, end = 30.dp, top = 22.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+    Box(Modifier.fillMaxSize().background(PanelDim)) {
+        T("الترجمات", 30.sp, weight = FontWeight.Bold, serif = true, modifier = Modifier.padding(start = 30.dp, top = 24.dp))
+        Row(Modifier.fillMaxSize().padding(start = 30.dp, end = 30.dp, top = 74.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             // Languages.
             Column(Modifier.width(175.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                T("الترجمات", 26.sp, weight = FontWeight.Bold, serif = true)
-                T("اللغات", 11.sp, color = C.Dim, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+                T("اللغات", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(bottom = 4.dp))
                 ChoiceRow("لا شيء", selected == null, offFocus) { v.select(null, "sub"); onPick() }
                 langs.forEach { (code, list) ->
                     ChoiceRow(if (code == "?") "أخرى" else Addons.languageName(code), code == lang, null, count = list.size) { lang = code }
                 }
             }
             // That language's subtitles.
-            Column(Modifier.width(235.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                T("الترجمات", 11.sp, color = C.Dim, modifier = Modifier.padding(top = 44.dp, bottom = 2.dp))
-                inLang.forEachIndexed { i, t ->
-                    ChoiceRow(
-                        t.label.substringBefore(" — ").substringBefore(" · "), t.selected, trackFocus[i],
-                        sub = (t.title.takeIf { it.isNotBlank() && it != t.lang } ?: if (t.external) "خارجية" else "داخل الملف"),
-                    ) { v.select(t, "sub"); onPick() }
-                }
+            Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                T("الترجمات", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(bottom = 4.dp))
+                inLang.forEachIndexed { i, t -> TrackCard(t, trackFocus[i]) { v.select(t, "sub"); onPick() } }
             }
             // The look.
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                T("النمط", 11.sp, color = C.Dim, modifier = Modifier.padding(top = 44.dp, bottom = 2.dp))
+                T("النمط", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(bottom = 4.dp))
                 StyleRow("تأخير الترجمة") {
                     Stepper(fmtDelay(delay), onMinus = { onDelay(((delay - 0.1) * 100).toLong() / 100.0) }, onPlus = { onDelay(((delay + 0.1) * 100).toLong() / 100.0) })
                 }
@@ -918,7 +789,7 @@ private fun SubsPanel(
                         .tvFocus(shape = CircleShape, scale = 1.03f, onClick = onSync)
                         .background(Color(0x1AD6B36A)).border(1.dp, Color(0x80D6B36A), CircleShape),
                     horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
-                ) { T("سمعت · ظهرت", 13.sp, color = C.GoldLight) }
+                ) { T("المزامنة بالسمع · سمعت ظهرت", 13.sp, color = C.GoldLight) }
                 StyleRow("حجم الخط") {
                     Stepper("${(scale * 100).toInt()}٪", onMinus = { onScale((scale - 0.1).coerceAtLeast(0.5)) }, onPlus = { onScale((scale + 0.1).coerceAtMost(2.0)) })
                 }
@@ -927,7 +798,7 @@ private fun SubsPanel(
                     Chip("معطّل", !bold, onClick = { bold = false; Store.setFlag("subBold", false); onStyle() })
                 }
                 StyleRow("اللون") {
-                    listOf("#FFFFFF", "#F5D03B", "#3CC7F0", "#3CCF7A").forEach { c ->
+                    listOf("#FFFFFF", "#FFD21F", "#2BD9F0", "#FF6A6A", "#1EE38A", "#A066D8", "#FF7A1A").forEach { c ->
                         Box(
                             Modifier.size(22.dp)
                                 .tvFocus(shape = CircleShape, scale = 1.15f, onClick = { color = c; Store.setText("subColor", c); onStyle() })
@@ -1004,25 +875,6 @@ private fun InfoPanel(rows: List<Pair<String, String>>) {
     }
 }
 
-@Composable
-private fun NextUp(ep: Episode, seconds: Int, onPlay: () -> Unit, onCancel: () -> Unit) {
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { delay(40); runCatching { focus.requestFocus() } }
-    Box(Modifier.fillMaxSize().padding(start = 40.dp, bottom = 130.dp), contentAlignment = Alignment.BottomEnd) {
-        Column(
-            Modifier.width(320.dp).background(PanelBg, RoundedCornerShape(16.dp)).border(1.dp, Color(0x59D6B36A), RoundedCornerShape(16.dp)).padding(16.dp),
-        ) {
-            T("الحلقة التالية خلال ${seconds.coerceAtLeast(0)}", 15.sp, color = C.Gold, weight = FontWeight.SemiBold)
-            T("${ep.number}. ${ep.title}", 17.sp, weight = FontWeight.SemiBold, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
-            T("بنفس المصدر والإضافة", 13.sp, color = C.Dim, modifier = Modifier.padding(top = 2.dp, bottom = 10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip("تشغيل الآن", false, onClick = onPlay, modifier = Modifier.focusRequester(focus))
-                Chip("إلغاء", false, onClick = onCancel)
-            }
-        }
-    }
-}
-
 private fun fmtDelay(d: Double): String = String.format(Locale.US, "%+.2f", d) + " ث"
 
 private fun timeMs(ms: Long): String {
@@ -1056,5 +908,82 @@ private fun DirectSubtitles(v: MpvView?) {
     Box(Modifier.fillMaxSize().padding(start = 80.dp, end = 80.dp, bottom = 46.dp), contentAlignment = Alignment.BottomCenter) {
         T(text, size.sp, weight = FontWeight.SemiBold, align = androidx.compose.ui.text.style.TextAlign.Center, shadow = true, lineHeight = (size * 1.45f).sp,
             modifier = Modifier.background(Color(0x59000000), RoundedCornerShape(8.dp)).padding(horizontal = 14.dp, vertical = 4.dp))
+    }
+}
+
+
+/** One subtitle in the tablet's style: its source in a small chip, the language, and a tick when chosen. */
+@Composable
+private fun TrackCard(t: Track, focus: FocusRequester, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val ink = if (t.selected) C.Sea else C.Ink
+    Row(
+        Modifier.fillMaxWidth().focusRequester(focus).onFocusChanged { focused = it.isFocused }
+            .tvFocus(shape = RoundedCornerShape(12.dp), scale = 1.02f, onClick = onClick)
+            .background(if (t.selected) C.GoldLight else if (focused) Color(0x24FFFFFF) else Color.Transparent)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            val src = t.title.takeIf { it.isNotBlank() && it != t.lang } ?: if (t.external) "خارجية" else "داخل الملف"
+            T(src, 9.sp, color = ink, maxLines = 1, num = true,
+                modifier = Modifier.background(if (t.selected) Color(0x1A000000) else Color(0x1FFFFFFF), CircleShape).padding(horizontal = 8.dp, vertical = 1.dp))
+            T(t.label.substringBefore(" — ").substringBefore(" · "), 14.sp, color = ink, weight = FontWeight.SemiBold, maxLines = 1, modifier = Modifier.padding(top = 3.dp))
+            T(Addons.languageName(t.lang.take(2)), 10.sp, color = if (t.selected) Color(0xFF4A3C1C) else Color(0xFFAAAAAA), maxLines = 1)
+        }
+        if (t.selected) T("✓", 17.sp, color = C.Sea, weight = FontWeight.Bold)
+    }
+}
+
+/** «الصوت»: the audio tracks, then the sound tools and the speed, in the tablet's panel style. */
+@Composable
+private fun AudioPanel(
+    tracks: List<Track>, speed: Double, dialogue: Boolean, night: Boolean, level: Boolean,
+    onTrack: (Track) -> Unit, onDialogue: () -> Unit, onNight: () -> Unit, onLevel: () -> Unit, onSpeed: (Double) -> Unit,
+) {
+    val focus = remember(tracks.size) { List(tracks.size.coerceAtLeast(1)) { FocusRequester() } }
+    LaunchedEffect(Unit) { delay(40); runCatching { focus[tracks.indexOfFirst { it.selected }.coerceAtLeast(0)].requestFocus() } }
+    Box(Modifier.fillMaxSize().background(PanelDim)) {
+        T("الصوت", 30.sp, weight = FontWeight.Bold, serif = true, modifier = Modifier.padding(start = 30.dp, top = 24.dp))
+        Row(Modifier.fillMaxSize().padding(start = 30.dp, end = 30.dp, top = 74.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.width(220.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                T("مسار الصوت", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(bottom = 4.dp))
+                if (tracks.isEmpty()) T("لا توجد مسارات.", 13.sp, color = C.Muted)
+                tracks.forEachIndexed { i, t -> ChoiceRow(t.label.substringBefore(" — "), t.selected, focus[i]) { onTrack(t) } }
+            }
+            Column(Modifier.width(270.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                T("تحسين الصوت", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(bottom = 4.dp))
+                SoundSwitch("توضيح الحوار", "رفع صوت الكلام", dialogue, onDialogue)
+                SoundSwitch("صوت ليلي", "تهدئة الأصوات العالية", night, onNight)
+                SoundSwitch("موازنة المستوى", "صوت ثابت بين المشاهد", level, onLevel)
+                T("السرعة", 12.sp, color = Color(0xFFCCCCCC), modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0.75, 1.0, 1.25, 1.5, 2.0).forEach { sp -> Chip("×" + if (sp == 1.0) "1" else sp.toString(), kotlin.math.abs(sp - speed) < 0.01, onClick = { onSpeed(sp) }) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoundSwitch(title: String, note: String, on: Boolean, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    Row(
+        Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
+            .tvFocus(shape = RoundedCornerShape(12.dp), scale = 1.02f, onClick = onClick)
+            .background(if (focused) Color(0x24FFFFFF) else Color(0x0FFFFFFF))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            T(title, 14.sp, weight = FontWeight.SemiBold)
+            T(note, 10.sp, color = Color(0xFFAAAAAA))
+        }
+        Box(
+            Modifier.size(36.dp, 20.dp).background(if (on) C.Gold else Color(0x33FFFFFF), CircleShape).padding(3.dp),
+            contentAlignment = if (on) Alignment.CenterStart else Alignment.CenterEnd,
+        ) { Box(Modifier.size(14.dp).background(if (on) C.Sea else Color(0xFFBBBBBB), CircleShape)) }
     }
 }

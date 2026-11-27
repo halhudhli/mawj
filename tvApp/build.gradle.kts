@@ -23,6 +23,7 @@ android {
         buildConfigField("String", "SUPA_KEY", "\"${providers.environmentVariable("NUVIO_SUPABASE_ANON_KEY").orNull.orEmpty()}\"")
         // Gemini for Mawj's companion tools (a CI secret; empty means the tools stay hidden).
         buildConfigField("String", "GEMINI_KEY", "\"${providers.environmentVariable("LUXO_GEMINI_KEY").orNull.orEmpty()}\"")
+        buildConfigField("String", "INTRODB_URL", "\"${providers.environmentVariable("INTRODB_API_URL").orNull.orEmpty()}\"")
     }
 
     buildFeatures {

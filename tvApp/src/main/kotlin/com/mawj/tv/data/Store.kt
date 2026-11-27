@@ -41,7 +41,7 @@ object Store {
         "uiSounds" to false, "screensaver" to true, "kidsLimit" to false, "privateMode" to false,
         "seasonalThemes" to true, "timeTint" to false, "top10Rank" to true, "becauseWatched" to true,
         "countdown" to true, "hideCam" to true, "smartSource" to true, "stallGuard" to true,
-        "timeLeft" to true, "seriesMemory" to true, "perfMeter" to false, "googleTvRow" to true, "kidsMode" to false,
+        "timeLeft" to true, "seriesMemory" to true, "perfMeter" to false, "googleTvRow" to true, "kidsMode" to false, "skipIntro" to true, "playerAdvisory" to true,
     )
 
     private val features = androidx.compose.runtime.mutableStateMapOf<String, Boolean>()
