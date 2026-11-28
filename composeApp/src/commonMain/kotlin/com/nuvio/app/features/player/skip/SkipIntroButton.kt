@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -108,6 +110,38 @@ fun SkipIntroButton(
         exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.8f),
         modifier = modifier,
     ) {
+        if (com.nuvio.app.features.player.rememberMawjPlayerLook()) {
+            // «تصميم مشغّل موج»: a glass pill that fills with gold while the part runs out.
+            val gold = com.nuvio.app.core.ui.MawjTint.gold
+            val pill = RoundedCornerShape(24.dp)
+            val showFill = !(controlsVisible || autoHidden || dismissed)
+            Row(
+                modifier = Modifier
+                    .clip(pill)
+                    .background(Color(0xFF0B1520).copy(alpha = 0.74f))
+                    .drawBehind {
+                        if (showFill) {
+                            val w = size.width * progress.value
+                            val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) size.width - w else 0f
+                            drawRect(gold.copy(alpha = 0.3f), topLeft = androidx.compose.ui.geometry.Offset(x, 0f), size = androidx.compose.ui.geometry.Size(w, size.height))
+                        }
+                    }
+                    .border(1.dp, gold.copy(alpha = 0.55f), pill)
+                    .clickable(enabled = canSkip) { onSkip() }
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(imageVector = Icons.Default.SkipNext, contentDescription = null, tint = gold, modifier = Modifier.size(20.dp))
+                Text(
+                    text = skipLabel(lastType, lastSkipsToPostCredits),
+                    color = Color(0xFFF4F1EA),
+                    fontSize = 14.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+            return@AnimatedVisibility
+        }
         val shape = RoundedCornerShape(16.dp)
         Column(
             modifier = Modifier
