@@ -49,7 +49,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -829,6 +831,9 @@ private fun MawjTicketCard(title: String, poster: String?, label: String, days: 
     val gold = tokens.colors.accent
     val shape = remember { MawjTicketShape(tearAt = 0.3f) }
     val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+    val shine by androidx.compose.animation.core.rememberInfiniteTransition(label = "ticket").animateFloat(
+        0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(5_000, easing = androidx.compose.animation.core.LinearEasing)), label = "shine",
+    )
     Row(
         Modifier
             .width(250.dp)
@@ -837,6 +842,16 @@ private fun MawjTicketCard(title: String, poster: String?, label: String, days: 
             .background(Color(0xFF121C26))
             .border(1.dp, gold.copy(alpha = 0.35f), shape)
             .drawBehind { drawTicketTear(0.3f, gold.copy(alpha = 0.55f), rtl) }
+            .drawWithContent {
+                drawContent()
+                // A gold light passes over the ticket every five seconds.
+                val p = shine * 3f - 1f
+                if (p in -0.2f..1.2f) {
+                    val x = size.width * (if (rtl) 1f - p else p)
+                    drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, gold.copy(alpha = 0.22f), Color.Transparent),
+                        start = androidx.compose.ui.geometry.Offset(x - 80f, 0f), end = androidx.compose.ui.geometry.Offset(x + 80f, size.height)))
+                }
+            }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,

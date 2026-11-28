@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -210,8 +211,11 @@ fun MawjIslands(
             }
         }
         val routeColor = tokens.colors.accent.copy(alpha = 0.35f)
+        val flow by androidx.compose.animation.core.rememberInfiniteTransition(label = "routes").animateFloat(
+            0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1_600, easing = androidx.compose.animation.core.LinearEasing)), label = "flow",
+        )
         LazyRow(
-            modifier = if (chart) Modifier.drawBehind { drawSeaRoutes(routeColor) } else Modifier,
+            modifier = if (chart) Modifier.drawBehind { drawSeaRoutes(routeColor, -flow) } else Modifier,
             horizontalArrangement = Arrangement.spacedBy(if (chart) 22.dp else 14.dp),
         ) {
             items(current.folders, key = { current.id + ":" + it.id }) { folder ->

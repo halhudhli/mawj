@@ -5,7 +5,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -90,10 +101,16 @@ fun DrawScope.drawMoonLoader(t: Float, lit: Color, dark: Color) {
 /** A thin gold horizon that section titles stand on; it fades towards the end of the line. */
 @Composable
 fun MawjHorizonLine(color: Color, modifier: Modifier = Modifier) {
+    val run by rememberInfiniteTransition(label = "horizon").animateFloat(0f, 1f, infiniteRepeatable(tween(6_000, easing = LinearEasing)), label = "run")
     Box(
         modifier.height(1.5.dp).drawWithCache {
             val brush = Brush.horizontalGradient(listOf(color.copy(alpha = 0.7f), color.copy(alpha = 0f)))
-            onDrawBehind { drawRect(brush) }
+            onDrawBehind {
+                drawRect(brush)
+                // A short glint travels along the horizon, like moonlight on the water.
+                val x = size.width * run
+                drawRect(Brush.horizontalGradient(listOf(Color.Transparent, color, Color.Transparent), startX = x - 60f, endX = x + 60f), Offset(x - 60f, 0f), Size(120f, size.height))
+            }
         },
     )
 }
@@ -103,8 +120,11 @@ fun MawjHorizonLine(color: Color, modifier: Modifier = Modifier) {
 /** The gold seal on a finished title: a round stamp with the crescent, tilted like a pressed seal. */
 @Composable
 fun MawjFinishedStamp(size: Dp, gold: Color, ink: Color, modifier: Modifier = Modifier) {
+    val press = remember { Animatable(1.5f) }
+    LaunchedEffect(Unit) { press.animateTo(1f, tween(420)) }
     Canvas(modifier.size(size)) {
-        rotate(-14f) {
+        val k = press.value
+        scale(k, k) { rotate(-14f - (k - 1f) * 30f) {
             val r = this.size.minDimension / 2f
             val c = center
             drawCircle(gold, r, c)
@@ -113,7 +133,7 @@ fun MawjFinishedStamp(size: Dp, gold: Color, ink: Color, modifier: Modifier = Mo
             val moon = Path().apply { addOval(Rect(c, r * 0.46f)) }
             val cut = Path().apply { addOval(Rect(Offset(c.x - r * 0.2f, c.y - r * 0.06f), r * 0.4f)) }
             drawPath(Path().apply { op(moon, cut, PathOperation.Difference) }, ink)
-        }
+        } }
     }
 }
 
@@ -135,11 +155,15 @@ private val grainTile: ImageBitmap by lazy {
 }
 
 /** Still film grain over everything behind it (no motion, so it costs nothing after the first frame). */
-fun Modifier.mawjFilmGrain(alpha: Float = 0.06f): Modifier = drawWithCache {
+fun Modifier.mawjFilmGrain(alpha: Float = 0.06f, frame: () -> Float = { 0f }): Modifier = drawWithCache {
     val brush = ShaderBrush(ImageShader(grainTile, TileMode.Repeated, TileMode.Repeated))
     onDrawWithContent {
         drawContent()
-        drawRect(brush, alpha = alpha)
+        // The grain jumps to a new place a few times a second, like film running through a projector.
+        val step = (frame() * 240f).toInt()
+        val dx = ((step * 37) % 160).toFloat()
+        val dy = ((step * 61) % 160).toFloat()
+        translate(-dx, -dy) { drawRect(brush, topLeft = Offset.Zero, size = Size(size.width + 160f, size.height + 160f), alpha = alpha) }
     }
 }
 
@@ -198,7 +222,8 @@ class MawjIslandShape(private val seed: Int) : Shape {
 /** A chart's compass rose, in gold lines. */
 @Composable
 fun MawjCompassRose(size: Dp, color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(size)) {
+    val sway by rememberInfiniteTransition(label = "compass").animateFloat(-9f, 9f, infiniteRepeatable(tween(3_200), RepeatMode.Reverse), label = "sway")
+    Canvas(modifier.size(size)) { rotate(sway) {
         val r = this.size.minDimension / 2f
         val c = center
         drawCircle(color.copy(alpha = 0.5f), r * 0.92f, c, style = Stroke(1.5f))
@@ -216,12 +241,12 @@ fun MawjCompassRose(size: Dp, color: Color, modifier: Modifier = Modifier) {
             drawPath(q, color.copy(alpha = if (long) 0.45f else 0.3f))
         }
         drawCircle(color, r * 0.07f, c)
-    }
+    } }
 }
 
 /** Dotted sea routes between the islands, behind the cards. */
-fun DrawScope.drawSeaRoutes(color: Color) {
-    val dash = PathEffect.dashPathEffect(floatArrayOf(5f, 9f))
+fun DrawScope.drawSeaRoutes(color: Color, phase: Float = 0f) {
+    val dash = PathEffect.dashPathEffect(floatArrayOf(5f, 9f), phase * 14f)
     val y = size.height * 0.5f
     val p = Path().apply {
         moveTo(0f, y)
@@ -238,27 +263,34 @@ enum class MawjScene { Boat, Lighthouse, Net }
 /** A small still drawing for empty and offline states: a boat on the waves, a lighthouse, an empty net. */
 @Composable
 fun MawjSceneArt(scene: MawjScene, gold: Color, modifier: Modifier = Modifier.fillMaxWidth().height(120.dp)) {
+    val tr = rememberInfiniteTransition(label = "scene")
+    val wave by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(2_400, easing = LinearEasing)), label = "wave")
+    val rock by tr.animateFloat(-1f, 1f, infiniteRepeatable(tween(2_200), RepeatMode.Reverse), label = "rock")
     Canvas(modifier) {
         val w = size.width
         val h = size.height
         val cx = w / 2f
         val line = Stroke(width = 2.2f, cap = StrokeCap.Round)
         // The sea line under every scene.
+        val shift = wave * 30f
         val sea = Path().apply {
             moveTo(cx - 120f, h * 0.82f)
             var x = cx - 120f
-            while (x < cx + 120f) { quadraticTo(x + 15f, h * 0.82f - 8f, x + 30f, h * 0.82f); x += 30f }
+            while (x < cx + 120f) {
+                val up = if (((x - cx + 120f + shift) / 30f).toInt() % 2 == 0) -8f else -4f
+                quadraticTo(x + 15f, h * 0.82f + up, x + 30f, h * 0.82f); x += 30f
+            }
         }
         drawPath(sea, gold.copy(alpha = 0.55f), style = line)
         when (scene) {
-            MawjScene.Boat -> {
+            MawjScene.Boat -> translate(0f, rock * 3f) { rotate(rock * 4f, Offset(cx, h * 0.75f)) {
                 val hull = Path().apply { moveTo(cx - 46f, h * 0.7f); lineTo(cx + 46f, h * 0.7f); lineTo(cx + 30f, h * 0.8f); lineTo(cx - 30f, h * 0.8f); close() }
                 drawPath(hull, gold.copy(alpha = 0.85f))
                 drawLine(gold, Offset(cx, h * 0.7f), Offset(cx, h * 0.22f), strokeWidth = 2.4f)
                 val sail = Path().apply { moveTo(cx + 3f, h * 0.24f); lineTo(cx + 40f, h * 0.64f); lineTo(cx + 3f, h * 0.64f); close() }
                 drawPath(sail, gold.copy(alpha = 0.35f))
                 drawPath(sail, gold, style = line)
-            }
+            } }
             MawjScene.Lighthouse -> {
                 val tower = Path().apply { moveTo(cx - 20f, h * 0.8f); lineTo(cx - 12f, h * 0.3f); lineTo(cx + 12f, h * 0.3f); lineTo(cx + 20f, h * 0.8f); close() }
                 drawPath(tower, gold.copy(alpha = 0.3f))
@@ -266,12 +298,14 @@ fun MawjSceneArt(scene: MawjScene, gold: Color, modifier: Modifier = Modifier.fi
                 drawRect(gold, Offset(cx - 14f, h * 0.2f), Size(28f, h * 0.1f))
                 drawLine(gold.copy(alpha = 0.6f), Offset(cx - 16f, h * 0.55f), Offset(cx + 16f, h * 0.55f), strokeWidth = 2f)
                 // The light, reaching out to both sides.
+                // The light turns: one side brightens as the other fades.
+                val a = (rock + 1f) / 2f
                 val beam = Path().apply { moveTo(cx, h * 0.25f); lineTo(cx + 110f, h * 0.12f); lineTo(cx + 110f, h * 0.38f); close() }
-                drawPath(beam, Brush.horizontalGradient(listOf(gold.copy(alpha = 0.4f), Color.Transparent), startX = cx, endX = cx + 110f))
+                drawPath(beam, Brush.horizontalGradient(listOf(gold.copy(alpha = 0.5f * a), Color.Transparent), startX = cx, endX = cx + 110f))
                 val beam2 = Path().apply { moveTo(cx, h * 0.25f); lineTo(cx - 110f, h * 0.12f); lineTo(cx - 110f, h * 0.38f); close() }
-                drawPath(beam2, Brush.horizontalGradient(listOf(Color.Transparent, gold.copy(alpha = 0.25f)), startX = cx - 110f, endX = cx))
+                drawPath(beam2, Brush.horizontalGradient(listOf(Color.Transparent, gold.copy(alpha = 0.5f * (1f - a))), startX = cx - 110f, endX = cx))
             }
-            MawjScene.Net -> {
+            MawjScene.Net -> rotate(rock * 4f, Offset(cx, h * 0.25f)) {
                 val net = Path().apply { moveTo(cx - 50f, h * 0.25f); quadraticTo(cx, h * 0.95f, cx + 50f, h * 0.25f) }
                 drawPath(net, gold, style = line)
                 for (i in 1..4) {
@@ -301,5 +335,6 @@ fun String.hasArabic(): Boolean = any { it in '؀'..'ۿ' }
 object Touches {
     fun DrawScope.moonFrame(t: Float, lit: Color) = drawMoonLoader(t, lit, Color.White.copy(alpha = 0.12f))
     val grain: Modifier get() = Modifier.mawjFilmGrain()
+    fun grainOn(m: Modifier, frame: () -> Float): Modifier = m.mawjFilmGrain(frame = frame)
     fun String.hasArabic(): Boolean = any { it in '؀'..'ۿ' }
 }
