@@ -83,23 +83,10 @@ jobs:
             -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
             -Pkotlin.compiler.execution.strategy=in-process \
             --no-daemon --stacktrace 2>&1 | tee build.log
-          # نسخة التابلت (arm64) نحفظها، وبعدين نبني نسخة الشاشات 32-bit (armeabi-v7a)
+          # نسخة التابلت (arm64) فقط
           mkdir -p luxo-out
           cp "$(ls androidApp/build/outputs/apk/full/debug/*.apk | head -1)" luxo-out/arm64-v8a.apk
-          # TV build (32-bit, shrunk by R8, always in TV mode) is back on; set LUXO_BUILD_TV to "false" to skip it.
-          if [ "${LUXO_BUILD_TV:-true}" != "true" ]; then exit 0; fi
-          ./gradlew :androidApp:assembleFullDebug \
-            -Pnuvio.android.distribution=full \
-            -Pnuvio.ios.distribution=appstore \
-            -Pluxo.abi=armeabi-v7a \
-            -Pluxo.fastDebug=true \
-            -Pluxo.minify=true \
-            -Pluxo.tv=true \
-            -Pnuvio.app.versionName=1.0.${{ github.run_number }} \
-            -Pnuvio.app.versionCode=$((1000 + ${{ github.run_number }})) \
-            -Pkotlin.compiler.execution.strategy=in-process \
-            --no-daemon --stacktrace 2>&1 | tee -a build.log
-          cp "$(ls -t androidApp/build/outputs/apk/full/debug/*.apk | head -1)" luxo-out/armeabi-v7a.apk
+          # The TV has its own app now (tvApp, release «tv»); the tablet build no longer makes a TV copy.
 
       # يحوّل أخطاء Kotlin إلى تنبيهات تظهر في صفحة البناء وتُقرأ عبر الـ API
       - name: Report compile errors
@@ -139,10 +126,6 @@ jobs:
           VERSION="1.0.${{ github.run_number }}"
           cp luxo-out/arm64-v8a.apk "Mawj-${VERSION}-tablet-arm64-v8a.apk"
           FILES="Mawj-${VERSION}-tablet-arm64-v8a.apk"
-          if [ -f luxo-out/armeabi-v7a.apk ]; then
-            cp luxo-out/armeabi-v7a.apk "Mawj-${VERSION}-TV-armeabi-v7a.apk"
-            FILES="$FILES Mawj-${VERSION}-TV-armeabi-v7a.apk"
-          fi
           git log -1 --pretty=%B | grep -v '^Co-Authored-By\|^Claude-Session' > notes.txt
           echo "" >> notes.txt
           echo "<!-- luxo-build update-token=${HAS_UPDATE_TOKEN} gemini-key=${HAS_GEMINI_KEY} trakt-id=${HAS_TRAKT_ID} trakt-secret=${HAS_TRAKT_SECRET} simkl=${HAS_SIMKL} mdblist=${HAS_MDBLIST} -->" >> notes.txt
