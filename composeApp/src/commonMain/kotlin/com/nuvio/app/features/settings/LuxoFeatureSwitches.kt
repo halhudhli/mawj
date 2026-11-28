@@ -300,6 +300,11 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.themeByTime }, { f, v -> f.copy(themeByTime = v) },
         ),
         LuxoFeatureSwitch(
+            lx("تصميم مشغّل موج", "Mawj player look"),
+            lx("الاسم أعلى الشاشة، وحلقة ذهبية حول زر التشغيل، ورصيف زجاجي واحد بالأدوات بأسمائها، و«المزيد» بكل الأدوات في مجموعات", "The name at the top, a gold ring, one glass dock and a grouped «More» sheet"),
+            { it.mawjPlayerLook }, { f, v -> f.copy(mawjPlayerLook = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),
             lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
             { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },

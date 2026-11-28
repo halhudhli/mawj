@@ -83,6 +83,7 @@ object MawjTint {
 fun AppTheme.mawjWorld(): MawjWorld? = MawjWorld.entries.firstOrNull { it.theme == this }
 
 /** One line for each world, shown under its live card in the theme picker. */
+@Composable
 internal fun MawjWorld.blurb(): String = when (this) {
     MawjWorld.Sea -> com.nuvio.app.features.luxo.lx("بحر الليل وذهب القمر، والموج يتحرك ببطء", "The night sea and the moon's gold")
     MawjWorld.Dawn -> com.nuvio.app.features.luxo.lx("فاتح: رمل عاجي وبحر فضي، وذهب أعمق للقراءة في النهار", "Light: ivory sand and a silver sea")

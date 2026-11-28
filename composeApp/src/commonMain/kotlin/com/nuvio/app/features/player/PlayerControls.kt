@@ -178,7 +178,62 @@ internal fun PlayerControlsShell(
     var timelineHeight by remember { mutableStateOf(0.dp) }
     val glassActive = isAmbientLiquidGlassActive()
     var sourceLineHeight by remember { mutableStateOf(0.dp) }
+    val mawjLook = !useLegacyLayout && rememberMawjPlayerLook()
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        if (mawjLook) {
+            MawjPlayerChrome(
+                title = title,
+                seasonNumber = seasonNumber,
+                episodeNumber = episodeNumber,
+                episodeTitle = episodeTitle,
+                snapshot = playbackSnapshot,
+                displayedPositionMs = displayedPositionMs,
+                metrics = metrics,
+                resizeMode = resizeMode,
+                isLocked = isLocked,
+                showPlaybackControls = showPlaybackControls,
+                showRemainingTime = showRemainingTime,
+                onRuntimeClick = onRuntimeClick,
+                onInteraction = onInteraction,
+                onLockToggle = onLockToggle,
+                onBack = onBack,
+                onPartyClick = onPartyClick,
+                partyActive = partyActive,
+                onCastClick = onCastClick,
+                isCasting = isCasting,
+                onPictureInPictureClick = onPictureInPictureClick,
+                onOrientationToggleClick = onOrientationToggleClick,
+                isPortraitPlayback = isPortraitPlayback,
+                onTogglePlayback = onTogglePlayback,
+                onSeekBack = onSeekBack,
+                onSeekForward = onSeekForward,
+                skipBackwardSeconds = skipBackwardSeconds,
+                skipForwardSeconds = skipForwardSeconds,
+                onSubtitleClick = { onSubtitleClick?.invoke() },
+                onAudioClick = { onAudioClick?.invoke() },
+                onSpeedClick = { onSpeedClick?.invoke() },
+                speedPickerVisible = speedPickerVisible,
+                onSpeedSelected = onSpeedSelected,
+                onSpeedPickerDismiss = onSpeedPickerDismiss,
+                onResizeModeClick = onResizeModeClick,
+                onNextEpisodeClick = onNextEpisodeClick,
+                actions = playerActionLists(
+                    playbackSnapshot, resizeMode, { onSubtitleClick?.invoke() }, { onAudioClick?.invoke() }, onSourcesClick,
+                    onEpisodesClick, onChaptersClick, onNextEpisodeClick, { onSpeedClick?.invoke() }, speedPickerVisible,
+                    onSpeedSelected, onSpeedPickerDismiss, onResizeModeClick, onVideoSettingsClick, onOpenInExternalPlayer,
+                    onStreamInfoClick, onSubmitIntroClick, qualityLabel, onQualityClick, onSwitchEngineClick, onInfoClick,
+                    onRateClick, userRating,
+                ),
+                parentalWarnings = parentalWarnings,
+                showParentalGuide = showParentalGuide,
+                onParentalGuideAnimationComplete = onParentalGuideAnimationComplete,
+                onScrubChange = onScrubChange,
+                onScrubFinished = onScrubFinished,
+                seekPreview = seekPreview,
+                onTimelineTouchChange = onTimelineTouchChange,
+            )
+            return@BoxWithConstraints
+        }
         val centerControlHeight = metrics.playIconSize + maxOf(metrics.playButtonPadding, metrics.sideButtonPadding) * 2
         val centerBottomPadding = if (useLegacyLayout) metrics.centerLift else maxOf(
             metrics.centerLift,
@@ -717,7 +772,7 @@ internal fun PlayerHeaderIconButton(
 }
 
 @Composable
-private fun CenterControls(
+internal fun CenterControls(
     snapshot: PlayerPlaybackSnapshot,
     metrics: PlayerLayoutMetrics,
     onSeekBack: () -> Unit,

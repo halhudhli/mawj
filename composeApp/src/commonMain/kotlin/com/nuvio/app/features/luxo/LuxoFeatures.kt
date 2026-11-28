@@ -281,6 +281,8 @@ data class LuxoFeatures(
     val themeByTime: Boolean = false,
     /** Themes whose background stands still (theme names), set from the theme picker. */
     val worldStill: Set<String> = emptySet(),
+    /** «تصميم مشغّل موج»: the tablet player's Mawj look (the name at the top, a gold ring, one glass dock, a «المزيد» sheet). */
+    val mawjPlayerLook: Boolean = true,
 )
 
 object LuxoFeaturesRepository {

@@ -200,175 +200,11 @@ internal fun PlayerControlActions(
     userRating: Int? = null,
     onInteraction: () -> Unit,
 ) {
-    val primaryActions = listOfNotNull(
-        onNextEpisodeClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.player_next_episode), it,
-                icon = Icons.Rounded.SkipNext, iconSize = 40.dp,
-            )
-        },
-        PlayerControlAction(
-            "${stringResource(Res.string.compose_player_speed)} ${formatPlaybackSpeedLabel(playbackSnapshot.playbackSpeed)}",
-            onSpeedClick, icon = Icons.Rounded.Speed,
-            popup = {
-                PlayerSpeedPopup(
-                    visible = speedPickerVisible,
-                    currentSpeed = playbackSnapshot.playbackSpeed,
-                    onSpeedSelected = onSpeedSelected,
-                    onDismiss = onSpeedPickerDismiss,
-                )
-            },
-        ),
-        PlayerControlAction(
-            stringResource(resizeMode.labelRes), onResizeModeClick,
-            painter = appIconPainter(AppIconResource.PlayerAspectRatio),
-        ),
-        PlayerControlAction(
-            stringResource(Res.string.compose_player_subtitles), onSubtitleClick,
-            painter = appIconPainter(AppIconResource.PlayerSubtitles),
-        ),
-        onChaptersClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.player_chapters), it,
-                icon = Icons.AutoMirrored.Rounded.ListAlt,
-            )
-        },
-    )
-    val luxoSleepLabel = LuxoPlayerBridge.sleepLabel
-    val secondaryActions = listOfNotNull(
-        LuxoPlayerBridge.onCompanionClick?.let {
-            PlayerControlAction("رفيق موج", it, icon = Icons.Rounded.AutoAwesome)
-        },
-        LuxoPlayerBridge.onColorsClick?.let {
-            PlayerControlAction("ألوان الصورة", it, icon = Icons.Rounded.Palette)
-        },
-        LuxoPlayerBridge.onSubtitleFileClick?.let {
-            PlayerControlAction("ترجمة من ملف", it, icon = Icons.Rounded.UploadFile)
-        },
-        LuxoPlayerBridge.onPictureClick?.let {
-            PlayerControlAction("تحسين الصورة", it, icon = Icons.Rounded.AutoFixHigh)
-        },
-        LuxoPlayerBridge.onSoundClick?.let {
-            PlayerControlAction("تحسين الصوت", it, icon = Icons.Rounded.GraphicEq)
-        },
-        LuxoPlayerBridge.onEncodingClick?.let {
-            PlayerControlAction("ترميز الترجمة · ${MawjSubtitleEncoding.mode.value.label}", it, icon = Icons.Rounded.TextFormat)
-        },
-        LuxoPlayerBridge.onTranslateSubtitlesClick?.let {
-            PlayerControlAction(LuxoPlayerBridge.translateLabel, it, icon = Icons.Rounded.Translate)
-        },
-        LuxoPlayerBridge.onBookmarkClick?.let {
-            PlayerControlAction("علامة هنا", it, icon = Icons.Rounded.BookmarkAdd)
-        },
-        LuxoPlayerBridge.onBookmarksListClick?.let {
-            PlayerControlAction("العلامات", it, icon = Icons.Rounded.Bookmarks)
-        },
-        LuxoPlayerBridge.onDialogueClick?.let {
-            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.dialogue) "توضيح الحوار · مفعّل" else "توضيح الحوار", it, icon = Icons.Rounded.RecordVoiceOver)
-        },
-        LuxoPlayerBridge.onNightAudioClick?.let {
-            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.night) "صوت ليلي · مفعّل" else "صوت ليلي", it, icon = Icons.Rounded.NightsStay)
-        },
-        LuxoPlayerBridge.onShareSceneClick?.let {
-            PlayerControlAction("مشاركة المشهد", it, icon = Icons.Rounded.Share)
-        },
-        LuxoPlayerBridge.onSaveQuoteClick?.let {
-            PlayerControlAction("حفظ العبارة", it, icon = Icons.Rounded.FormatQuote)
-        },
-        LuxoPlayerBridge.onGifClick?.let {
-            PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif)
-        },
-        LuxoPlayerBridge.onWallpaperClick?.let {
-            PlayerControlAction("خلفية من المشهد", it, icon = Icons.Rounded.Palette)
-        },
-        LuxoPlayerBridge.onQuizClick?.let {
-            PlayerControlAction("اختبار الحلقة", it, icon = Icons.Rounded.AutoAwesome)
-        },
-        LuxoPlayerBridge.onWhoInSceneClick?.let {
-            PlayerControlAction("من في المشهد؟", it, icon = Icons.Rounded.Groups)
-        },
-        LuxoPlayerBridge.onContinueOnTvClick?.let {
-            PlayerControlAction("أكمل على الشاشة", it, icon = Icons.Rounded.Tv)
-        },
-        LuxoPlayerBridge.onScreenshotClick?.let {
-            PlayerControlAction("لقطة شاشة", it, icon = Icons.Rounded.PhotoCamera)
-        },
-        LuxoPlayerBridge.onAbLoopClick?.let {
-            PlayerControlAction(LuxoPlayerBridge.abLoopLabel, it, icon = Icons.Rounded.Repeat)
-        },
-        LuxoPlayerBridge.onSleepTimerClick?.let {
-            PlayerControlAction(
-                luxoSleepLabel?.let { label -> "مؤقت النوم · $label" } ?: "مؤقت النوم",
-                it,
-                icon = Icons.Rounded.Bedtime,
-            )
-        },
-        PlayerControlAction(
-            stringResource(Res.string.compose_player_audio), onAudioClick,
-            painter = appIconPainter(AppIconResource.PlayerAudioFilled),
-        ),
-        onQualityClick?.let {
-            PlayerControlAction(
-                qualityLabel?.takeIf { label -> label.isNotBlank() } ?: "Quality", it,
-                icon = Icons.Rounded.HighQuality,
-            )
-        },
-        onSourcesClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.compose_player_sources), it,
-                painter = appIconPainter(AppIconResource.PlayerSource),
-            )
-        },
-        onEpisodesClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.compose_player_episodes), it,
-                painter = appIconPainter(AppIconResource.PlayerEpisodes),
-            )
-        },
-        onRateClick?.let {
-            PlayerControlAction(
-                userRating?.let { rating -> stringResource(Res.string.user_rating_action_rated, rating) }
-                    ?: stringResource(Res.string.user_rating_action_rate),
-                it,
-                icon = if (userRating != null) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-            )
-        },
-        onOpenInExternalPlayer?.let {
-            PlayerControlAction(
-                stringResource(Res.string.streams_open_external_player), it,
-                icon = Icons.AutoMirrored.Rounded.OpenInNew,
-            )
-        },
-        onInfoClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.compose_player_playback_info), it,
-                icon = Icons.Rounded.Info,
-            )
-        },
-        onStreamInfoClick.takeIf { ShowUpstreamStreamInfoAction }?.let {
-            PlayerControlAction(
-                stringResource(Res.string.cd_stream_info), onStreamInfoClick,
-                icon = Icons.Rounded.Info,
-            )
-        },
-        onSwitchEngineClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.cd_switch_player_engine), it,
-                icon = Icons.Rounded.SwapHoriz,
-            )
-        },
-        onVideoSettingsClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.player_action_video_settings), it,
-                icon = Icons.Rounded.Build,
-            )
-        },
-        onSubmitIntroClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.submit_intro_action), it,
-                icon = Icons.Rounded.Flag,
-            )
-        },
+    val (primaryActions, secondaryActions) = playerActionLists(
+        playbackSnapshot, resizeMode, onSubtitleClick, onAudioClick, onSourcesClick, onEpisodesClick, onChaptersClick,
+        onNextEpisodeClick, onSpeedClick, speedPickerVisible, onSpeedSelected, onSpeedPickerDismiss, onResizeModeClick,
+        onVideoSettingsClick, onOpenInExternalPlayer, onStreamInfoClick, onSubmitIntroClick, qualityLabel, onQualityClick,
+        onSwitchEngineClick, onInfoClick, onRateClick, userRating,
     )
     val hasOverflow = secondaryActions.isNotEmpty()
     var expanded by remember(hasOverflow) { mutableStateOf(false) }
@@ -467,6 +303,210 @@ internal fun PlayerControlActions(
     }
 }
 
+/** Every player action, the main strip ([first]) and the rest ([second]); shared by both looks. */
+@Composable
+internal fun playerActionLists(
+    playbackSnapshot: PlayerPlaybackSnapshot,
+    resizeMode: PlayerResizeMode,
+    onSubtitleClick: () -> Unit,
+    onAudioClick: () -> Unit,
+    onSourcesClick: (() -> Unit)?,
+    onEpisodesClick: (() -> Unit)?,
+    onChaptersClick: (() -> Unit)?,
+    onNextEpisodeClick: (() -> Unit)?,
+    onSpeedClick: () -> Unit,
+    speedPickerVisible: Boolean,
+    onSpeedSelected: (Float) -> Unit,
+    onSpeedPickerDismiss: () -> Unit,
+    onResizeModeClick: () -> Unit,
+    onVideoSettingsClick: (() -> Unit)?,
+    onOpenInExternalPlayer: (() -> Unit)?,
+    onStreamInfoClick: () -> Unit,
+    onSubmitIntroClick: (() -> Unit)?,
+    qualityLabel: String?,
+    onQualityClick: (() -> Unit)?,
+    onSwitchEngineClick: (() -> Unit)?,
+    onInfoClick: (() -> Unit)?,
+    onRateClick: (() -> Unit)?,
+    userRating: Int?,
+): Pair<List<PlayerControlAction>, List<PlayerControlAction>> {
+    val primaryActions = listOfNotNull(
+        onNextEpisodeClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.player_next_episode), it,
+                icon = Icons.Rounded.SkipNext, iconSize = 40.dp,
+            )
+        },
+        PlayerControlAction(
+            "${stringResource(Res.string.compose_player_speed)} ${formatPlaybackSpeedLabel(playbackSnapshot.playbackSpeed)}",
+            onSpeedClick, icon = Icons.Rounded.Speed,
+            popup = {
+                PlayerSpeedPopup(
+                    visible = speedPickerVisible,
+                    currentSpeed = playbackSnapshot.playbackSpeed,
+                    onSpeedSelected = onSpeedSelected,
+                    onDismiss = onSpeedPickerDismiss,
+                )
+            },
+        ),
+        PlayerControlAction(
+            stringResource(resizeMode.labelRes), onResizeModeClick,
+            painter = appIconPainter(AppIconResource.PlayerAspectRatio),
+        ),
+        PlayerControlAction(
+            stringResource(Res.string.compose_player_subtitles), onSubtitleClick,
+            painter = appIconPainter(AppIconResource.PlayerSubtitles),
+        ),
+        onChaptersClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.player_chapters), it,
+                icon = Icons.AutoMirrored.Rounded.ListAlt,
+            )
+        },
+    )
+    val luxoSleepLabel = LuxoPlayerBridge.sleepLabel
+    val secondaryActions = listOfNotNull(
+        LuxoPlayerBridge.onCompanionClick?.let {
+            PlayerControlAction("رفيق موج", it, icon = Icons.Rounded.AutoAwesome, group = MawjToolGroup.Mate, on = false)
+        },
+        LuxoPlayerBridge.onColorsClick?.let {
+            PlayerControlAction("ألوان الصورة", it, icon = Icons.Rounded.Palette, group = MawjToolGroup.Picture, on = false)
+        },
+        LuxoPlayerBridge.onSubtitleFileClick?.let {
+            PlayerControlAction("ترجمة من ملف", it, icon = Icons.Rounded.UploadFile, group = MawjToolGroup.Subtitles, on = false)
+        },
+        LuxoPlayerBridge.onPictureClick?.let {
+            PlayerControlAction("تحسين الصورة", it, icon = Icons.Rounded.AutoFixHigh, group = MawjToolGroup.Picture, on = false)
+        },
+        LuxoPlayerBridge.onSoundClick?.let {
+            PlayerControlAction("تحسين الصوت", it, icon = Icons.Rounded.GraphicEq, group = MawjToolGroup.Picture, on = false)
+        },
+        LuxoPlayerBridge.onEncodingClick?.let {
+            PlayerControlAction("ترميز الترجمة · ${MawjSubtitleEncoding.mode.value.label}", it, icon = Icons.Rounded.TextFormat, group = MawjToolGroup.Subtitles, on = false)
+        },
+        LuxoPlayerBridge.onTranslateSubtitlesClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.translateLabel, it, icon = Icons.Rounded.Translate, group = MawjToolGroup.Subtitles, on = false)
+        },
+        LuxoPlayerBridge.onBookmarkClick?.let {
+            PlayerControlAction("علامة هنا", it, icon = Icons.Rounded.BookmarkAdd, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onBookmarksListClick?.let {
+            PlayerControlAction("العلامات", it, icon = Icons.Rounded.Bookmarks, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onDialogueClick?.let {
+            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.dialogue) "توضيح الحوار · مفعّل" else "توضيح الحوار", it, icon = Icons.Rounded.RecordVoiceOver, group = MawjToolGroup.Picture, on = com.nuvio.app.features.luxo.LuxoAudioFx.dialogue)
+        },
+        LuxoPlayerBridge.onNightAudioClick?.let {
+            PlayerControlAction(if (com.nuvio.app.features.luxo.LuxoAudioFx.night) "صوت ليلي · مفعّل" else "صوت ليلي", it, icon = Icons.Rounded.NightsStay, group = MawjToolGroup.Picture, on = com.nuvio.app.features.luxo.LuxoAudioFx.night)
+        },
+        LuxoPlayerBridge.onShareSceneClick?.let {
+            PlayerControlAction("مشاركة المشهد", it, icon = Icons.Rounded.Share, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onSaveQuoteClick?.let {
+            PlayerControlAction("حفظ العبارة", it, icon = Icons.Rounded.FormatQuote, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onGifClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.gifLabel, it, icon = Icons.Rounded.Gif, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onWallpaperClick?.let {
+            PlayerControlAction("خلفية من المشهد", it, icon = Icons.Rounded.Palette, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onQuizClick?.let {
+            PlayerControlAction("اختبار الحلقة", it, icon = Icons.Rounded.AutoAwesome, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onWhoInSceneClick?.let {
+            PlayerControlAction("من في المشهد؟", it, icon = Icons.Rounded.Groups, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onContinueOnTvClick?.let {
+            PlayerControlAction("أكمل على الشاشة", it, icon = Icons.Rounded.Tv, group = MawjToolGroup.Watch, on = false)
+        },
+        LuxoPlayerBridge.onScreenshotClick?.let {
+            PlayerControlAction("لقطة شاشة", it, icon = Icons.Rounded.PhotoCamera, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onAbLoopClick?.let {
+            PlayerControlAction(LuxoPlayerBridge.abLoopLabel, it, icon = Icons.Rounded.Repeat, group = MawjToolGroup.Moment, on = false)
+        },
+        LuxoPlayerBridge.onSleepTimerClick?.let {
+            PlayerControlAction(
+                luxoSleepLabel?.let { label -> "مؤقت النوم · $label" } ?: "مؤقت النوم",
+                it,
+                icon = Icons.Rounded.Bedtime,
+                group = MawjToolGroup.Watch,
+                on = luxoSleepLabel != null,
+            )
+        },
+        PlayerControlAction(
+            stringResource(Res.string.compose_player_audio), onAudioClick,
+            painter = appIconPainter(AppIconResource.PlayerAudioFilled),
+            group = MawjToolGroup.Picture,
+        ),
+        onQualityClick?.let {
+            PlayerControlAction(
+                qualityLabel?.takeIf { label -> label.isNotBlank() } ?: "Quality", it,
+                icon = Icons.Rounded.HighQuality,
+                group = MawjToolGroup.Picture,
+            )
+        },
+        onSourcesClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.compose_player_sources), it,
+                painter = appIconPainter(AppIconResource.PlayerSource),
+            )
+        },
+        onEpisodesClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.compose_player_episodes), it,
+                painter = appIconPainter(AppIconResource.PlayerEpisodes),
+            )
+        },
+        onRateClick?.let {
+            PlayerControlAction(
+                userRating?.let { rating -> stringResource(Res.string.user_rating_action_rated, rating) }
+                    ?: stringResource(Res.string.user_rating_action_rate),
+                it,
+                icon = if (userRating != null) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+            )
+        },
+        onOpenInExternalPlayer?.let {
+            PlayerControlAction(
+                stringResource(Res.string.streams_open_external_player), it,
+                icon = Icons.AutoMirrored.Rounded.OpenInNew,
+            )
+        },
+        onInfoClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.compose_player_playback_info), it,
+                icon = Icons.Rounded.Info,
+            )
+        },
+        onStreamInfoClick.takeIf { ShowUpstreamStreamInfoAction }?.let {
+            PlayerControlAction(
+                stringResource(Res.string.cd_stream_info), onStreamInfoClick,
+                icon = Icons.Rounded.Info,
+            )
+        },
+        onSwitchEngineClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.cd_switch_player_engine), it,
+                icon = Icons.Rounded.SwapHoriz,
+            )
+        },
+        onVideoSettingsClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.player_action_video_settings), it,
+                icon = Icons.Rounded.Build,
+            )
+        },
+        onSubmitIntroClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.submit_intro_action), it,
+                icon = Icons.Rounded.Flag,
+            )
+        },
+    )
+    return primaryActions to secondaryActions
+}
+
 @Composable
 private fun PlayerAction(
     description: String,
@@ -487,14 +527,27 @@ private fun PlayerAction(
 
 internal val PlayerGlassCapsule = RoundedCornerShape(percent = 50)
 
-private data class PlayerControlAction(
+internal data class PlayerControlAction(
     val description: String,
     val onClick: () -> Unit,
     val icon: ImageVector? = null,
     val painter: Painter? = null,
     val iconSize: Dp = 24.dp,
     val popup: (@Composable () -> Unit)? = null,
+    /** Where the action sits in Mawj's «المزيد» sheet. */
+    val group: MawjToolGroup = MawjToolGroup.Watch,
+    /** Shown in gold there (a tool that is on). */
+    val on: Boolean = false,
 )
+
+/** The groups of Mawj's «المزيد» sheet. */
+internal enum class MawjToolGroup(val title: String) {
+    Mate("رفيق موج"),
+    Subtitles("الترجمة"),
+    Picture("الصوت والصورة"),
+    Moment("اللحظة"),
+    Watch("المشاهدة"),
+}
 
 
 /** Whether the player's extra actions ("more") are open; the auto-hide waits while they are. */
