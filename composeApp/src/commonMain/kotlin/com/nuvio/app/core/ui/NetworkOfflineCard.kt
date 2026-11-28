@@ -21,6 +21,10 @@ fun NuvioNetworkOfflineCard(
 ) {
     val tokens = MaterialTheme.nuvio
     NuvioSurfaceCard(modifier = modifier) {
+        // «منارة»: a lighthouse when the connection is gone.
+        if (com.nuvio.app.features.luxo.rememberLuxoFeatures().sceneArt) {
+            com.nuvio.app.features.luxo.MawjSceneArt(com.nuvio.app.features.luxo.MawjScene.Lighthouse, tokens.colors.accent)
+        }
         Text(
             text = condition.titleForEmptyState(),
             style = MaterialTheme.typography.titleLarge,

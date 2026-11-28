@@ -345,14 +345,17 @@ private fun NuvioShelfSectionHeader(
                 if (rememberMawjStageOn()) MaterialTheme.typography.titleLarge.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif) else MaterialTheme.typography.titleLarge,
                 tokens.colors.textPrimary,
             )
+            val horizon = com.nuvio.app.features.luxo.rememberLuxoFeatures().horizonLine
             Text(
                 text = title,
-                modifier = Modifier.weight(1f),
+                modifier = if (horizon) Modifier.weight(1f, fill = false) else Modifier.weight(1f),
                 style = luxoTitleStyle,
                 color = if (luxoTitleStyle.brush != null) androidx.compose.ui.graphics.Color.Unspecified else tokens.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            // «خط الأفق»: the title stands on a thin gold line that fades towards the end.
+            if (horizon) com.nuvio.app.features.luxo.MawjHorizonLine(tokens.colors.accent, Modifier.weight(1f))
             val viewAllPlaceholderModifier = if (onViewAllClick == null) {
                 Modifier
                     .alpha(0f)

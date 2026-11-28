@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -316,6 +317,7 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
     val today = remember { luxoTodayEpochDay() }
     val tokens = MaterialTheme.nuvio
     val shown = if (picks.isEmpty()) entries.filter { it.followed }.take(12) else entries.filter { it.key in picks }
+    val ticketsOn = rememberLuxoFeatures().ticketCards
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -350,6 +352,11 @@ internal fun LuxoCountdownStrip(onOpen: (MetaPreview) -> Unit, modifier: Modifie
             androidx.compose.foundation.lazy.LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 items(shown, key = { it.key }) { entry ->
                     val days = entry.epochDay - today
+                    if (ticketsOn) {
+                        MawjTicketCard(entry.title, entry.poster, entry.note ?: daysLabel(days), days,
+                            onClick = { entry.preview?.let(onOpen) }, onLongClick = { picking = true })
+                        return@items
+                    }
                     Column(
                         Modifier
                             .width(104.dp)
@@ -807,5 +814,49 @@ internal fun LuxoCountdownPage(onDismiss: () -> Unit, onOpen: (MetaPreview) -> U
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(lx("إلغاء", "Cancel")) } },
         )
+    }
+}
+
+
+/**
+ * «بطاقة تذكرة»: a coming title as a cinema ticket. The stub holds the days left in big numbers,
+ * a dotted tear line separates it from the poster and the name.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun MawjTicketCard(title: String, poster: String?, label: String, days: Long, onClick: () -> Unit, onLongClick: () -> Unit) {
+    val tokens = MaterialTheme.nuvio
+    val gold = tokens.colors.accent
+    val shape = remember { MawjTicketShape(tearAt = 0.3f) }
+    val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+    Row(
+        Modifier
+            .width(250.dp)
+            .height(104.dp)
+            .clip(shape)
+            .background(Color(0xFF121C26))
+            .border(1.dp, gold.copy(alpha = 0.35f), shape)
+            .drawBehind { drawTicketTear(0.3f, gold.copy(alpha = 0.55f), rtl) }
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = coil3.request.ImageRequest.Builder(coil3.compose.LocalPlatformContext.current).data(luxoHighResImage(poster)).size(240, 360).build(),
+            contentDescription = title,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.width(56.dp).height(84.dp).clip(RoundedCornerShape(8.dp)),
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = tokens.colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(label, fontSize = 11.sp, color = tokens.colors.textMuted, maxLines = 1)
+            Text("ADMIT ONE", fontSize = 8.sp, color = gold.copy(alpha = 0.6f), letterSpacing = 2.sp, modifier = Modifier.padding(top = 4.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.width(52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(if (days <= 0) "اليوم" else "$days", fontSize = if (days <= 0) 16.sp else 26.sp, fontWeight = FontWeight.Black, color = gold, maxLines = 1)
+            if (days > 0) Text(if (days == 1L) "يوم" else "يوماً", fontSize = 10.sp, color = tokens.colors.textMuted)
+        }
     }
 }

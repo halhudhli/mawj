@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.padding
 import com.nuvio.app.core.ui.NuvioPrimaryButton
 import com.nuvio.app.core.ui.NuvioSurfaceCard
+import com.nuvio.app.core.ui.nuvio
 
 @Composable
 fun HomeEmptyStateCard(
@@ -19,10 +20,14 @@ fun HomeEmptyStateCard(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
+    scene: com.nuvio.app.features.luxo.MawjScene = com.nuvio.app.features.luxo.MawjScene.Boat,
 ) {
     NuvioSurfaceCard(modifier = modifier) {
         val mawj = com.nuvio.app.core.ui.rememberMawjStageOn()
-        if (mawj) {
+        if (com.nuvio.app.features.luxo.rememberLuxoFeatures().sceneArt) {
+            // A small still drawing: a boat for empty lists, an empty net for no results.
+            com.nuvio.app.features.luxo.MawjSceneArt(scene, MaterialTheme.nuvio.colors.accent)
+        } else if (mawj) {
             // Empty, offline and error states share Mawj's calm sea instead of a bare card.
             com.nuvio.app.core.ui.MawjWave(Modifier.padding(bottom = 4.dp), alpha = 0.7f)
             com.nuvio.app.core.ui.MawjWave(Modifier.padding(bottom = 12.dp), alpha = 0.3f)

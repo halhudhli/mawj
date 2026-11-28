@@ -50,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -183,6 +184,10 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
             .sortedByDescending { it.sample.markedAtEpochMs }
     }
     val months = entries.groupBy { civilOf(it.day).let { c -> c.year * 100 + c.month } }
+    // «دفتر الرحلة»: ruled lines, a margin line after the date, and month pages like a captain's log.
+    val logbook = com.nuvio.app.features.luxo.rememberLuxoFeatures().journalLog
+    val rule = tokens.colors.accent.copy(alpha = 0.16f)
+    val margin = tokens.colors.accent.copy(alpha = 0.45f)
     Dialog(onDismissRequest = onDismiss, properties = com.nuvio.app.features.luxo.luxoFullScreenDialogProperties()) {
         Column(
             Modifier
@@ -192,7 +197,7 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
         ) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(if (com.nuvio.app.core.ui.rememberMawjStageOn()) lx("مذكراتي", "My diary") else lx("مذكراتي 📔", "My diary 📔"), fontWeight = FontWeight.Black, fontSize = 26.sp, color = tokens.colors.textPrimary, fontFamily = if (com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
+                    Text(if (logbook) lx("دفتر الرحلة", "Logbook") else if (com.nuvio.app.core.ui.rememberMawjStageOn()) lx("مذكراتي", "My diary") else lx("مذكراتي 📔", "My diary 📔"), fontWeight = FontWeight.Black, fontSize = 26.sp, color = tokens.colors.textPrimary, fontFamily = if (logbook || com.nuvio.app.core.ui.rememberMawjStageOn()) androidx.compose.ui.text.font.FontFamily.Serif else null)
                     Text(lx("${entries.size} يوم مشاهدة مسجّل", "${entries.size} watch entries"), fontSize = 12.sp, color = tokens.colors.textMuted)
                 }
                 IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, null, tint = tokens.colors.textPrimary) }
@@ -215,7 +220,8 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
                             Box(Modifier.size(10.dp).clip(CircleShape).background(Brush.linearGradient(accents)))
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "${monthName(ym % 100)} ${LuxoDateStyle.digits((ym / 100).toString())}",
+                                (if (logbook) lx("صفحة ", "Page · ") else "") + "${monthName(ym % 100)} ${LuxoDateStyle.digits((ym / 100).toString())}",
+                                fontFamily = if (logbook) androidx.compose.ui.text.font.FontFamily.Serif else null,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = tokens.colors.textPrimary,
@@ -231,7 +237,14 @@ private fun LuxoDiaryDialog(items: List<WatchedItem>, onDismiss: () -> Unit, onP
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
+                                .then(
+                                    if (logbook) Modifier.drawBehind {
+                                        drawLine(rule, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height), strokeWidth = 1.2f)
+                                        val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) size.width - 46.dp.toPx() else 46.dp.toPx()
+                                        drawLine(margin, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height), strokeWidth = 1.5f)
+                                    } else Modifier,
+                                )
+                                .clip(RoundedCornerShape(if (logbook) 0.dp else 16.dp))
                                 .clickable { onPosterClick(MetaPreview(id = item.id, type = item.type, name = item.name, poster = item.poster)) }
                                 .padding(vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),

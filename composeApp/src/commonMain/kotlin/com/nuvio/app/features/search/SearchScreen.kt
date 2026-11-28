@@ -509,6 +509,7 @@ private fun SearchEmptyStateCard(
     }
 
     HomeEmptyStateCard(
+        scene = com.nuvio.app.features.luxo.MawjScene.Net,
         modifier = modifier,
         title = title,
         message = message,

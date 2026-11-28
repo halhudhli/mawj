@@ -75,13 +75,17 @@ internal fun mawjTitleEyebrow(meta: MetaDetails): String {
 internal fun MawjTitleHead(meta: MetaDetails, showRatings: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.widthIn(max = 620.dp)) {
         Text(mawjTitleEyebrow(meta), color = TGold, fontSize = 14.sp)
+        val swash = com.nuvio.app.features.luxo.rememberLuxoFeatures().swashTitles && with(com.nuvio.app.features.luxo.Touches) { meta.name.hasArabic() }
         Text(
-            meta.name, color = TInk, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
+            meta.name, color = TInk, fontFamily = if (swash) com.nuvio.app.features.luxo.rememberMawjSwash() else FontFamily.Serif, fontWeight = if (swash) FontWeight.Normal else FontWeight.Bold,
             fontSize = 64.sp, lineHeight = 68.sp, maxLines = 3, overflow = TextOverflow.Ellipsis,
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             val imdb = meta.imdbRating?.takeIf { showRatings && (it.toDoubleOrNull() ?: 0.0) > 0.0 }
-            imdb?.let { Text("IMDb $it", color = TGold, fontSize = 15.sp) }
+            imdb?.let {
+                if (com.nuvio.app.features.luxo.rememberLuxoFeatures().moonRatings) it.toDoubleOrNull()?.let { v -> com.nuvio.app.features.luxo.MawjMoonRating(v, 16.dp) }
+                Text("IMDb $it", color = TGold, fontSize = 15.sp)
+            }
             if (meta.genres.isNotEmpty()) Text(meta.genres.take(3).joinToString(" · "), color = TMeta, fontSize = 15.sp, maxLines = 1)
             meta.releaseInfo?.let(::extractReleaseYearForDisplay)?.takeIf { meta.type == "movie" }?.let { Text(it.toString(), color = TMeta, fontSize = 15.sp) }
             meta.ageRating?.takeIf { it.isNotBlank() }?.let {

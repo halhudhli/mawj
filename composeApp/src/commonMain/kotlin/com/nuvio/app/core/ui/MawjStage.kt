@@ -206,7 +206,8 @@ fun MawjSea(
     gold: Color = MaterialTheme.nuvio.colors.accent,
 ) {
     val t by mawjDrift("mawj_sea", 24_000)
-    Canvas(modifier.fillMaxWidth()) {
+    val grain = com.nuvio.app.features.luxo.rememberLuxoFeatures().filmGrain
+    Canvas(modifier.fillMaxWidth().then(if (grain) Modifier.then(com.nuvio.app.features.luxo.Touches.grain) else Modifier)) {
         val layers = 5
         val tau = (2 * PI).toFloat()
         for (i in 0 until layers) {

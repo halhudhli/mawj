@@ -305,8 +305,10 @@ fun TabletDetailHero(
                     onError = { logoLoadError = true },
                 )
             } else {
+                val swash = com.nuvio.app.features.luxo.rememberLuxoFeatures().swashTitles && with(com.nuvio.app.features.luxo.Touches) { meta.name.hasArabic() }
                 Text(
                     text = meta.name,
+                    fontFamily = if (swash) com.nuvio.app.features.luxo.rememberMawjSwash() else null,
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontSize = NuvioTokens.Type.displayMd,
                         lineHeight = NuvioTokens.LineHeight.displayMd,

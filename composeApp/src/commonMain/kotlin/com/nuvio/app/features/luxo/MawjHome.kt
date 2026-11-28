@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -182,7 +183,11 @@ fun MawjIslands(
     val lite = rememberLuxoLite()
     val current = collections.firstOrNull { it.id == chosen } ?: collections.first()
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("الجزر", color = tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+        val chart = rememberLuxoFeatures().islandsChart
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("الجزر", color = tokens.colors.textPrimary, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 26.sp, modifier = Modifier.weight(1f))
+            if (chart) MawjCompassRose(44.dp, tokens.colors.accent)
+        }
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -204,15 +209,21 @@ fun MawjIslands(
                 )
             }
         }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        val routeColor = tokens.colors.accent.copy(alpha = 0.35f)
+        LazyRow(
+            modifier = if (chart) Modifier.drawBehind { drawSeaRoutes(routeColor) } else Modifier,
+            horizontalArrangement = Arrangement.spacedBy(if (chart) 22.dp else 14.dp),
+        ) {
             items(current.folders, key = { current.id + ":" + it.id }) { folder ->
+                // On the chart every card is an island of its own shape (the same shape each time for a folder).
+                val shape = if (chart) remember(folder.id) { MawjIslandShape(folder.id.hashCode()) } else RoundedCornerShape(18.dp)
                 androidx.compose.foundation.layout.Box(
                     Modifier
-                        .width(200.dp)
-                        .height(104.dp)
-                        .clip(RoundedCornerShape(18.dp))
+                        .width(if (chart) 214.dp else 200.dp)
+                        .height(if (chart) 124.dp else 104.dp)
+                        .clip(shape)
                         .background(Color(0xFF0D1620))
-                        .border(1.dp, tokens.colors.accent.copy(alpha = 0.2f), RoundedCornerShape(18.dp))
+                        .border(if (chart) 1.5.dp else 1.dp, tokens.colors.accent.copy(alpha = if (chart) 0.55f else 0.2f), shape)
                         .clickable { onFolderClick?.invoke(current.id, folder.id) },
                 ) {
                     if (!folder.coverImageUrl.isNullOrBlank() && lite) {
@@ -244,7 +255,7 @@ fun MawjIslands(
                         fontFamily = FontFamily.Serif,
                         fontSize = 19.sp,
                         maxLines = 2,
-                        modifier = Modifier.align(Alignment.BottomStart).padding(14.dp),
+                        modifier = Modifier.align(if (chart) Alignment.Center else Alignment.BottomStart).padding(14.dp),
                     )
                 }
             }

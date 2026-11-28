@@ -908,7 +908,10 @@ private fun HeroContentBlock(
         ) {
             var needsDot = false
             if (rating != null) {
-                Icon(
+                val moonValue = rating.toDoubleOrNull()
+                if (com.nuvio.app.features.luxo.rememberLuxoFeatures().moonRatings && moonValue != null) {
+                    com.nuvio.app.features.luxo.MawjMoonRating(moonValue, 18.dp)
+                } else Icon(
                     imageVector = Icons.Rounded.Star,
                     contentDescription = null,
                     tint = HeroRatingStar,

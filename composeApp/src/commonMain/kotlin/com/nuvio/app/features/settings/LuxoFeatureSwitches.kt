@@ -240,6 +240,56 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.openingPreview }, { f, v -> f.copy(openingPreview = v) },
         ),
         LuxoFeatureSwitch(
+            lx("التقييم بأطوار القمر", "Moon ratings"),
+            lx("هلال للتقييم المنخفض يكبر حتى يصير بدراً عند 9 فأعلى، بدل النجمة", "A crescent that grows to a full moon"),
+            { it.moonRatings }, { f, v -> f.copy(moonRatings = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("التحميل بأطوار القمر", "Moon loader"),
+            lx("علامة التحميل قمر يمر من هلال إلى بدر بدل الدائرة الدوّارة", "The loader is the moon waxing and waning"),
+            { it.moonLoader }, { f, v -> f.copy(moonLoader = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("خط الأفق", "Horizon line"),
+            lx("خط ذهبي رفيع تقف عليه عناوين الأقسام", "A thin gold line under section titles"),
+            { it.horizonLine }, { f, v -> f.copy(horizonLine = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ختم موج", "Mawj seal"),
+            lx("ختم ذهبي صغير على بوستر العمل المكتمل", "A gold seal on finished titles"),
+            { it.finishedStamp }, { f, v -> f.copy(finishedStamp = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الجزر خريطة بحرية", "Islands as a sea chart"),
+            lx("بطاقات «الجزر» على شكل جزر، مع طرق بحرية ووردة بوصلة", "Island-shaped cards with routes and a compass rose"),
+            { it.islandsChart }, { f, v -> f.copy(islandsChart = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("بطاقات التذاكر", "Ticket cards"),
+            lx("الأعمال القادمة على شكل تذكرة سينما بخط قطع وتاريخ", "Coming titles as cinema tickets"),
+            { it.ticketCards }, { f, v -> f.copy(ticketCards = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("ملمس الفيلم", "Film grain"),
+            lx("حبيبات ثابتة خفيفة جداً فوق الخلفية", "Very light still grain over the background"),
+            { it.filmGrain }, { f, v -> f.copy(filmGrain = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("دفتر الرحلة", "Logbook journal"),
+            lx("«مذكراتي» بشكل دفتر ربان: أسطر مخططة والتاريخ في الهامش", "The journal as a captain's logbook"),
+            { it.journalLog }, { f, v -> f.copy(journalLog = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("رسومات الصفحات الفارغة", "Empty page drawings"),
+            lx("قارب للقوائم الفارغة، ومنارة لانقطاع الاتصال، وشبكة فارغة للبحث بلا نتائج", "A boat, a lighthouse and an empty net"),
+            { it.sceneArt }, { f, v -> f.copy(sceneArt = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("اسم العمل بخط الشعار", "Title in the logo font"),
+            lx("الاسم العربي في صفحة العمل بخط ثمانية سيرف ديسبلاي سواش", "Arabic titles in the logo's swash font"),
+            { it.swashTitles }, { f, v -> f.copy(swashTitles = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),
             lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
             { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },

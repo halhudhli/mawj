@@ -65,6 +65,14 @@ fun BoxScope.NuvioPosterWatchedOverlay(
     modifier: Modifier = Modifier,
     padding: Dp = NuvioTokens.Space.s6,
 ) {
+    if (isWatched && com.nuvio.app.features.luxo.rememberLuxoFeatures().finishedStamp) {
+        // «ختم موج»: a pressed gold seal instead of the plain tick.
+        com.nuvio.app.features.luxo.MawjFinishedStamp(
+            androidx.compose.ui.unit.Dp(30f), MaterialTheme.nuvio.colors.accent, androidx.compose.ui.graphics.Color(0xFF070D14),
+            modifier.align(Alignment.TopEnd).padding(padding),
+        )
+        return
+    }
     NuvioAnimatedWatchedBadge(
         isVisible = isWatched,
         modifier = modifier

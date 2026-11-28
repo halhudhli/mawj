@@ -36,12 +36,16 @@ internal fun LuxoGlassRatingBadge(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Rounded.Star,
-            contentDescription = null,
-            tint = Color(0xFFF5C518),
-            modifier = Modifier.size(11.dp),
-        )
+        if (com.nuvio.app.features.luxo.rememberLuxoFeatures().moonRatings) {
+            com.nuvio.app.features.luxo.MawjMoonRating(rating, 11.dp)
+        } else {
+            Icon(
+                imageVector = Icons.Rounded.Star,
+                contentDescription = null,
+                tint = Color(0xFFF5C518),
+                modifier = Modifier.size(11.dp),
+            )
+        }
         Text(
             text = ((rating * 10).toInt() / 10.0).toString(),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp),

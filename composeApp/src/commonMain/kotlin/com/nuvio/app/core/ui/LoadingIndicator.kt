@@ -42,6 +42,18 @@ fun NuvioLoadingIndicator(
         contentAlignment = Alignment.Center,
     ) {
         val frame = rememberLoadingIndicatorFrame(active)
+        if (com.nuvio.app.features.luxo.rememberLuxoFeatures().moonLoader) {
+            // «التحميل بأطوار القمر»: the moon waxes to full and wanes again.
+            val lit = if (color == Color.Unspecified) com.nuvio.app.features.luxo.MawjMoonLit else color
+            Spacer(
+                modifier = Modifier.fillMaxSize().drawWithCache {
+                    onDrawBehind {
+                        with(com.nuvio.app.features.luxo.Touches) { moonFrame(frame.value / 60f, lit) }
+                    }
+                },
+            )
+            return@Box
+        }
 
         Spacer(
             modifier = Modifier

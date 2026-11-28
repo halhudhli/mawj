@@ -255,6 +255,26 @@ data class LuxoFeatures(
     val perfMeter: Boolean = false,
     /** TV: the moving sea behind the pages (off: plain opaque pages, lighter on a weak box). */
     val tvSea: Boolean = false,
+    /** Ratings drawn as the moon: a crescent for a weak rating, a full moon at 9 and above. */
+    val moonRatings: Boolean = true,
+    /** Loading shown as the moon passing from a crescent to a full moon. */
+    val moonLoader: Boolean = true,
+    /** «خط الأفق»: a thin gold line that section titles stand on. */
+    val horizonLine: Boolean = true,
+    /** «ختم موج»: a gold seal on the poster of a finished title. */
+    val finishedStamp: Boolean = true,
+    /** «الجزر» drawn as a sea chart: island-shaped cards, sea routes and a compass rose. */
+    val islandsChart: Boolean = true,
+    /** Coming titles as cinema tickets with a tear line and the date stamp. */
+    val ticketCards: Boolean = true,
+    /** Still film grain over the background, very light. */
+    val filmGrain: Boolean = true,
+    /** «مذكراتي» as a captain's logbook: ruled lines, the date in the margin. */
+    val journalLog: Boolean = true,
+    /** Small drawings for empty and offline pages: a boat, a lighthouse, an empty net. */
+    val sceneArt: Boolean = true,
+    /** Arabic title names on the title page in the logo's font (Thmanyah Serif Display Swash). */
+    val swashTitles: Boolean = true,
 )
 
 object LuxoFeaturesRepository {
