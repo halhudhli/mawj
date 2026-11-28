@@ -132,18 +132,18 @@ internal fun LuxoAppLockOverlay() {
                 var x = 0f
                 path.moveTo(0f, y)
                 while (x <= size.width) { path.lineTo(x, y + kotlin.math.sin(x / size.width * 8f * kotlin.math.PI.toFloat()) * 12.dp.toPx()); x += 4f }
-                drawPath(path, androidx.compose.ui.graphics.Color(0xFFD6B36A).copy(alpha = 0.5f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.2.dp.toPx()))
+                drawPath(path, com.nuvio.app.core.ui.MawjTint.gold.copy(alpha = 0.5f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.2.dp.toPx()))
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.padding(32.dp)) {
                 Box(
-                    Modifier.size(104.dp).border(2.5.dp, androidx.compose.ui.graphics.Color(0xFFD6B36A), androidx.compose.foundation.shape.CircleShape)
+                    Modifier.size(104.dp).border(2.5.dp, com.nuvio.app.core.ui.MawjTint.gold, androidx.compose.foundation.shape.CircleShape)
                         .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.Color(0xFF2A3C52), androidx.compose.ui.graphics.Color(0xFF0D1620))), androidx.compose.foundation.shape.CircleShape),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Fingerprint, contentDescription = null, tint = androidx.compose.ui.graphics.Color(0xFFF1DDA6), modifier = Modifier.size(52.dp)) }
                 Text(lx("موج مقفول", "Mawj is locked"), color = androidx.compose.ui.graphics.Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = androidx.compose.ui.unit.TextUnit(40f, androidx.compose.ui.unit.TextUnitType.Sp))
                 Text(subtitle, color = androidx.compose.ui.graphics.Color(0xFFA9B6C4), textAlign = TextAlign.Center)
                 Box(
-                    Modifier.clip(androidx.compose.foundation.shape.CircleShape).background(androidx.compose.ui.graphics.Color(0xFFD6B36A)).clickable(onClick = prompt).padding(horizontal = 30.dp, vertical = 14.dp),
+                    Modifier.clip(androidx.compose.foundation.shape.CircleShape).background(com.nuvio.app.core.ui.MawjTint.gold).clickable(onClick = prompt).padding(horizontal = 30.dp, vertical = 14.dp),
                 ) { Text(lx("افتح بالبصمة", "Unlock"), color = androidx.compose.ui.graphics.Color(0xFF070D14), fontWeight = FontWeight.SemiBold) }
             }
         }

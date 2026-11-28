@@ -1,5 +1,7 @@
 package com.nuvio.app.core.ui.background
 
+import com.nuvio.app.core.ui.mawjWorld
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -171,11 +173,27 @@ internal fun AppBackgroundHost(paintSea: Boolean = true, content: @Composable ()
             },
     ) {
         if (seaOn) {
+            // «عوالم موج»: a Mawj theme other than the sea draws its own world over the whole page.
+            val features = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+            val theme = com.nuvio.app.core.ui.LocalAppTheme.current
+            val world = if (features.mawjWorlds) theme.mawjWorld() else null
+            val dawnPlain = theme == com.nuvio.app.core.ui.AppTheme.MAWJ_DAWN && world == null
             Box(Modifier.fillMaxSize().background(baseTokens.colors.background)) {
-                com.nuvio.app.core.ui.MawjSea(
-                    Modifier.align(androidx.compose.ui.Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.62f),
-                    fill = baseTokens.colors.background,
-                )
+                if (dawnPlain) {
+                    // «الفجر» without its world: a plain pale page (the night sea does not belong on it).
+                } else if (world == null || world == com.nuvio.app.core.ui.MawjWorld.Sea) {
+                    com.nuvio.app.core.ui.MawjSea(
+                        Modifier.align(androidx.compose.ui.Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.62f),
+                        fill = baseTokens.colors.background,
+                    )
+                } else {
+                    com.nuvio.app.core.ui.MawjWorldScene(
+                        world,
+                        Modifier.fillMaxSize(),
+                        moving = com.nuvio.app.core.ui.rememberMawjWorldMoving(world),
+                        grain = features.filmGrain,
+                    )
+                }
             }
         }
         if (model != null && suspendCount == 0) {

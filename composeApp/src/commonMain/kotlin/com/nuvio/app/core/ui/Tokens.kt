@@ -370,16 +370,18 @@ internal fun defaultNuvioThemeTokens(
     amoled: Boolean,
     colorScheme: ColorScheme?,
 ): NuvioThemeTokens {
-    val background = if (amoled) Color.Black else palette.background
-    val textPrimary = Color(0xFFF5F7F8)
-    val textSecondary = Color(0xFFB8BEC5)
-    val textMuted = Color(0xFF969CA3)
+    val light = palette.light
+    val background = if (amoled && !light) Color.Black else palette.background
+    val textPrimary = if (light) MawjInk else Color(0xFFF5F7F8)
+    val textSecondary = if (light) Color(0xFF3E4C59) else Color(0xFFB8BEC5)
+    val textMuted = if (light) Color(0xFF5E6B77) else Color(0xFF969CA3)
     val surface = palette.backgroundElevated
     val surfaceCard = palette.backgroundCard
     val accent = palette.secondary
     val accentStrong = palette.secondaryVariant
-    val borderSubtle = Color(0xFF252A2A).copy(alpha = 0.55f)
-    val borderDefault = Color(0xFF252A2A)
+    val borderSubtle = if (light) MawjInk.copy(alpha = 0.10f) else Color(0xFF252A2A).copy(alpha = 0.55f)
+    val borderDefault = if (light) MawjInk.copy(alpha = 0.16f) else Color(0xFF252A2A)
+    val wash = if (light) MawjInk else Color.White
     val overlayScrim = Color.Black.copy(alpha = NuvioTokens.Opacity.overlayMedium)
 
     return NuvioThemeTokens(
@@ -397,7 +399,7 @@ internal fun defaultNuvioThemeTokens(
             textSecondary = textSecondary,
             textMuted = textMuted,
             textDisabled = textMuted.copy(alpha = NuvioTokens.Opacity.disabled),
-            textInverse = Color(0xFF111111),
+            textInverse = if (light) Color(0xFFF5F7F8) else Color(0xFF111111),
             accent = accent,
             accentStrong = accentStrong,
             onAccent = palette.onSecondary,
@@ -405,7 +407,7 @@ internal fun defaultNuvioThemeTokens(
             focusBackground = palette.focusBackground,
             borderSubtle = borderSubtle,
             borderDefault = borderDefault,
-            borderStrong = Color(0xFF3A4040),
+            borderStrong = if (light) MawjInk.copy(alpha = 0.28f) else Color(0xFF3A4040),
             borderFocus = palette.focusRing,
             borderSelected = accent.copy(alpha = NuvioTokens.Opacity.strong),
             success = Color(0xFF66BB6A),
@@ -414,12 +416,12 @@ internal fun defaultNuvioThemeTokens(
             info = Color(0xFF42A5F5),
             neutral = textMuted,
             overlayScrim = overlayScrim,
-            overlayHover = Color.White.copy(alpha = NuvioTokens.Opacity.hover),
-            overlayPressed = Color.White.copy(alpha = NuvioTokens.Opacity.pressed),
-            overlaySelected = Color.White.copy(alpha = NuvioTokens.Opacity.selected),
+            overlayHover = wash.copy(alpha = NuvioTokens.Opacity.hover),
+            overlayPressed = wash.copy(alpha = NuvioTokens.Opacity.pressed),
+            overlaySelected = wash.copy(alpha = NuvioTokens.Opacity.selected),
             overlayDisabled = Color.Black.copy(alpha = NuvioTokens.Opacity.disabled),
-            shimmer = Color.White.copy(alpha = 0.10f),
-            skeleton = Color.White.copy(alpha = 0.06f),
+            shimmer = wash.copy(alpha = 0.10f),
+            skeleton = wash.copy(alpha = 0.06f),
             playerControlsBackground = Color.Black.copy(alpha = 0.72f),
             playerControlsForeground = Color.White,
             playerTimelineTrack = Color.White.copy(alpha = 0.30f),

@@ -48,13 +48,13 @@ import com.nuvio.app.features.details.SPECIALS_SEASON_NUMBER
 
 // «صفحة العمل — المسرح» (Mawj new interface): the hero text, the episode line and «لماذا قد يعجب».
 
-private val TGold = Color(0xFFD6B36A)
-private val TGoldLight = Color(0xFFF1DDA6)
-private val TInk = Color(0xFFF6F1E4)
-private val TBody = Color(0xFFB7C2CE)
-private val TMeta = Color(0xFFC3CCD6)
-private val TFaint = Color(0xFF8796A8)
-private val TRaised = Color(0xFF0D1620)
+private val TGold: androidx.compose.ui.graphics.Color get() = com.nuvio.app.core.ui.MawjTint.gold
+private val TGoldLight: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFF1DDA6), Color(0xFF7A5A1C))
+private val TInk: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFF6F1E4), Color(0xFF13202B))
+private val TBody: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFB7C2CE), Color(0xFF3E4C59))
+private val TMeta: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFC3CCD6), Color(0xFF4A5865))
+private val TFaint: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFF8796A8), Color(0xFF6B7782))
+private val TRaised: Color get() = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFF0D1620), Color(0xFFFFFAF1))
 
 private fun arabicDigits(s: String): String = s.map { c -> if (c in '0'..'9') ('٠' + (c - '0')) else c }.joinToString("")
 
@@ -89,7 +89,7 @@ internal fun MawjTitleHead(meta: MetaDetails, showRatings: Boolean) {
             if (meta.genres.isNotEmpty()) Text(meta.genres.take(3).joinToString(" · "), color = TMeta, fontSize = 15.sp, maxLines = 1)
             meta.releaseInfo?.let(::extractReleaseYearForDisplay)?.takeIf { meta.type == "movie" }?.let { Text(it.toString(), color = TMeta, fontSize = 15.sp) }
             meta.ageRating?.takeIf { it.isNotBlank() }?.let {
-                Text(it, color = TMeta, fontSize = 12.sp, modifier = Modifier.border(1.dp, Color(0x4DEEF2F6), RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 1.dp))
+                Text(it, color = TMeta, fontSize = 12.sp, modifier = Modifier.border(1.dp, TMeta.copy(alpha = 0.3f), RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 1.dp))
             }
         }
     }
@@ -124,7 +124,7 @@ internal fun MawjEpisodeLine(meta: MetaDetails, onEpisodeClick: (MetaVideo) -> U
                     val on = n == season
                     Box(
                         Modifier.height(36.dp).clip(CircleShape).background(if (on) TGold else Color.Transparent)
-                            .border(1.dp, if (on) TGold else Color(0x2EEEF2F6), CircleShape).clickable { season = n }.padding(horizontal = 14.dp),
+                            .border(1.dp, if (on) TGold else TMeta.copy(alpha = 0.18f), CircleShape).clickable { season = n }.padding(horizontal = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("الموسم ${arabicDigits(n.toString())}", color = if (on) Color(0xFF070D14) else TMeta, fontSize = 13.sp) }
                 }
@@ -156,7 +156,7 @@ internal fun MawjEpisodeLine(meta: MetaDetails, onEpisodeClick: (MetaVideo) -> U
                     drawPath(line, TGold.copy(alpha = 0.85f), style = Stroke(2.dp.toPx()))
                     scored.forEachIndexed { i, (e, _) ->
                         val isBest = best?.first == e
-                        drawCircle(if (isBest) TGold else Color(0xFFEEF2F6), radius = if (isBest) 7.dp.toPx() else 4.dp.toPx(), center = pts[i])
+                        drawCircle(if (isBest) TGold else TInk, radius = if (isBest) 7.dp.toPx() else 4.dp.toPx(), center = pts[i])
                     }
                 }
                 best?.let { (e, r) ->
@@ -176,7 +176,7 @@ internal fun MawjEpisodeLine(meta: MetaDetails, onEpisodeClick: (MetaVideo) -> U
                         (e.thumbnail ?: meta.background)?.let { AsyncImage(model = it, contentDescription = e.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
                         Text("ح${arabicDigits((e.episode ?: 0).toString())}", color = TGold, fontSize = 12.sp, modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 12.dp, vertical = 10.dp))
                     }
-                    Text(e.title, color = Color(0xFFE6EBF0), fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(e.title, color = TInk, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     val meta2 = listOfNotNull(e.runtime?.let { "${arabicDigits(it.toString())} د" }, e.mawjScore()?.let { "★ ${((it * 10).toInt() / 10.0)}" }).joinToString(" · ")
                     if (meta2.isNotBlank()) Text(meta2, color = TFaint, fontSize = 12.sp)
                 }

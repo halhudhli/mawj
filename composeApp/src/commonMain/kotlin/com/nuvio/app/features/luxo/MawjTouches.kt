@@ -54,8 +54,8 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /** Mawj's moon gold and the dark of its unlit side. */
-val MawjMoonLit = Color(0xFFF1DDA6)
-val MawjMoonDark = Color(0xFF26323F)
+val MawjMoonLit: Color get() = com.nuvio.app.core.ui.MawjTint.moon
+val MawjMoonDark: Color get() = com.nuvio.app.core.ui.MawjTint.moonDark
 
 // ---------------- «التقييم بأطوار القمر» ----------------
 

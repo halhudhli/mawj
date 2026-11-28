@@ -1607,7 +1607,7 @@ private fun MawjWeekCalendar(
         days.map { LibraryCalendarMonth(it.year, it.month) }.distinct().forEach(onMonthRequested)
     }
     val byDate = remember(events) { events.groupBy { it.date.iso } }
-    val gold = Color(0xFFD6B36A)
+    val gold = com.nuvio.app.core.ui.MawjTint.gold
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
             Modifier.fillMaxSize().background(Color(0xFF070D14))
@@ -1672,8 +1672,8 @@ private fun MawjWeekCalendar(
 private fun MawjCalChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.height(40.dp).clip(RoundedCornerShape(20.dp))
-            .background(if (selected) Color(0xFFD6B36A) else Color.Transparent)
-            .border(1.dp, if (selected) Color(0xFFD6B36A) else Color(0x33EEF2F6), RoundedCornerShape(20.dp))
+            .background(if (selected) com.nuvio.app.core.ui.MawjTint.gold else Color.Transparent)
+            .border(1.dp, if (selected) com.nuvio.app.core.ui.MawjTint.gold else Color(0x33EEF2F6), RoundedCornerShape(20.dp))
             .clickable(onClick = onClick).padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (selected) Color(0xFF070D14) else Color(0xFFC3CCD6), fontSize = 14.sp) }

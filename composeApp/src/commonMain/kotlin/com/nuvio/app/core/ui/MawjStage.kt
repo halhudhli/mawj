@@ -179,8 +179,9 @@ fun Modifier.mawjShimmer(): Modifier {
         animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart),
         label = "mawj_shimmer_x",
     )
-    val dark = Color(0xFF0F1A25)
-    val light = Color(0xFF1D2C3B)
+    val pale = LocalThemePalette.current.light
+    val dark = if (pale) Color(0xFFEADFCB) else Color(0xFF0F1A25)
+    val light = if (pale) Color(0xFFF8F1E4) else Color(0xFF1D2C3B)
     return this.drawBehind {
         drawRect(dark)
         val w = size.width
@@ -205,8 +206,10 @@ fun MawjSea(
     fill: Color = MaterialTheme.colorScheme.background,
     gold: Color = MaterialTheme.nuvio.colors.accent,
 ) {
-    val t by mawjDrift("mawj_sea", 24_000)
-    val grain = com.nuvio.app.features.luxo.rememberLuxoFeatures().filmGrain
+    val features = com.nuvio.app.features.luxo.rememberLuxoFeatures()
+    val moving = LocalAppTheme.current.name !in features.worldStill
+    val t by if (moving) mawjDrift("mawj_sea", 24_000) else androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0.3f) }
+    val grain = features.filmGrain
     Canvas(modifier.fillMaxWidth().then(if (grain) com.nuvio.app.features.luxo.Touches.grainOn(Modifier) { t } else Modifier)) {
         val layers = 5
         val tau = (2 * PI).toFloat()

@@ -91,7 +91,7 @@ fun MawjMoodCompass(
                 val on = m == mood
                 Text(
                     m.label,
-                    color = if (on) Color(0xFF070D14) else Color(0xFFC3CCD6),
+                    color = if (on) Color(0xFF070D14) else com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFC3CCD6), Color(0xFF4A5865)),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -154,11 +154,11 @@ fun MawjCollectionChips(
             collection.folders.forEach { folder ->
                 Text(
                     listOfNotNull(folder.coverEmoji?.takeIf { it.isNotBlank() }, folder.title).joinToString(" "),
-                    color = Color(0xFFE6EBF0),
+                    color = com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFE6EBF0), Color(0xFF13202B)),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF0D1620))
+                        .background(com.nuvio.app.core.ui.MawjTint.ink(Color(0xFF0D1620), Color(0xFFFFFAF1)))
                         .border(1.dp, tokens.colors.accent.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
                         .clickable { onFolderClick?.invoke(collection.id, folder.id) }
                         .padding(horizontal = 18.dp, vertical = 12.dp),
@@ -197,7 +197,7 @@ fun MawjIslands(
                 val on = c.id == current.id
                 Text(
                     c.title,
-                    color = if (on) Color(0xFF070D14) else Color(0xFFC3CCD6),
+                    color = if (on) Color(0xFF070D14) else com.nuvio.app.core.ui.MawjTint.ink(Color(0xFFC3CCD6), Color(0xFF4A5865)),
                     fontSize = 14.sp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -226,7 +226,7 @@ fun MawjIslands(
                         .width(if (chart) 214.dp else 200.dp)
                         .height(if (chart) 124.dp else 104.dp)
                         .clip(shape)
-                        .background(Color(0xFF0D1620))
+                        .background(com.nuvio.app.core.ui.MawjTint.ink(Color(0xFF0D1620), Color(0xFFFFFAF1)))
                         .border(if (chart) 1.5.dp else 1.dp, tokens.colors.accent.copy(alpha = if (chart) 0.55f else 0.2f), shape)
                         .clickable { onFolderClick?.invoke(current.id, folder.id) },
                 ) {

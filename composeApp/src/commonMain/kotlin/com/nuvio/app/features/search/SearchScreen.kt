@@ -263,7 +263,7 @@ fun SearchScreen(
                             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
                         ) {
                             androidx.compose.material3.Text(
-                                "المنارة", color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp),
+                                "المنارة", color = com.nuvio.app.core.ui.MawjTint.gold, fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp),
                             )
                             androidx.compose.material3.Text(
                                 if (query.isBlank()) "عمّ يكون البحث الليلة؟" else headerTitle,

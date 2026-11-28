@@ -2180,6 +2180,12 @@
     <string name="settings_glass_ui_style_balanced">متوازن</string>
     <string name="settings_glass_ui_style_vivid">حيوي</string>
     <string name="theme_mawj_sea">بحر موج</string>
+    <string name="theme_mawj_dawn">الفجر</string>
+    <string name="theme_mawj_dunes">كثبان</string>
+    <string name="theme_mawj_aurora">الشفق</string>
+    <string name="theme_mawj_reef">المرجان</string>
+    <string name="theme_mawj_galaxy">المجرة</string>
+    <string name="theme_mawj_sadu">السدو</string>
     <!-- Arabic for strings that were still English -->
     <string name="theme_gold">ذهبي</string>
     <string name="theme_jade">يشمي</string>

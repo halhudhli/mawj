@@ -290,6 +290,16 @@ internal fun LuxoFeatureSwitches(isTablet: Boolean) {
             { it.swashTitles }, { f, v -> f.copy(swashTitles = v) },
         ),
         LuxoFeatureSwitch(
+            lx("عوالم موج", "Mawj worlds"),
+            lx("كل ثيم من ثيمات موج يرسم خلفيته الحية: الفجر، والكثبان، والشفق، والمرجان، والمجرة، والسدو", "Each Mawj theme draws its own living background"),
+            { it.mawjWorlds }, { f, v -> f.copy(mawjWorlds = v) },
+        ),
+        LuxoFeatureSwitch(
+            lx("الثيم حسب الوقت", "Theme by time"),
+            lx("«الفجر» من السادسة صباحاً إلى السادسة مساءً، والثيم المختار في الليل", "Dawn by day, the chosen theme by night"),
+            { it.themeByTime }, { f, v -> f.copy(themeByTime = v) },
+        ),
+        LuxoFeatureSwitch(
             lx("أيقونات متحركة", "Animated icons"),
             lx("أيقونات الشريط والإعدادات تتحرك مرة واحدة عند اختيارها أو ظهورها ثم تهدأ", "Rail and settings icons move once, then rest"),
             { it.mawjAnimatedIcons }, { f, v -> f.copy(mawjAnimatedIcons = v) },

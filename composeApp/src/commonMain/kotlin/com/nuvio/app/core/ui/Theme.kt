@@ -48,16 +48,31 @@ private fun buildColorScheme(palette: ThemeColorPalette, amoled: Boolean = false
     onPrimaryContainer = contentColorFor(palette.focusBackground),
     secondary = palette.secondaryVariant,
     onSecondary = palette.onSecondaryVariant,
-    background = if (amoled) Color.Black else palette.background,
-    onBackground = Color(0xFFF5F7F8),
+    background = if (amoled && !palette.light) Color.Black else palette.background,
+    onBackground = if (palette.light) MawjInk else Color(0xFFF5F7F8),
     surface = palette.backgroundElevated,
-    onSurface = Color(0xFFF5F7F8),
+    onSurface = if (palette.light) MawjInk else Color(0xFFF5F7F8),
     surfaceVariant = palette.backgroundCard,
-    onSurfaceVariant = Color(0xFF969CA3),
-    outline = Color(0xFF252A2A),
-    error = Color(0xFFE36A8A),
+    onSurfaceVariant = if (palette.light) Color(0xFF556472) else Color(0xFF969CA3),
+    outline = if (palette.light) Color(0xFFD5C7AE) else Color(0xFF252A2A),
+    error = if (palette.light) Color(0xFFB3261E) else Color(0xFFE36A8A),
     onError = Color(0xFFFCE5EC),
-)
+).let {
+    // A light theme: Material's own containers (sheets, menus, dialogs) take the pale page tones too.
+    if (!palette.light) it else it.copy(
+        surfaceContainerLowest = palette.backgroundCard,
+        surfaceContainerLow = palette.backgroundElevated,
+        surfaceContainer = palette.backgroundElevated,
+        surfaceContainerHigh = palette.backgroundCard,
+        surfaceContainerHighest = palette.backgroundCard,
+        surfaceTint = palette.secondary,
+        inverseSurface = MawjInk,
+        inverseOnSurface = palette.background,
+    )
+}
+
+/** Ink for the light theme «الفجر». */
+internal val MawjInk = Color(0xFF13202B)
 
 // Luxo: the user's chosen app font (Settings → Appearance → Fonts) replaces the default family.
 private val JetBrainsSans: FontFamily

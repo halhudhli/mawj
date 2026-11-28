@@ -9,6 +9,12 @@ import nuvio.composeapp.generated.resources.theme_rose
 import nuvio.composeapp.generated.resources.theme_violet
 import nuvio.composeapp.generated.resources.theme_white
 import nuvio.composeapp.generated.resources.theme_mawj_sea
+import nuvio.composeapp.generated.resources.theme_mawj_dawn
+import nuvio.composeapp.generated.resources.theme_mawj_dunes
+import nuvio.composeapp.generated.resources.theme_mawj_aurora
+import nuvio.composeapp.generated.resources.theme_mawj_reef
+import nuvio.composeapp.generated.resources.theme_mawj_galaxy
+import nuvio.composeapp.generated.resources.theme_mawj_sadu
 import nuvio.composeapp.generated.resources.theme_gold
 import nuvio.composeapp.generated.resources.theme_jade
 import nuvio.composeapp.generated.resources.theme_rose_gold
@@ -33,6 +39,13 @@ enum class AppTheme {
     WHITE,
     /** Mawj's own: deep night-sea blue with the moon's gold. */
     MAWJ_SEA,
+    /** Mawj's worlds: each one a palette and a living background of its own. */
+    MAWJ_DAWN,
+    MAWJ_DUNES,
+    MAWJ_AURORA,
+    MAWJ_REEF,
+    MAWJ_GALAXY,
+    MAWJ_SADU,
 }
 
 val AppTheme.labelRes: StringResource
@@ -51,4 +64,10 @@ val AppTheme.labelRes: StringResource
         AppTheme.ROSE -> Res.string.theme_rose
         AppTheme.WHITE -> Res.string.theme_white
         AppTheme.MAWJ_SEA -> Res.string.theme_mawj_sea
+        AppTheme.MAWJ_DAWN -> Res.string.theme_mawj_dawn
+        AppTheme.MAWJ_DUNES -> Res.string.theme_mawj_dunes
+        AppTheme.MAWJ_AURORA -> Res.string.theme_mawj_aurora
+        AppTheme.MAWJ_REEF -> Res.string.theme_mawj_reef
+        AppTheme.MAWJ_GALAXY -> Res.string.theme_mawj_galaxy
+        AppTheme.MAWJ_SADU -> Res.string.theme_mawj_sadu
     }

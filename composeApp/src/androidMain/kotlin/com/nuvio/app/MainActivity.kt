@@ -117,6 +117,14 @@ open class MainActivity : AppCompatActivity() {
         SentrySettingsStorage.initialize(applicationContext)
         SentryInitializer.start(application)
         super.onCreate(savedInstanceState)
+        // «الفجر» is a pale page: dark status-bar icons while it shows, light ones otherwise.
+        startupScope.launch {
+            com.nuvio.app.core.ui.MawjPageTone.light.collect { pale ->
+                runCatching {
+                    androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = pale
+                }
+            }
+        }
         // Luxo: start-up diagnostics (Settings → Advanced → Debugging), to see on a TV whether the
         // screen is being rebuilt by the system after launch.
         luxoCreateCount++

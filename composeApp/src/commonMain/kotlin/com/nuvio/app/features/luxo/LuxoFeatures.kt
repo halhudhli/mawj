@@ -275,6 +275,12 @@ data class LuxoFeatures(
     val sceneArt: Boolean = true,
     /** Arabic title names on the title page in the logo's font (Thmanyah Serif Display Swash). */
     val swashTitles: Boolean = true,
+    /** «عوالم موج»: the Mawj themes draw their own living background (dunes, aurora, reef, galaxy, Sadu, dawn). */
+    val mawjWorlds: Boolean = true,
+    /** «الثيم حسب الوقت»: «الفجر» by day (6:00–17:59), the chosen theme by night. */
+    val themeByTime: Boolean = false,
+    /** Themes whose background stands still (theme names), set from the theme picker. */
+    val worldStill: Set<String> = emptySet(),
 )
 
 object LuxoFeaturesRepository {

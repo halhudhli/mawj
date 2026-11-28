@@ -239,7 +239,7 @@ fun NuvioScreenHeader(
                         // «Mawj — new interface»: a gold eyebrow (the page's sea name), the serif title, a gold wave under it.
                         Column {
                             mawjPageEyebrow(currentTitle)?.let {
-                                Text(it, color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp)
+                                Text(it, color = com.nuvio.app.core.ui.MawjTint.gold, fontSize = 13.sp)
                             }
                             Text(
                                 text = currentTitle,
@@ -306,7 +306,7 @@ fun MawjGoldWaveLine(modifier: Modifier = Modifier) {
             path.lineTo(x, mid + kotlin.math.sin(x / size.width * 4f * kotlin.math.PI.toFloat()) * amp)
             x += 3f
         }
-        drawPath(path, androidx.compose.ui.graphics.Color(0xFFD6B36A).copy(alpha = 0.7f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3.dp.toPx()))
+        drawPath(path, com.nuvio.app.core.ui.MawjTint.gold.copy(alpha = 0.7f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3.dp.toPx()))
     }
 }
 

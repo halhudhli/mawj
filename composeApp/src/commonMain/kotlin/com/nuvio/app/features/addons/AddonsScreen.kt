@@ -122,7 +122,7 @@ internal fun AddonsSettingsPageContent(
                 androidx.compose.foundation.layout.Box(
                     Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Color(0x24D6B36A)),
                     contentAlignment = Alignment.Center,
-                ) { Text(arabic(working), color = Color(0xFFD6B36A), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 22.sp) }
+                ) { Text(arabic(working), color = com.nuvio.app.core.ui.MawjTint.gold, fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 22.sp) }
                 Column(Modifier.weight(1f)) {
                     Text(
                         if (failing == 0) "${arabic(working)} إضافات تعمل" else "${arabic(working)} إضافات تعمل · ${arabic(failing)} لا تستجيب",

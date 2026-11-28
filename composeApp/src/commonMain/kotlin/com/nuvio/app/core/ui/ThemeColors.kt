@@ -14,6 +14,8 @@ data class ThemeColorPalette(
     val background: Color = Color(0xFF0D0D0D),
     val backgroundElevated: Color = Color(0xFF1A1A1A),
     val backgroundCard: Color = Color(0xFF242424),
+    /** A light theme («الفجر»): dark ink on a pale page. */
+    val light: Boolean = false,
 )
 
 object ThemeColors {
@@ -120,6 +122,97 @@ object ThemeColors {
         backgroundCard = Color(0xFF121C26),
     )
 
+    /** «الفجر»: ivory sand, a silver sea and a deeper gold for reading by day. */
+    val MawjDawn = ThemeColorPalette(
+        secondary = Color(0xFF9A7429),
+        secondaryVariant = Color(0xFF7A5A1C),
+        accentGradient = listOf(Color(0xFF7A5A1C), Color(0xFF9A7429), Color(0xFFC9A050)),
+        nativeAccentHex = "#9A7429",
+        onSecondary = Color(0xFFFFFAF0),
+        onSecondaryVariant = Color(0xFFFFFAF0),
+        focusRing = Color(0xFF9A7429),
+        focusBackground = Color(0xFFE6D8BF),
+        background = Color(0xFFF3E9D8),
+        backgroundElevated = Color(0xFFFBF5EA),
+        backgroundCard = Color(0xFFFFFAF1),
+        light = true,
+    )
+
+    /** «كثبان»: a desert night, a crescent and copper dunes. */
+    val MawjDunes = ThemeColorPalette(
+        secondary = Color(0xFFE0A060),
+        secondaryVariant = Color(0xFFB07440),
+        accentGradient = listOf(Color(0xFFB07440), Color(0xFFE0A060), Color(0xFFF2D39A)),
+        nativeAccentHex = "#E0A060",
+        onSecondary = Color(0xFF1C100A),
+        onSecondaryVariant = Color(0xFF1C100A),
+        focusRing = Color(0xFFE0A060),
+        focusBackground = Color(0xFF3A2418),
+        background = Color(0xFF170F12),
+        backgroundElevated = Color(0xFF221619),
+        backgroundCard = Color(0xFF2C1C1E),
+    )
+
+    /** «الشفق»: the northern night, green and violet ribbons over the mountains. */
+    val MawjAurora = ThemeColorPalette(
+        secondary = Color(0xFF4CF0B8),
+        secondaryVariant = Color(0xFF2BB88A),
+        accentGradient = listOf(Color(0xFF2BB88A), Color(0xFF4CF0B8), Color(0xFFA8F7DC)),
+        nativeAccentHex = "#4CF0B8",
+        onSecondary = Color(0xFF02150F),
+        onSecondaryVariant = Color(0xFF02150F),
+        focusRing = Color(0xFF4CF0B8),
+        focusBackground = Color(0xFF10302F),
+        background = Color(0xFF03121A),
+        backgroundElevated = Color(0xFF081C24),
+        backgroundCard = Color(0xFF0C252D),
+    )
+
+    /** «المرجان»: under the water, light rays, rising bubbles and pink coral. */
+    val MawjReef = ThemeColorPalette(
+        secondary = Color(0xFFFF8A73),
+        secondaryVariant = Color(0xFFD9644F),
+        accentGradient = listOf(Color(0xFFD9644F), Color(0xFFFF8A73), Color(0xFFFFC2B4)),
+        nativeAccentHex = "#FF8A73",
+        onSecondary = Color(0xFF2A0C06),
+        onSecondaryVariant = Color(0xFF2A0C06),
+        focusRing = Color(0xFFFF8A73),
+        focusBackground = Color(0xFF124452),
+        background = Color(0xFF062C37),
+        backgroundElevated = Color(0xFF0A3644),
+        backgroundCard = Color(0xFF0F4150),
+    )
+
+    /** «المجرة»: the night sky, a violet nebula turning slowly and twinkling stars. */
+    val MawjGalaxy = ThemeColorPalette(
+        secondary = Color(0xFFC08CFF),
+        secondaryVariant = Color(0xFF8E5CE0),
+        accentGradient = listOf(Color(0xFF8E5CE0), Color(0xFFC08CFF), Color(0xFFE9DCFF)),
+        nativeAccentHex = "#C08CFF",
+        onSecondary = Color(0xFF12072A),
+        onSecondaryVariant = Color(0xFF12072A),
+        focusRing = Color(0xFFC08CFF),
+        focusBackground = Color(0xFF221A46),
+        background = Color(0xFF07051A),
+        backgroundElevated = Color(0xFF100C28),
+        backgroundCard = Color(0xFF171236),
+    )
+
+    /** «السدو»: the Sadu weave, maroon, black and gold. */
+    val MawjSadu = ThemeColorPalette(
+        secondary = Color(0xFFE3B04B),
+        secondaryVariant = Color(0xFFB8862E),
+        accentGradient = listOf(Color(0xFFB8862E), Color(0xFFE3B04B), Color(0xFFF1E6D0)),
+        nativeAccentHex = "#E3B04B",
+        onSecondary = Color(0xFF1C0A0D),
+        onSecondaryVariant = Color(0xFF1C0A0D),
+        focusRing = Color(0xFFE3B04B),
+        focusBackground = Color(0xFF3A161B),
+        background = Color(0xFF1C0A0D),
+        backgroundElevated = Color(0xFF261014),
+        backgroundCard = Color(0xFF311519),
+    )
+
     val Ocean = ThemeColorPalette(
         secondary = Color(0xFF1E88E5),
         secondaryVariant = Color(0xFF1565C0),
@@ -206,5 +299,11 @@ object ThemeColors {
         AppTheme.ROSE -> Rose
         AppTheme.WHITE -> White
         AppTheme.MAWJ_SEA -> MawjSea
+        AppTheme.MAWJ_DAWN -> MawjDawn
+        AppTheme.MAWJ_DUNES -> MawjDunes
+        AppTheme.MAWJ_AURORA -> MawjAurora
+        AppTheme.MAWJ_REEF -> MawjReef
+        AppTheme.MAWJ_GALAXY -> MawjGalaxy
+        AppTheme.MAWJ_SADU -> MawjSadu
     }
 }

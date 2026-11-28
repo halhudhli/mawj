@@ -279,7 +279,7 @@ private fun CatalogHeader(
         if (mawjCatalog) {
             // «عرض الكل — الشبكة»: the source in gold over a serif title and the gold wave.
             if (subtitle.isNotBlank()) {
-                Text(subtitle, color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = com.nuvio.app.core.ui.MawjTint.gold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(4.dp))
             }
             Text(

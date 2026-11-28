@@ -45,7 +45,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.nuvio.app.features.player.skip.AutoSkipSegmentType
 
-private val QGold = Color(0xFFD6B36A)
+private val QGold: androidx.compose.ui.graphics.Color get() = com.nuvio.app.core.ui.MawjTint.gold
 private val QGoldLight = Color(0xFFF1DDA6)
 private val QInk = Color(0xFFF6F1E4)
 private val QMuted = Color(0xFFA9B6C4)

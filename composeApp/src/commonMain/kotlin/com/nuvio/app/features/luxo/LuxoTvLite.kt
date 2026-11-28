@@ -162,7 +162,7 @@ private class LuxoTvIndicationNode(
             val stroke = 3.dp.toPx()
             val a = p.coerceIn(0f, 1f)
             drawRoundRect(
-                color = Color(0xFFD6B36A).copy(alpha = 0.28f * a),
+                color = com.nuvio.app.core.ui.MawjTint.gold.copy(alpha = 0.28f * a),
                 topLeft = Offset(-stroke, -stroke),
                 size = androidx.compose.ui.geometry.Size(size.width + stroke * 2, size.height + stroke * 2),
                 cornerRadius = CornerRadius(16.dp.toPx()),

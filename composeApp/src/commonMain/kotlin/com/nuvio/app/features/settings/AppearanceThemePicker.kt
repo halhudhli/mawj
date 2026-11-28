@@ -124,7 +124,13 @@ internal fun AppearanceThemePicker(
     val profileId = profileState.activeProfile?.profileIndex
     val gradientEnabled = memberAccess.tier != null
     var showEditor by rememberSaveable(profileId, gradientEnabled) { mutableStateOf(false) }
-    val themes = availableAppThemes(memberAccess.entitlements)
+    val worldsOn = com.nuvio.app.features.luxo.rememberLuxoFeatures().mawjWorlds
+    val themes = availableAppThemes(memberAccess.entitlements).let { all ->
+        if (worldsOn) all.filter { it.mawjWorldOrNull() == null } else all
+    }
+    if (worldsOn) {
+        MawjWorldPicker(isTablet = isTablet, selectedTheme = selectedTheme, onThemeSelected = onThemeSelected)
+    }
     val themeSpacing = if (isTablet) NuvioTokens.Space.s16 else NuvioTokens.Space.s12
     BoxWithConstraints(
         modifier = Modifier
@@ -226,3 +232,5 @@ private fun ThemeChip(
         )
     }
 }
+
+private fun AppTheme.mawjWorldOrNull() = com.nuvio.app.core.ui.MawjWorld.entries.firstOrNull { it.theme == this }

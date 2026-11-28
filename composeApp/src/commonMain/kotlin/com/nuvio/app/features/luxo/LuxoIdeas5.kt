@@ -286,7 +286,7 @@ fun LuxoKidsTimeUpDialog(onExtended: () -> Unit, onDismiss: () -> Unit) {
                             val path = androidx.compose.ui.graphics.Path(); var x = 0f; val y = size.height * yf
                             path.moveTo(0f, y)
                             while (x <= size.width) { path.lineTo(x, y + kotlin.math.sin(x / size.width * 2f * kotlin.math.PI.toFloat()) * 7.dp.toPx()); x += 2f }
-                            drawPath(path, Color(0xFFD6B36A).copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+                            drawPath(path, com.nuvio.app.core.ui.MawjTint.gold.copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
                         }
                     }
                     Text("هدأت الأمواج… وحان وقت الراحة", color = Color(0xFFF6F1E4), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontSize = 26.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)

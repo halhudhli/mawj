@@ -676,7 +676,7 @@ private fun AuthHeading(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (mawjGate) Text("البوابة", color = androidx.compose.ui.graphics.Color(0xFFD6B36A), fontSize = 13.sp)
+        if (mawjGate) Text("البوابة", color = com.nuvio.app.core.ui.MawjTint.gold, fontSize = 13.sp)
         AnimatedContent(
             targetState = isSignUp,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -1249,6 +1249,6 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.mawjGateArt() {
         var x = 0f
         path.moveTo(0f, y)
         while (x <= size.width) { path.lineTo(x, y + kotlin.math.sin(x / size.width * 5f * kotlin.math.PI.toFloat()) * 14f * density); x += 4f }
-        drawPath(path, androidx.compose.ui.graphics.Color(0xFFD6B36A).copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3f * density))
+        drawPath(path, com.nuvio.app.core.ui.MawjTint.gold.copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3f * density))
     }
 }

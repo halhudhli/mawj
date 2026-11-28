@@ -153,7 +153,7 @@ private fun CastItem(
                 .then(avatarSharedElementModifier)
                 .size(sizing.avatarSize)
                 // Mawj: a thin moon-gold ring around every face.
-                .then(if (com.nuvio.app.core.ui.rememberMawjStageOn()) Modifier.border(1.5.dp, androidx.compose.ui.graphics.Color(0xFFD6B36A), CircleShape) else Modifier)
+                .then(if (com.nuvio.app.core.ui.rememberMawjStageOn()) Modifier.border(1.5.dp, com.nuvio.app.core.ui.MawjTint.gold, CircleShape) else Modifier)
                 .clip(CircleShape)
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant,

@@ -2934,4 +2934,10 @@
     <string name="settings_glass_ui_style_balanced">Balanced</string>
     <string name="settings_glass_ui_style_vivid">Vivid</string>
     <string name="theme_mawj_sea">Mawj sea</string>
+    <string name="theme_mawj_dawn">Dawn</string>
+    <string name="theme_mawj_dunes">Dunes</string>
+    <string name="theme_mawj_aurora">Aurora</string>
+    <string name="theme_mawj_reef">Reef</string>
+    <string name="theme_mawj_galaxy">Galaxy</string>
+    <string name="theme_mawj_sadu">Sadu</string>
 </resources>

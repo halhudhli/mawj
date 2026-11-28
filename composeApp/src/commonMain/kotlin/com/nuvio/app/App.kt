@@ -109,7 +109,13 @@ internal fun AppEnvironment(paintSea: Boolean = true, content: @Composable () ->
 
     val customThemeColors by ThemeSettingsRepository.customThemeColors.collectAsStateWithLifecycle()
 
-    NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled, customThemeColors = customThemeColors) {
+    val shownTheme = com.nuvio.app.core.ui.rememberMawjTimedTheme(selectedTheme)
+    androidx.compose.runtime.SideEffect {
+        val shownPalette = com.nuvio.app.core.ui.ThemeColors.getColorPalette(shownTheme, customThemeColors)
+        com.nuvio.app.core.ui.MawjPageTone.light.value = shownPalette.light
+        com.nuvio.app.core.ui.MawjTint.apply(shownTheme, shownPalette.secondary, shownPalette.light)
+    }
+    NuvioTheme(appTheme = shownTheme, amoled = amoledEnabled, customThemeColors = customThemeColors) {
         AppBackgroundHost(paintSea = paintSea) {
             com.nuvio.app.features.luxo.LuxoTvProviders(content)
         }
